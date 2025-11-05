@@ -1,15 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { WorkItem, Person, Sprint, AppState, WorkItemType, WorkItemState, Priority, Comment } from '@/types';
+import { WorkItem, Person, Sprint, AppState, WorkItemType, WorkItemState, Priority, Comment, Board, BoardNote, Announcement } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 interface AppContextType extends AppState {
   addWorkItem: (item: Omit<WorkItem, 'id' | 'createdAt' | 'comments'>) => void;
   updateWorkItem: (id: string, updates: Partial<WorkItem>) => void;
   deleteWorkItem: (id: string) => void;
+  copyWorkItem: (id: string) => void;
   addComment: (workItemId: string, text: string, authorId?: string) => void;
   addPerson: (person: Omit<Person, 'id'>) => void;
   updatePerson: (id: string, updates: Partial<Person>) => void;
   deletePerson: (id: string) => void;
   addSprint: (name: string, startDate?: number) => void;
+  updateSprint: (id: string, updates: Partial<Sprint>) => void;
+  deleteSprint: (id: string) => void;
   setActiveSprint: (id: string | null) => void;
   getNextSprint: () => Sprint | null;
   getPreviousSprint: () => Sprint | null;
@@ -19,13 +23,30 @@ interface AppContextType extends AppState {
   logout: () => void;
   getChildItems: (parentId: string) => WorkItem[];
   getPersonById: (id: string) => Person | undefined;
+  addBoard: (name: string) => void;
+  deleteBoard: (id: string) => void;
+  setActiveBoard: (id: string | null) => void;
+  addBoardNote: (boardId: string, title: string, content?: string, color?: string) => void;
+  updateBoardNote: (id: string, updates: Partial<BoardNote>) => void;
+  deleteBoardNote: (id: string) => void;
+  addAnnouncement: (title: string, description: string) => void;
+  updateAnnouncement: (id: string, updates: Partial<Announcement>) => void;
+  deleteAnnouncement: (id: string) => void;
+  isLoading: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'topi-gang-task-board';
 const PASSWORD = 'lockin2024';
 
+// Helper function to calculate 2-week sprint dates
+const getSprintDates = (startDate?: number) => {
+  const start = startDate || Date.now();
+  const end = start + (14 * 24 * 60 * 60 * 1000); // 14 days in milliseconds
+  return { startDate: start, endDate: end };
+};
+
+// Default data for initial setup
 const defaultPeople: Person[] = [
   { id: '1', name: 'Alex Chen', handle: 'alex' },
   { id: '2', name: 'Jordan Lee', handle: 'jordan' },
@@ -34,13 +55,6 @@ const defaultPeople: Person[] = [
   { id: '5', name: 'Morgan Wu', handle: 'morgan' },
   { id: '6', name: 'Taylor Patel', handle: 'taylor' },
 ];
-
-// Helper function to calculate 2-week sprint dates
-const getSprintDates = (startDate?: number) => {
-  const start = startDate || Date.now();
-  const end = start + (14 * 24 * 60 * 60 * 1000); // 14 days in milliseconds
-  return { startDate: start, endDate: end };
-};
 
 const defaultSprints: Sprint[] = [
   { 
@@ -54,24 +68,24 @@ const defaultSprints: Sprint[] = [
 const defaultWorkItems: WorkItem[] = [
   {
     id: 'wi-1',
-    title: 'Set up project infrastructure',
-    type: 'User Story',
+    title: 'Study for final exams',
+    type: 'Study',
     state: 'Active',
     assigneeId: '1',
     priority: 'High',
-    tags: ['setup'],
+    tags: ['exam'],
     createdAt: Date.now(),
     description: '',
     comments: [],
   },
   {
     id: 'wi-2',
-    title: 'Configure CI/CD pipeline',
-    type: 'Task',
+    title: 'Complete math homework',
+    type: 'Study',
     state: 'New',
     assigneeId: '2',
     priority: 'High',
-    tags: ['devops'],
+    tags: ['homework'],
     parentId: 'wi-1',
     createdAt: Date.now(),
     description: '',
@@ -79,12 +93,12 @@ const defaultWorkItems: WorkItem[] = [
   },
   {
     id: 'wi-3',
-    title: 'Database migration blocked',
-    type: 'Task',
+    title: 'Gym session blocked - no equipment',
+    type: 'Gym',
     state: 'Active',
     assigneeId: '3',
     priority: 'Critical',
-    tags: ['Blocker', 'database'],
+    tags: ['Blocker', 'equipment'],
     parentId: 'wi-1',
     createdAt: Date.now(),
     description: '',
@@ -92,12 +106,12 @@ const defaultWorkItems: WorkItem[] = [
   },
   {
     id: 'wi-4',
-    title: 'Authentication flow broken',
-    type: 'Bug',
+    title: 'Basketball game',
+    type: 'Sports',
     state: 'Active',
     assigneeId: '4',
-    priority: 'Critical',
-    tags: ['Blocker', 'auth'],
+    priority: 'High',
+    tags: ['game'],
     sprintId: 'sprint-1',
     createdAt: Date.now(),
     description: '',
@@ -105,12 +119,12 @@ const defaultWorkItems: WorkItem[] = [
   },
   {
     id: 'wi-5',
-    title: 'User management epic',
-    type: 'Epic',
+    title: 'Morning run',
+    type: 'Running',
     state: 'Active',
     assigneeId: '5',
-    priority: 'High',
-    tags: ['users'],
+    priority: 'Medium',
+    tags: ['morning'],
     sprintId: 'sprint-1',
     createdAt: Date.now(),
     description: '',
@@ -118,144 +132,387 @@ const defaultWorkItems: WorkItem[] = [
   },
   {
     id: 'wi-6',
-    title: 'Deploy monitoring stack',
-    type: 'Operation',
+    title: 'Movie night',
+    type: 'Entertainment',
     state: 'New',
     assigneeId: '6',
-    priority: 'Medium',
-    tags: ['monitoring'],
+    priority: 'Low',
+    tags: ['weekend'],
     createdAt: Date.now(),
     description: '',
     comments: [],
   },
 ];
 
-/**
- * Migration helper to ensure old data format is compatible with new schema.
- * Adds description and comments fields to work items that may not have them.
- */
-const migrateWorkItems = (items: any[]): WorkItem[] => {
-  if (!Array.isArray(items)) {
-    return [];
-  }
-  return items.map(item => ({
-    ...item,
-    description: item.description || '',
-    comments: item.comments || [],
-  }));
-};
-
-/**
- * Migration helper for sprints.
- * Ensures all sprints have startDate and endDate fields for 2-week sprint logic.
- * If a sprint is missing dates, it uses the current date as the start date.
- */
-const migrateSprints = (sprints: any[]): Sprint[] => {
-  if (!Array.isArray(sprints)) {
-    return [];
-  }
-  return sprints.map(sprint => {
-    // If sprint already has dates, use them
-    if (sprint.startDate && sprint.endDate) {
-      return sprint;
+// Load all data from Supabase
+const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
+  try {
+    // Check if Supabase is configured
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
+      console.warn('Supabase not configured, using defaults');
+      return {};
     }
-    // Migrate old sprints without dates - use current date as start
-    const { startDate, endDate } = getSprintDates();
+
+    // Load people
+    const { data: peopleData, error: peopleError } = await supabase
+      .from('people')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (peopleError) {
+      console.error('Error loading people:', peopleError);
+    }
+
+    // Load sprints
+    const { data: sprintsData, error: sprintsError } = await supabase
+      .from('sprints')
+      .select('*')
+      .order('start_date', { ascending: true });
+
+    if (sprintsError) {
+      console.error('Error loading sprints:', sprintsError);
+    }
+
+    // Load work items
+    const { data: workItemsData, error: workItemsError } = await supabase
+      .from('work_items')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (workItemsError) {
+      console.error('Error loading work items:', workItemsError);
+    }
+
+    // Load comments
+    const { data: commentsData, error: commentsError } = await supabase
+      .from('comments')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (commentsError) {
+      console.error('Error loading comments:', commentsError);
+    }
+
+    // Combine comments with work items
+    const workItemsWithComments: WorkItem[] = (workItemsData || []).map(item => {
+      const comments = (commentsData || [])
+        .filter(comment => comment.work_item_id === item.id)
+        .map(comment => ({
+          id: comment.id,
+          text: comment.text,
+          createdAt: comment.created_at,
+          authorId: comment.author_id || undefined,
+        }));
+      
+      return {
+        id: item.id,
+        title: item.title,
+        type: item.type as WorkItemType,
+        state: item.state as WorkItemState,
+        assigneeId: item.assignee_id || undefined,
+        priority: item.priority as Priority,
+        tags: item.tags || [],
+        parentId: item.parent_id || undefined,
+        sprintId: item.sprint_id || undefined,
+        createdAt: item.created_at,
+        description: item.description || '',
+        comments: comments,
+      };
+    });
+
+    // Convert people data
+    const people: Person[] = (peopleData || []).map(p => ({
+      id: p.id,
+      name: p.name,
+      handle: p.handle || undefined,
+    }));
+
+    // Convert sprints data
+    const sprints: Sprint[] = (sprintsData || []).map(s => ({
+      id: s.id,
+      name: s.name,
+      isActive: s.is_active,
+      startDate: s.start_date,
+      endDate: s.end_date,
+    }));
+
+    // Find active sprint
+    const activeSprint = sprints.find(s => s.isActive)?.id || sprints[0]?.id || null;
+
     return {
-      ...sprint,
-      startDate,
-      endDate,
+      workItems: workItemsWithComments,
+      people: people.length > 0 ? people : defaultPeople,
+      sprints: sprints.length > 0 ? sprints : defaultSprints,
+      activeSprint: activeSprint || 'sprint-1',
     };
-  });
-};
-
-const loadState = (): Partial<AppState> => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      // Migrate old data format
-      if (parsed.workItems) {
-        parsed.workItems = migrateWorkItems(parsed.workItems);
-      }
-      if (parsed.sprints) {
-        parsed.sprints = migrateSprints(parsed.sprints);
-      }
-      return parsed;
-    }
-  } catch (e) {
-    console.error('Failed to load state:', e);
+  } catch (error) {
+    console.error('Error loading data from Supabase:', error);
+    return {};
   }
-  return {};
 };
 
-const saveState = (state: Partial<AppState>) => {
+// Initialize database with default data if empty
+const initializeDatabase = async () => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error('Failed to save state:', e);
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
+      return;
+    }
+
+    // Check if people table is empty
+    const { data: peopleData } = await supabase.from('people').select('id').limit(1);
+    if (!peopleData || peopleData.length === 0) {
+      // Insert default people
+      const peopleToInsert = defaultPeople.map(p => ({
+        id: p.id,
+        name: p.name,
+        handle: p.handle || null,
+      }));
+      await supabase.from('people').insert(peopleToInsert);
+    }
+
+    // Check if sprints table is empty
+    const { data: sprintsData } = await supabase.from('sprints').select('id').limit(1);
+    if (!sprintsData || sprintsData.length === 0) {
+      // Insert default sprint
+      const sprintToInsert = defaultSprints.map(s => ({
+        id: s.id,
+        name: s.name,
+        is_active: s.isActive,
+        start_date: s.startDate,
+        end_date: s.endDate,
+      }));
+      await supabase.from('sprints').insert(sprintToInsert);
+    }
+
+    // Check if work_items table is empty
+    const { data: workItemsData } = await supabase.from('work_items').select('id').limit(1);
+    if (!workItemsData || workItemsData.length === 0) {
+      // Insert default work items
+      const workItemsToInsert = defaultWorkItems.map(item => ({
+        id: item.id,
+        title: item.title,
+        type: item.type,
+        state: item.state,
+        assignee_id: item.assigneeId || null,
+        priority: item.priority,
+        tags: item.tags,
+        parent_id: item.parentId || null,
+        sprint_id: item.sprintId || null,
+        description: item.description || null,
+        created_at: item.createdAt,
+      }));
+      await supabase.from('work_items').insert(workItemsToInsert);
+    }
+  } catch (error) {
+    console.error('Error initializing database:', error);
   }
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AppState>(() => {
-    const loaded = loadState();
-    return {
-      workItems: loaded.workItems || defaultWorkItems,
-      people: loaded.people || defaultPeople,
-      sprints: loaded.sprints || defaultSprints,
-      activeSprint: loaded.activeSprint || 'sprint-1',
-      isAuthenticated: false,
-    };
+  const [state, setState] = useState<AppState>({
+    workItems: [],
+    people: [],
+    sprints: [],
+    activeSprint: null,
+    boards: [],
+    boardNotes: [],
+    activeBoard: null,
+    announcements: [],
+    isAuthenticated: false,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Load data from Supabase on mount
   useEffect(() => {
-    const { isAuthenticated, ...toSave } = state;
-    saveState(toSave);
-  }, [state]);
+    const loadData = async () => {
+      setIsLoading(true);
+      await initializeDatabase();
+      const data = await loadDataFromSupabase();
+      setState(prev => ({
+        ...prev,
+        workItems: data.workItems || defaultWorkItems,
+        people: data.people || defaultPeople,
+        sprints: data.sprints || defaultSprints,
+        activeSprint: data.activeSprint || 'sprint-1',
+      }));
+      setIsLoading(false);
+    };
+    loadData();
+  }, []);
 
-  const addWorkItem = (item: Omit<WorkItem, 'id' | 'createdAt' | 'comments'>) => {
+  // Save work item to Supabase
+  const saveWorkItemToSupabase = async (item: WorkItem) => {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
+    
+    try {
+      const { error } = await supabase
+        .from('work_items')
+        .upsert({
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          state: item.state,
+          assignee_id: item.assigneeId || null,
+          priority: item.priority,
+          tags: item.tags,
+          parent_id: item.parentId || null,
+          sprint_id: item.sprintId || null,
+          description: item.description || null,
+          created_at: item.createdAt,
+        });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving work item:', error);
+    }
+  };
+
+  // Save person to Supabase
+  const savePersonToSupabase = async (person: Person) => {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
+    
+    try {
+      const { error } = await supabase
+        .from('people')
+        .upsert({
+          id: person.id,
+          name: person.name,
+          handle: person.handle || null,
+        });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving person:', error);
+    }
+  };
+
+  // Save sprint to Supabase
+  const saveSprintToSupabase = async (sprint: Sprint) => {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
+    
+    try {
+      const { error } = await supabase
+        .from('sprints')
+        .upsert({
+          id: sprint.id,
+          name: sprint.name,
+          is_active: sprint.isActive,
+          start_date: sprint.startDate,
+          end_date: sprint.endDate,
+        });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving sprint:', error);
+    }
+  };
+
+  // Save comment to Supabase
+  const saveCommentToSupabase = async (comment: Comment, workItemId: string) => {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
+    
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .insert({
+          id: comment.id,
+          work_item_id: workItemId,
+          text: comment.text,
+          author_id: comment.authorId || null,
+          created_at: comment.createdAt,
+        });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving comment:', error);
+    }
+  };
+
+  const addWorkItem = async (item: Omit<WorkItem, 'id' | 'createdAt' | 'comments'>) => {
     const newItem: WorkItem = {
       ...item,
       id: `wi-${Date.now()}`,
       createdAt: Date.now(),
       comments: [],
     };
+    
+    // Update state immediately (optimistic update)
     setState(prev => ({ ...prev, workItems: [...prev.workItems, newItem] }));
+    
+    // Save to Supabase in background (won't block if Supabase not configured)
+    try {
+      await saveWorkItemToSupabase(newItem);
+    } catch (error) {
+      console.error('Failed to save to Supabase, but item added locally:', error);
+      // Item is already in state, so it will still show up
+    }
   };
 
-  const updateWorkItem = (id: string, updates: Partial<WorkItem>) => {
-    setState(prev => ({
-      ...prev,
-      workItems: prev.workItems.map(item =>
+  const updateWorkItem = async (id: string, updates: Partial<WorkItem>) => {
+    setState(prev => {
+      const updatedItems = prev.workItems.map(item =>
         item.id === id ? { ...item, ...updates } : item
-      ),
-    }));
+      );
+      const updatedItem = updatedItems.find(item => item.id === id);
+      if (updatedItem) {
+        saveWorkItemToSupabase(updatedItem);
+      }
+      return { ...prev, workItems: updatedItems };
+    });
   };
 
-  const deleteWorkItem = (id: string) => {
+  const deleteWorkItem = async (id: string) => {
     setState(prev => ({
       ...prev,
       workItems: prev.workItems.filter(item => item.id !== id && item.parentId !== id),
     }));
+    
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      try {
+        // Delete comments first (cascade should handle this, but being explicit)
+        await supabase.from('comments').delete().eq('work_item_id', id);
+        // Delete work item (cascade will delete children)
+        await supabase.from('work_items').delete().eq('id', id);
+      } catch (error) {
+        console.error('Error deleting work item:', error);
+      }
+    }
   };
 
-  const addPerson = (person: Omit<Person, 'id'>) => {
+  const copyWorkItem = async (id: string) => {
+    const originalItem = state.workItems.find(item => item.id === id);
+    if (!originalItem) return;
+
+    const copiedItem: WorkItem = {
+      ...originalItem,
+      id: `wi-${Date.now()}`,
+      title: `${originalItem.title} (Copy)`,
+      createdAt: Date.now(),
+      comments: [],
+      parentId: undefined, // Don't copy parent relationship
+    };
+
+    setState(prev => ({ ...prev, workItems: [...prev.workItems, copiedItem] }));
+    await saveWorkItemToSupabase(copiedItem);
+  };
+
+  const addPerson = async (person: Omit<Person, 'id'>) => {
     const newPerson: Person = {
       ...person,
       id: `person-${Date.now()}`,
     };
     setState(prev => ({ ...prev, people: [...prev.people, newPerson] }));
+    await savePersonToSupabase(newPerson);
   };
 
-  const updatePerson = (id: string, updates: Partial<Person>) => {
-    setState(prev => ({
-      ...prev,
-      people: prev.people.map(p => (p.id === id ? { ...p, ...updates } : p)),
-    }));
+  const updatePerson = async (id: string, updates: Partial<Person>) => {
+    setState(prev => {
+      const updatedPeople = prev.people.map(p => (p.id === id ? { ...p, ...updates } : p));
+      const updatedPerson = updatedPeople.find(p => p.id === id);
+      if (updatedPerson) {
+        savePersonToSupabase(updatedPerson);
+      }
+      return { ...prev, people: updatedPeople };
+    });
   };
 
-  const deletePerson = (id: string) => {
+  const deletePerson = async (id: string) => {
     setState(prev => ({
       ...prev,
       people: prev.people.filter(p => p.id !== id),
@@ -263,9 +520,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         item.assigneeId === id ? { ...item, assigneeId: undefined } : item
       ),
     }));
+    
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      try {
+        // Update work items to remove assignee
+        await supabase.from('work_items').update({ assignee_id: null }).eq('assignee_id', id);
+        // Delete person
+        await supabase.from('people').delete().eq('id', id);
+      } catch (error) {
+        console.error('Error deleting person:', error);
+      }
+    }
   };
 
-  const addSprint = (name: string, startDate?: number) => {
+  const addSprint = async (name: string, startDate?: number) => {
     const { startDate: sprintStartDate, endDate } = getSprintDates(startDate);
     const newSprint: Sprint = {
       id: `sprint-${Date.now()}`,
@@ -275,9 +543,55 @@ export function AppProvider({ children }: { children: ReactNode }) {
       endDate,
     };
     setState(prev => ({ ...prev, sprints: [...prev.sprints, newSprint] }));
+    await saveSprintToSupabase(newSprint);
   };
 
-  const addComment = (workItemId: string, text: string, authorId?: string) => {
+  const updateSprint = async (id: string, updates: Partial<Sprint>) => {
+    setState(prev => {
+      const updatedSprints = prev.sprints.map(sprint =>
+        sprint.id === id ? { ...sprint, ...updates } : sprint
+      );
+      const updatedSprint = updatedSprints.find(s => s.id === id);
+      if (updatedSprint) {
+        saveSprintToSupabase(updatedSprint);
+      }
+      return { ...prev, sprints: updatedSprints };
+    });
+  };
+
+  const deleteSprint = async (id: string) => {
+    setState(prev => {
+      const newSprints = prev.sprints.filter(s => s.id !== id);
+      // If deleted sprint was active, set first sprint as active or null
+      let newActiveSprint = prev.activeSprint;
+      if (prev.activeSprint === id) {
+        newActiveSprint = newSprints.length > 0 ? newSprints[0].id : null;
+      }
+      // Remove sprintId from work items
+      const updatedWorkItems = prev.workItems.map(item =>
+        item.sprintId === id ? { ...item, sprintId: undefined } : item
+      );
+      return {
+        ...prev,
+        sprints: newSprints,
+        activeSprint: newActiveSprint,
+        workItems: updatedWorkItems,
+      };
+    });
+
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      try {
+        // Update work items to remove sprint
+        await supabase.from('work_items').update({ sprint_id: null }).eq('sprint_id', id);
+        // Delete sprint
+        await supabase.from('sprints').delete().eq('id', id);
+      } catch (error) {
+        console.error('Error deleting sprint:', error);
+      }
+    }
+  };
+
+  const addComment = async (workItemId: string, text: string, authorId?: string) => {
     const newComment: Comment = {
       id: `comment-${Date.now()}`,
       text,
@@ -296,14 +610,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return item;
       }),
     }));
+    await saveCommentToSupabase(newComment, workItemId);
   };
 
-  const setActiveSprint = (id: string | null) => {
-    setState(prev => ({
-      ...prev,
-      activeSprint: id,
-      sprints: prev.sprints.map(s => ({ ...s, isActive: s.id === id })),
-    }));
+  const setActiveSprint = async (id: string | null) => {
+    setState(prev => {
+      const updatedSprints = prev.sprints.map(s => ({ ...s, isActive: s.id === id }));
+      // Save all sprints to update is_active flags
+      updatedSprints.forEach(sprint => saveSprintToSupabase(sprint));
+      return {
+        ...prev,
+        activeSprint: id,
+        sprints: updatedSprints,
+      };
+    });
   };
 
   // Get next sprint (chronologically by start date)
@@ -315,7 +635,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!currentSprint) {
       return null;
     }
-    // Find next sprint by start date
     const sortedSprints = [...state.sprints].sort((a, b) => a.startDate - b.startDate);
     const currentIndex = sortedSprints.findIndex(s => s.id === state.activeSprint);
     if (currentIndex >= 0 && currentIndex < sortedSprints.length - 1) {
@@ -333,7 +652,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!currentSprint) {
       return null;
     }
-    // Find previous sprint by start date
     const sortedSprints = [...state.sprints].sort((a, b) => a.startDate - b.startDate);
     const currentIndex = sortedSprints.findIndex(s => s.id === state.activeSprint);
     if (currentIndex > 0) {
@@ -378,6 +696,110 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return state.people.find(p => p.id === id);
   };
 
+  // Board management functions
+  const addBoard = (name: string) => {
+    const newBoard: Board = {
+      id: `board-${Date.now()}`,
+      name,
+      createdAt: Date.now(),
+    };
+    setState(prev => {
+      const newBoards = [...prev.boards, newBoard];
+      // Set as active if it's the first board or no active board
+      const newActiveBoard = prev.boards.length === 0 || !prev.activeBoard ? newBoard.id : prev.activeBoard;
+      return {
+        ...prev,
+        boards: newBoards,
+        activeBoard: newActiveBoard,
+      };
+    });
+  };
+
+  const deleteBoard = (id: string) => {
+    setState(prev => {
+      const newBoards = prev.boards.filter(b => b.id !== id);
+      const newNotes = prev.boardNotes.filter(n => n.boardId !== id);
+      // If deleted board was active, set first board as active or null
+      let newActiveBoard = prev.activeBoard;
+      if (prev.activeBoard === id) {
+        newActiveBoard = newBoards.length > 0 ? newBoards[0].id : null;
+      }
+      return {
+        ...prev,
+        boards: newBoards,
+        boardNotes: newNotes,
+        activeBoard: newActiveBoard,
+      };
+    });
+  };
+
+  const setActiveBoard = (id: string | null) => {
+    setState(prev => ({ ...prev, activeBoard: id }));
+  };
+
+  const addBoardNote = (boardId: string, title: string, content?: string, color?: string) => {
+    const newNote: BoardNote = {
+      id: `note-${Date.now()}`,
+      boardId,
+      title,
+      content,
+      x: Math.random() * 400 + 50, // Random position
+      y: Math.random() * 300 + 50,
+      color: color || '#fef3c7', // Default yellow sticky note color
+      createdAt: Date.now(),
+    };
+    setState(prev => ({
+      ...prev,
+      boardNotes: [...prev.boardNotes, newNote],
+    }));
+  };
+
+  const updateBoardNote = (id: string, updates: Partial<BoardNote>) => {
+    setState(prev => ({
+      ...prev,
+      boardNotes: prev.boardNotes.map(note =>
+        note.id === id ? { ...note, ...updates } : note
+      ),
+    }));
+  };
+
+  const deleteBoardNote = (id: string) => {
+    setState(prev => ({
+      ...prev,
+      boardNotes: prev.boardNotes.filter(note => note.id !== id),
+    }));
+  };
+
+  // Announcement management functions
+  const addAnnouncement = (title: string, description: string) => {
+    const newAnnouncement: Announcement = {
+      id: `announcement-${Date.now()}`,
+      title,
+      description,
+      createdAt: Date.now(),
+    };
+    setState(prev => ({
+      ...prev,
+      announcements: [...prev.announcements, newAnnouncement],
+    }));
+  };
+
+  const updateAnnouncement = (id: string, updates: Partial<Announcement>) => {
+    setState(prev => ({
+      ...prev,
+      announcements: prev.announcements.map(announcement =>
+        announcement.id === id ? { ...announcement, ...updates } : announcement
+      ),
+    }));
+  };
+
+  const deleteAnnouncement = (id: string) => {
+    setState(prev => ({
+      ...prev,
+      announcements: prev.announcements.filter(announcement => announcement.id !== id),
+    }));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -385,11 +807,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addWorkItem,
         updateWorkItem,
         deleteWorkItem,
+        copyWorkItem,
         addComment,
         addPerson,
         updatePerson,
         deletePerson,
         addSprint,
+        updateSprint,
+        deleteSprint,
         setActiveSprint,
         getNextSprint,
         getPreviousSprint,
@@ -399,6 +824,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         logout,
         getChildItems,
         getPersonById,
+        addBoard,
+        deleteBoard,
+        setActiveBoard,
+        addBoardNote,
+        updateBoardNote,
+        deleteBoardNote,
+        addAnnouncement,
+        updateAnnouncement,
+        deleteAnnouncement,
+        isLoading,
       }}
     >
       {children}
