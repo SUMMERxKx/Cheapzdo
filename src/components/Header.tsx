@@ -12,7 +12,7 @@ export function Header() {
           <Target className="w-5 h-5 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-sm font-bold tracking-wide">TOPI GANG</h1>
+          <h1 className="text-sm font-bold tracking-wide">CHEAPZDO</h1>
           <p className="text-[10px] text-muted-foreground tracking-widest">TASK BOARD</p>
         </div>
       </div>
