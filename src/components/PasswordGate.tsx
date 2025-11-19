@@ -25,7 +25,7 @@ export function PasswordGate() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-secondary mb-4">
             <Lock className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">TOPI GANG</h1>
+          <h1 className="text-2xl font-bold tracking-tight">CHEAPZDO</h1>
           <p className="text-sm text-muted-foreground mt-1">TASK BOARD</p>
         </div>
 
@@ -33,7 +33,7 @@ export function PasswordGate() {
           <div>
             <Input
               type="password"
-              placeholder="Enter password to lock in..."
+              placeholder="Enter password..."
               value={password}
               onChange={e => {
                 setPassword(e.target.value);
@@ -41,6 +41,11 @@ export function PasswordGate() {
               }}
               className="text-center text-lg tracking-widest"
               autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSubmit(e);
+                }
+              }}
             />
           </div>
 
@@ -52,13 +57,9 @@ export function PasswordGate() {
           )}
 
           <Button type="submit" className="w-full" size="lg">
-            LOCK IN
+            Enter
           </Button>
         </form>
-
-        <p className="text-center text-xs text-muted-foreground mt-8">
-          Focus. Execute. Ship.
-        </p>
       </div>
     </div>
   );
