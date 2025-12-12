@@ -23,7 +23,7 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
   const { updateWorkItem, addComment, people, sprints, getPersonById } = useApp();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<WorkItemType>('Task');
+  const [type, setType] = useState<WorkItemType>('Other');
   const [state, setState] = useState<WorkItemState>('New');
   const [priority, setPriority] = useState<Priority>('Medium');
   const [assigneeId, setAssigneeId] = useState<string>('');
@@ -100,19 +100,16 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
     setNewComment('');
   };
 
-  if (!workItem) {
-    return null;
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!workItem} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] bg-card border-border">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
-          <div className="space-y-6">
+        {workItem && (
+          <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
+            <div className="space-y-6">
             {/* Title */}
             <div className="space-y-2">
               <Label htmlFor="modal-title">Title</Label>
@@ -136,11 +133,12 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Epic">Epic</SelectItem>
-                    <SelectItem value="User Story">User Story</SelectItem>
-                    <SelectItem value="Task">Task</SelectItem>
-                    <SelectItem value="Bug">Bug</SelectItem>
-                    <SelectItem value="Operation">Operation</SelectItem>
+                    <SelectItem value="Study">Study</SelectItem>
+                    <SelectItem value="Gym">Gym</SelectItem>
+                    <SelectItem value="Sports">Sports</SelectItem>
+                    <SelectItem value="Running">Running</SelectItem>
+                    <SelectItem value="Entertainment">Entertainment</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -184,15 +182,19 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
 
               <div className="space-y-2">
                 <Label>Assignee</Label>
-                <Select value={assigneeId} onValueChange={(value) => {
-                  setAssigneeId(value);
-                  updateWorkItem(workItem.id, { assigneeId: value || undefined });
-                }}>
+                <Select 
+                  value={assigneeId || "__none__"} 
+                  onValueChange={(value) => {
+                    const finalValue = value === "__none__" ? "" : value;
+                    setAssigneeId(finalValue);
+                    updateWorkItem(workItem.id, { assigneeId: finalValue || undefined });
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                    <SelectItem value="__none__">Unassigned</SelectItem>
                     {people.map(p => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
@@ -203,15 +205,19 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
 
             <div className="space-y-2">
               <Label>Sprint</Label>
-              <Select value={sprintId} onValueChange={(value) => {
-                setSprintId(value);
-                updateWorkItem(workItem.id, { sprintId: value || undefined });
-              }}>
+              <Select 
+                value={sprintId || "__none__"} 
+                onValueChange={(value) => {
+                  const finalValue = value === "__none__" ? "" : value;
+                  setSprintId(finalValue);
+                  updateWorkItem(workItem.id, { sprintId: finalValue || undefined });
+                }}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Backlog" />
+                  <SelectValue placeholder="No Sprint" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Backlog</SelectItem>
+                  <SelectItem value="__none__">No Sprint</SelectItem>
                   {sprints.map(s => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
@@ -321,6 +327,7 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
             </div>
           </div>
         </ScrollArea>
+        )}
 
         <div className="flex justify-end gap-2 pt-4 border-t border-border">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AddWorkItemDialogProps {
   defaultSprintId?: string;
@@ -18,42 +19,74 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: Add
   const { addWorkItem, people, sprints } = useApp();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
-  const [type, setType] = useState<WorkItemType>(parentId ? 'Task' : 'User Story');
+  const [type, setType] = useState<WorkItemType>(parentId ? 'Other' : 'Other');
   const [priority, setPriority] = useState<Priority>('Medium');
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [sprintId, setSprintId] = useState<string>(defaultSprintId || '');
   const [tags, setTags] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim()) {
+      toast.error('Please enter a title for the task');
+      return;
+    }
 
-    addWorkItem({
-      title: title.trim(),
-      type,
-      state: 'New',
-      priority,
-      assigneeId: assigneeId || undefined,
-      sprintId: sprintId || undefined,
-      parentId,
-      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-    });
+    setIsSubmitting(true);
+    try {
+      await addWorkItem({
+        title: title.trim(),
+        type,
+        state: 'New',
+        priority,
+        assigneeId: assigneeId || undefined,
+        sprintId: sprintId || undefined,
+        parentId,
+        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      });
 
-    setTitle('');
-    setTags('');
-    setOpen(false);
+      toast.success('Task added successfully');
+      
+      // Reset form
+      setTitle('');
+      setTags('');
+      setAssigneeId('');
+      setSprintId(defaultSprintId || '');
+      setType(parentId ? 'Other' : 'Other');
+      setPriority('Medium');
+      setOpen(false);
+    } catch (error) {
+      console.error('Error adding work item:', error);
+      toast.error('Failed to add task. Check console for details.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const availableTypes: WorkItemType[] = parentId
-    ? ['Task']
-    : ['Epic', 'User Story', 'Task', 'Bug', 'Operation'];
+    ? ['Other']
+    : ['Study', 'Gym', 'Sports', 'Running', 'Entertainment', 'Other'];
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      // Reset form when closing
+      setTitle('');
+      setTags('');
+      setAssigneeId('');
+      setSprintId(defaultSprintId || '');
+      setType(parentId ? 'Other' : 'Other');
+      setPriority('Medium');
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-2">
+        <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
           <Plus className="w-4 h-4" />
-          Add Item
+          Add Task
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-card border-border">
@@ -109,12 +142,15 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: Add
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Assignee</Label>
-              <Select value={assigneeId} onValueChange={setAssigneeId}>
+              <Select 
+                value={assigneeId || "__none__"} 
+                onValueChange={(value) => setAssigneeId(value === "__none__" ? "" : value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Unassigned" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="__none__">Unassigned</SelectItem>
                   {people.map(p => (
                     <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                   ))}
@@ -125,12 +161,15 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: Add
             {!parentId && (
               <div className="space-y-2">
                 <Label>Sprint</Label>
-                <Select value={sprintId} onValueChange={setSprintId}>
+                <Select 
+                  value={sprintId || "__none__"} 
+                  onValueChange={(value) => setSprintId(value === "__none__" ? "" : value)}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Backlog" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Backlog</SelectItem>
+                    <SelectValue placeholder="No Sprint" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No Sprint</SelectItem>
                     {sprints.map(s => (
                       <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                     ))}
@@ -151,10 +190,17 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: Add
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit">Create</Button>
+            <Button type="submit" disabled={isSubmitting || !title.trim()}>
+              {isSubmitting ? 'Creating...' : 'Create'}
+            </Button>
           </div>
         </form>
       </DialogContent>

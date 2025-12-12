@@ -60,11 +60,12 @@ export function WorkItemFilters({ filters, onFiltersChange }: WorkItemFiltersPro
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Types</SelectItem>
-          <SelectItem value="Epic">Epic</SelectItem>
-          <SelectItem value="User Story">User Story</SelectItem>
-          <SelectItem value="Task">Task</SelectItem>
-          <SelectItem value="Bug">Bug</SelectItem>
-          <SelectItem value="Operation">Operation</SelectItem>
+          <SelectItem value="Study">Study</SelectItem>
+          <SelectItem value="Gym">Gym</SelectItem>
+          <SelectItem value="Sports">Sports</SelectItem>
+          <SelectItem value="Running">Running</SelectItem>
+          <SelectItem value="Entertainment">Entertainment</SelectItem>
+          <SelectItem value="Other">Other</SelectItem>
         </SelectContent>
       </Select>
 

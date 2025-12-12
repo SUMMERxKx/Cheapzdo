@@ -92,13 +92,15 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
     setIsModalOpen(true);
   };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedWorkItem(null);
+  const handleModalClose = (open: boolean) => {
+    if (!open) {
+      setIsModalOpen(false);
+      setSelectedWorkItem(null);
+    }
   };
 
-  // Calculate column count for empty state
-  const columnCount = hideSprintColumn ? 8 : 9;
+  // Calculate column count for empty state (Title, Type, Assigned, State, Priority, Tags, Actions)
+  const columnCount = 8;
 
   return (
     <div className="flex flex-col h-full">
@@ -110,8 +112,9 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
       )}
 
       {hideSprintColumn && (
-        <div className="flex items-center p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-bold tracking-wide">{title}</h2>
+          <AddWorkItemDialog defaultSprintId={defaultSprintId} />
         </div>
       )}
 
@@ -121,13 +124,12 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
         <table className="w-full">
           <thead className="sticky top-0 bg-card border-b border-border z-10">
             <tr className="text-left text-xs text-muted-foreground">
-              <th className="py-2 px-3 w-10"></th>
+              <th className="py-2 px-3 w-20"></th>
               <th className="py-2 px-3">Title</th>
               <th className="py-2 px-3 w-28">Type</th>
+              <th className="py-2 px-3 w-36">Assigned</th>
               <th className="py-2 px-3 w-24">State</th>
-              <th className="py-2 px-3 w-36">Assignee</th>
               <th className="py-2 px-3 w-24">Priority</th>
-              {!hideSprintColumn && <th className="py-2 px-3 w-32">Sprint</th>}
               <th className="py-2 px-3">Tags</th>
               <th className="py-2 px-3 w-10"></th>
             </tr>

@@ -3,8 +3,20 @@ import { WorkItem, WorkItemState, Priority } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, ChevronDown, Trash2, AlertTriangle, Circle, Bug, Layers, BookOpen, Wrench } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ChevronRight, ChevronDown, MoreVertical, Plus, AlertTriangle, BookOpen, Dumbbell, Gamepad2, Footprints, Film, Circle, Copy, Trash2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AddChildItemDialog } from './AddChildItemDialog';
+import { ConfirmDialog } from './ConfirmDialog';
 
 interface WorkItemRowProps {
   item: WorkItem;
@@ -14,19 +26,21 @@ interface WorkItemRowProps {
 }
 
 const typeIcons: Record<string, React.ElementType> = {
-  'Epic': Layers,
-  'User Story': BookOpen,
-  'Task': Circle,
-  'Bug': Bug,
-  'Operation': Wrench,
+  'Study': BookOpen,
+  'Gym': Dumbbell,
+  'Sports': Gamepad2,
+  'Running': Footprints,
+  'Entertainment': Film,
+  'Other': Circle,
 };
 
 const typeColors: Record<string, string> = {
-  'Epic': 'type-epic',
-  'User Story': 'type-story',
-  'Task': 'type-task',
-  'Bug': 'type-bug',
-  'Operation': 'type-operation',
+  'Study': 'text-blue-500',
+  'Gym': 'text-purple-500',
+  'Sports': 'text-green-500',
+  'Running': 'text-orange-500',
+  'Entertainment': 'text-pink-500',
+  'Other': 'text-gray-500',
 };
 
 const stateColors: Record<WorkItemState, string> = {
@@ -43,21 +57,23 @@ const priorityColors: Record<Priority, string> = {
 };
 
 export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = false }: WorkItemRowProps) {
-  const { deleteWorkItem, getChildItems, getPersonById, sprints } = useApp();
+  const { deleteWorkItem, copyWorkItem, getChildItems, getPersonById, sprints, updateWorkItem } = useApp();
   const [expanded, setExpanded] = useState(true);
+  const [isAddChildOpen, setIsAddChildOpen] = useState(false);
+  const [isAddBlockerOpen, setIsAddBlockerOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const children = getChildItems(item.id);
   const hasChildren = children.length > 0;
-  const canHaveChildren = item.type === 'User Story' || item.type === 'Operation';
+  const canHaveChildren = item.type === 'Study' || item.type === 'Sports' || item.type === 'Entertainment';
   const isBlocker = item.tags.includes('Blocker');
   const Icon = typeIcons[item.type] || Circle;
   const assignee = item.assigneeId ? getPersonById(item.assigneeId) : null;
-  const sprint = item.sprintId ? sprints.find(s => s.id === item.sprintId) : null;
 
   const handleRowClick = (e: React.MouseEvent) => {
-    // Don't trigger row click if clicking on expand/collapse or delete button
+    // Don't trigger row click if clicking on buttons or dropdowns
     const target = e.target as HTMLElement;
-    if (target.closest('button')) {
+    if (target.closest('button') || target.closest('[role="menuitem"]')) {
       return;
     }
     onRowClick(item);
@@ -65,12 +81,25 @@ export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = fa
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
     deleteWorkItem(item.id);
+  };
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    copyWorkItem(item.id);
   };
 
   const handleExpandClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setExpanded(!expanded);
+  };
+
+  const handleMoveToSprint = (sprintId: string) => {
+    updateWorkItem(item.id, { sprintId: sprintId || undefined });
   };
 
   return (
@@ -82,25 +111,58 @@ export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = fa
         )}
         onClick={handleRowClick}
       >
-        <td className="py-2 px-3 w-10">
-          {hasChildren || canHaveChildren ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-6 h-6 p-0"
-              onClick={handleExpandClick}
-            >
-              {expanded ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </Button>
-          ) : (
-            <span className="w-6" />
-          )}
+        {/* Plus button and expand arrow */}
+        <td className="py-2 px-3 w-20">
+          <div className="flex items-center gap-1">
+            {canHaveChildren && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-6 h-6 p-0"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Add child task or blocker"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAddChildOpen(true);
+                  }}>
+                    Add Task
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    setIsAddBlockerOpen(true);
+                  }}>
+                    Add Blocker
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {hasChildren || canHaveChildren ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-6 h-6 p-0"
+                onClick={handleExpandClick}
+              >
+                {expanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </Button>
+            ) : (
+              <span className="w-6" />
+            )}
+          </div>
         </td>
 
+        {/* Title with icon */}
         <td className="py-2 px-3" style={{ paddingLeft: `${depth * 24 + 12}px` }}>
           <div className="flex items-center gap-2">
             <Icon className={cn('w-4 h-4 flex-shrink-0', typeColors[item.type])} />
@@ -111,38 +173,35 @@ export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = fa
           </div>
         </td>
 
+        {/* Type */}
         <td className="py-2 px-3 w-28">
           <span className={cn('text-xs', typeColors[item.type])}>{item.type}</span>
         </td>
 
-        <td className="py-2 px-3 w-24">
-          <Badge className={cn('text-xs', stateColors[item.state])}>
-            {item.state}
-          </Badge>
-        </td>
-
+        {/* Assigned */}
         <td className="py-2 px-3 w-36">
           <span className="text-xs">
             {assignee ? assignee.name : 'Unassigned'}
           </span>
         </td>
 
+        {/* State */}
+        <td className="py-2 px-3 w-24">
+          <Badge className={cn('text-xs', stateColors[item.state])}>
+            {item.state}
+          </Badge>
+        </td>
+
+        {/* Priority */}
         <td className="py-2 px-3 w-24">
           <span className={cn('text-xs font-medium', priorityColors[item.priority])}>
             {item.priority}
           </span>
         </td>
 
-        {!hideSprintColumn && (
-          <td className="py-2 px-3 w-32">
-            <span className="text-xs">
-              {sprint ? sprint.name : 'Backlog'}
-            </span>
-          </td>
-        )}
-
+        {/* Tags */}
         <td className="py-2 px-3">
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 justify-end">
             {item.tags.map(tag => (
               <Badge
                 key={tag}
@@ -155,18 +214,51 @@ export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = fa
           </div>
         </td>
 
+        {/* Three dots menu */}
         <td className="py-2 px-3 w-10">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-6 h-6 p-0 text-muted-foreground hover:text-destructive"
-            onClick={handleDelete}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-6 h-6 p-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={handleCopy}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy Item
+              </DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Move to Sprint
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem onClick={() => handleMoveToSprint('')}>
+                    No Sprint
+                  </DropdownMenuItem>
+                  {sprints.map((sprint) => (
+                    <DropdownMenuItem key={sprint.id} onClick={() => handleMoveToSprint(sprint.id)}>
+                      {sprint.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </td>
       </tr>
 
+      {/* Child items */}
       {expanded && children.map(child => (
         <WorkItemRow 
           key={child.id} 
@@ -176,6 +268,34 @@ export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = fa
           hideSprintColumn={hideSprintColumn}
         />
       ))}
+
+      {/* Add Child Task Dialog */}
+      <AddChildItemDialog
+        open={isAddChildOpen}
+        onOpenChange={setIsAddChildOpen}
+        parentItem={item}
+        isBlocker={false}
+      />
+
+      {/* Add Blocker Dialog */}
+      <AddChildItemDialog
+        open={isAddBlockerOpen}
+        onOpenChange={setIsAddBlockerOpen}
+        parentItem={item}
+        isBlocker={true}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+        title="Delete Item"
+        description="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </>
   );
 }
