@@ -3,13 +3,14 @@ import { WorkItem, WorkItemState, Priority } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronRight, ChevronDown, Trash2, AlertTriangle, Circle, Bug, Layers, BookOpen, Wrench, Zap } from 'lucide-react';
+import { ChevronRight, ChevronDown, Trash2, AlertTriangle, Circle, Bug, Layers, BookOpen, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface WorkItemRowProps {
   item: WorkItem;
   depth?: number;
+  onRowClick: (item: WorkItem) => void;
+  hideSprintColumn?: boolean;
 }
 
 const typeIcons: Record<string, React.ElementType> = {
@@ -41,8 +42,8 @@ const priorityColors: Record<Priority, string> = {
   'Low': 'text-muted-foreground',
 };
 
-export function WorkItemRow({ item, depth = 0 }: WorkItemRowProps) {
-  const { updateWorkItem, deleteWorkItem, getChildItems, getPersonById, people, sprints, activeSprint } = useApp();
+export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = false }: WorkItemRowProps) {
+  const { deleteWorkItem, getChildItems, getPersonById, sprints } = useApp();
   const [expanded, setExpanded] = useState(true);
 
   const children = getChildItems(item.id);
@@ -51,20 +52,43 @@ export function WorkItemRow({ item, depth = 0 }: WorkItemRowProps) {
   const isBlocker = item.tags.includes('Blocker');
   const Icon = typeIcons[item.type] || Circle;
   const assignee = item.assigneeId ? getPersonById(item.assigneeId) : null;
+  const sprint = item.sprintId ? sprints.find(s => s.id === item.sprintId) : null;
+
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Don't trigger row click if clicking on expand/collapse or delete button
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) {
+      return;
+    }
+    onRowClick(item);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteWorkItem(item.id);
+  };
+
+  const handleExpandClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded(!expanded);
+  };
 
   return (
     <>
-      <tr className={cn(
-        'border-b border-border hover:bg-secondary/30 transition-colors',
-        isBlocker && 'bg-destructive/5 hover:bg-destructive/10'
-      )}>
+      <tr 
+        className={cn(
+          'border-b border-border hover:bg-secondary/30 transition-colors cursor-pointer',
+          isBlocker && 'bg-destructive/5 hover:bg-destructive/10'
+        )}
+        onClick={handleRowClick}
+      >
         <td className="py-2 px-3 w-10">
           {hasChildren || canHaveChildren ? (
             <Button
               variant="ghost"
               size="sm"
               className="w-6 h-6 p-0"
-              onClick={() => setExpanded(!expanded)}
+              onClick={handleExpandClick}
             >
               {expanded ? (
                 <ChevronDown className="w-4 h-4" />
@@ -92,75 +116,30 @@ export function WorkItemRow({ item, depth = 0 }: WorkItemRowProps) {
         </td>
 
         <td className="py-2 px-3 w-24">
-          <Select
-            value={item.state}
-            onValueChange={(value: WorkItemState) => updateWorkItem(item.id, { state: value })}
-          >
-            <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0">
-              <Badge className={cn('text-xs', stateColors[item.state])}>
-                {item.state}
-              </Badge>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="New">New</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Done">Done</SelectItem>
-            </SelectContent>
-          </Select>
+          <Badge className={cn('text-xs', stateColors[item.state])}>
+            {item.state}
+          </Badge>
         </td>
 
         <td className="py-2 px-3 w-36">
-          <Select
-            value={item.assigneeId || 'unassigned'}
-            onValueChange={(value) => updateWorkItem(item.id, { assigneeId: value === 'unassigned' ? undefined : value })}
-          >
-            <SelectTrigger className="h-7 text-xs">
-              <SelectValue placeholder="Unassigned" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="unassigned">Unassigned</SelectItem>
-              {people.map(p => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <span className="text-xs">
+            {assignee ? assignee.name : 'Unassigned'}
+          </span>
         </td>
 
         <td className="py-2 px-3 w-24">
-          <Select
-            value={item.priority}
-            onValueChange={(value: Priority) => updateWorkItem(item.id, { priority: value })}
-          >
-            <SelectTrigger className="h-7 text-xs border-0 bg-transparent p-0">
-              <span className={cn('text-xs font-medium', priorityColors[item.priority])}>
-                {item.priority}
-              </span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Critical">Critical</SelectItem>
-              <SelectItem value="High">High</SelectItem>
-              <SelectItem value="Medium">Medium</SelectItem>
-              <SelectItem value="Low">Low</SelectItem>
-            </SelectContent>
-          </Select>
+          <span className={cn('text-xs font-medium', priorityColors[item.priority])}>
+            {item.priority}
+          </span>
         </td>
 
-        <td className="py-2 px-3 w-32">
-          <Select
-            value={item.sprintId || 'backlog'}
-            onValueChange={(value) => updateWorkItem(item.id, { sprintId: value === 'backlog' ? undefined : value })}
-          >
-            <SelectTrigger className="h-7 text-xs">
-              <SelectValue placeholder="Backlog" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="backlog">Backlog</SelectItem>
-              {sprints.map(s => (
-                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </td>
+        {!hideSprintColumn && (
+          <td className="py-2 px-3 w-32">
+            <span className="text-xs">
+              {sprint ? sprint.name : 'Backlog'}
+            </span>
+          </td>
+        )}
 
         <td className="py-2 px-3">
           <div className="flex flex-wrap gap-1">
@@ -181,7 +160,7 @@ export function WorkItemRow({ item, depth = 0 }: WorkItemRowProps) {
             variant="ghost"
             size="sm"
             className="w-6 h-6 p-0 text-muted-foreground hover:text-destructive"
-            onClick={() => deleteWorkItem(item.id)}
+            onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -189,7 +168,13 @@ export function WorkItemRow({ item, depth = 0 }: WorkItemRowProps) {
       </tr>
 
       {expanded && children.map(child => (
-        <WorkItemRow key={child.id} item={child} depth={depth + 1} />
+        <WorkItemRow 
+          key={child.id} 
+          item={child} 
+          depth={depth + 1} 
+          onRowClick={onRowClick}
+          hideSprintColumn={hideSprintColumn}
+        />
       ))}
     </>
   );

@@ -8,6 +8,13 @@ export interface Person {
   handle?: string;
 }
 
+export interface Comment {
+  id: string;
+  text: string;
+  createdAt: number;
+  authorId?: string;
+}
+
 export interface WorkItem {
   id: string;
   title: string;
@@ -19,12 +26,16 @@ export interface WorkItem {
   parentId?: string;
   sprintId?: string;
   createdAt: number;
+  description?: string;
+  comments: Comment[];
 }
 
 export interface Sprint {
   id: string;
   name: string;
   isActive: boolean;
+  startDate: number;
+  endDate: number;
 }
 
 export interface AppState {
