@@ -3,21 +3,19 @@ import { useApp } from '@/context/AppContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WorkItemList } from './WorkItemList';
 import { Dashboard } from './Dashboard';
-import { PeopleManager } from './PeopleManager';
 import { Header } from './Header';
 import { SprintNavigation } from './SprintNavigation';
-import { LayoutDashboard, Archive, Zap, Users } from 'lucide-react';
+import { Announcements } from './Announcements';
+import { LayoutDashboard, Zap, Megaphone } from 'lucide-react';
 
-type TabValue = 'dashboard' | 'sprint' | 'taskhub' | 'people';
+type TabValue = 'dashboard' | 'sprint' | 'announcements';
 
 export function MainBoard() {
   const { workItems, activeSprint } = useApp();
   const [activeTab, setActiveTab] = useState<TabValue>('dashboard');
 
-  // Task Hub items are items without a sprint (backlog items)
-  const taskHubItems = workItems.filter(item => !item.sprintId);
-  // Sprint items are items assigned to the active sprint
-  const sprintItems = workItems.filter(item => item.sprintId === activeSprint);
+  // Show all tasks in Sprint Board (todo board)
+  const allTasks = workItems;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -38,23 +36,15 @@ export function MainBoard() {
               className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
             >
               <Zap className="w-4 h-4" />
-              Sprint
-              <span className="ml-1 text-xs text-muted-foreground">({sprintItems.filter(i => !i.parentId).length})</span>
+              Sprint Board
+              <span className="ml-1 text-xs text-muted-foreground">({allTasks.filter(i => !i.parentId).length})</span>
             </TabsTrigger>
             <TabsTrigger
-              value="taskhub"
+              value="announcements"
               className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
             >
-              <Archive className="w-4 h-4" />
-              Task Hub
-              <span className="ml-1 text-xs text-muted-foreground">({taskHubItems.filter(i => !i.parentId).length})</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="people"
-              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
-            >
-              <Users className="w-4 h-4" />
-              People
+              <Megaphone className="w-4 h-4" />
+              Announcements
             </TabsTrigger>
           </TabsList>
         </div>
@@ -67,20 +57,16 @@ export function MainBoard() {
           <SprintNavigation />
           <div className="flex-1 overflow-hidden">
             <WorkItemList 
-              items={sprintItems} 
-              title="SPRINT" 
+              items={allTasks} 
+              title="SPRINT BOARD" 
               defaultSprintId={activeSprint || undefined}
               hideSprintColumn={true}
             />
           </div>
         </TabsContent>
 
-        <TabsContent value="taskhub" className="flex-1 m-0">
-          <WorkItemList items={taskHubItems} title="TASK HUB" />
-        </TabsContent>
-
-        <TabsContent value="people" className="flex-1 m-0">
-          <PeopleManager />
+        <TabsContent value="announcements" className="flex-1 m-0 overflow-hidden">
+          <Announcements />
         </TabsContent>
       </Tabs>
     </div>
