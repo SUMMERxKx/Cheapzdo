@@ -23,6 +23,7 @@ interface WorkItemListProps {
 }
 
 export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false }: WorkItemListProps) {
+  const { reorderWorkItems } = useApp();
   const [filters, setFilters] = useState<FiltersState>({
     search: '',
     type: 'all',
@@ -33,13 +34,22 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
   });
   const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null);
 
   /**
    * Filter to only top-level items (items without a parent).
    * Child items are displayed nested under their parents in the row component.
+   * Sort by order field, then by createdAt as fallback.
    */
   const topLevelItems = useMemo(() => {
-    return items.filter(item => !item.parentId);
+    return items
+      .filter(item => !item.parentId)
+      .sort((a, b) => {
+        const orderA = a.order ?? a.createdAt;
+        const orderB = b.order ?? b.createdAt;
+        return orderA - orderB;
+      });
   }, [items]);
 
   /**
@@ -99,6 +109,57 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
     }
   };
 
+  const handleDragStart = (e: React.DragEvent, itemId: string) => {
+    setDraggedItemId(itemId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', itemId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, itemId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedItemId && draggedItemId !== itemId) {
+      setDragOverItemId(itemId);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverItemId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetItemId: string) => {
+    e.preventDefault();
+    setDragOverItemId(null);
+    
+    if (!draggedItemId || draggedItemId === targetItemId) {
+      setDraggedItemId(null);
+      return;
+    }
+
+    const currentOrder = filteredItems.map(item => item.id);
+    const draggedIndex = currentOrder.indexOf(draggedItemId);
+    const targetIndex = currentOrder.indexOf(targetItemId);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedItemId(null);
+      return;
+    }
+
+    // Reorder the array
+    const newOrder = [...currentOrder];
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedItemId);
+
+    // Update order in context
+    reorderWorkItems(newOrder);
+    setDraggedItemId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemId(null);
+    setDragOverItemId(null);
+  };
+
   // Calculate column count for empty state (Title, Type, Assigned, State, Priority, Tags, Actions)
   const columnCount = 8;
 
@@ -141,6 +202,13 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
                 item={item} 
                 onRowClick={handleRowClick}
                 hideSprintColumn={hideSprintColumn}
+                isDragging={draggedItemId === item.id}
+                isDragOver={dragOverItemId === item.id}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onDragEnd={handleDragEnd}
               />
             ))}
             {filteredItems.length === 0 && (

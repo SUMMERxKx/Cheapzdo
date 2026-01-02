@@ -25,6 +25,13 @@ export function MainBoard() {
         <div className="border-b border-border bg-card">
           <TabsList className="h-12 bg-transparent rounded-none border-0 px-4">
             <TabsTrigger
+              value="announcements"
+              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
+            >
+              <Megaphone className="w-4 h-4" />
+              Announcements
+            </TabsTrigger>
+            <TabsTrigger
               value="dashboard"
               className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
             >
@@ -39,15 +46,12 @@ export function MainBoard() {
               Sprint Board
               <span className="ml-1 text-xs text-muted-foreground">({allTasks.filter(i => !i.parentId).length})</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="announcements"
-              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
-            >
-              <Megaphone className="w-4 h-4" />
-              Announcements
-            </TabsTrigger>
           </TabsList>
         </div>
+
+        <TabsContent value="announcements" className="flex-1 m-0 overflow-hidden">
+          <Announcements />
+        </TabsContent>
 
         <TabsContent value="dashboard" className="flex-1 m-0">
           <Dashboard />
@@ -63,10 +67,6 @@ export function MainBoard() {
               hideSprintColumn={true}
             />
           </div>
-        </TabsContent>
-
-        <TabsContent value="announcements" className="flex-1 m-0 overflow-hidden">
-          <Announcements />
         </TabsContent>
       </Tabs>
     </div>

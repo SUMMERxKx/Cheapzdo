@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 interface AppContextType extends AppState {
   addWorkItem: (item: Omit<WorkItem, 'id' | 'createdAt' | 'comments'>) => void;
   updateWorkItem: (id: string, updates: Partial<WorkItem>) => void;
+  reorderWorkItems: (itemIds: string[]) => void;
   deleteWorkItem: (id: string) => void;
   copyWorkItem: (id: string) => void;
   addComment: (workItemId: string, text: string, authorId?: string) => void;
@@ -79,6 +80,7 @@ const defaultWorkItems: WorkItem[] = [
     createdAt: Date.now(),
     description: '',
     comments: [],
+    order: 0,
   },
   {
     id: 'wi-2',
@@ -118,6 +120,7 @@ const defaultWorkItems: WorkItem[] = [
     createdAt: Date.now(),
     description: '',
     comments: [],
+    order: 1,
   },
   {
     id: 'wi-5',
@@ -131,6 +134,7 @@ const defaultWorkItems: WorkItem[] = [
     createdAt: Date.now(),
     description: '',
     comments: [],
+    order: 2,
   },
   {
     id: 'wi-6',
@@ -143,6 +147,7 @@ const defaultWorkItems: WorkItem[] = [
     createdAt: Date.now(),
     description: '',
     comments: [],
+    order: 3,
   },
 ];
 
@@ -219,6 +224,7 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
         createdAt: item.created_at,
         description: item.description || '',
         comments: comments,
+        order: item.order ?? undefined,
       };
     });
 
@@ -366,6 +372,7 @@ const initializeDatabase = async () => {
         sprint_id: item.sprintId || null,
         description: item.description || null,
         created_at: item.createdAt,
+        order: item.order ?? null,
       }));
       await supabase.from('work_items').insert(workItemsToInsert);
     }
@@ -429,6 +436,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           sprint_id: item.sprintId || null,
           description: item.description || null,
           created_at: item.createdAt,
+          order: item.order ?? null,
         });
       if (error) throw error;
     } catch (error) {
@@ -523,6 +531,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (updatedItem) {
         saveWorkItemToSupabase(updatedItem);
       }
+      return { ...prev, workItems: updatedItems };
+    });
+  };
+
+  const reorderWorkItems = async (itemIds: string[]) => {
+    setState(prev => {
+      // Only reorder top-level items (no parent)
+      const topLevelIds = itemIds.filter(id => {
+        const item = prev.workItems.find(i => i.id === id);
+        return item && !item.parentId;
+      });
+
+      const updatedItems = prev.workItems.map(item => {
+        const newIndex = topLevelIds.indexOf(item.id);
+        if (newIndex !== -1 && !item.parentId) {
+          return { ...item, order: newIndex };
+        }
+        return item;
+      });
+      
+      // Save all reordered items to Supabase
+      topLevelIds.forEach((id, index) => {
+        const item = updatedItems.find(i => i.id === id);
+        if (item) {
+          saveWorkItemToSupabase(item);
+        }
+      });
+      
       return { ...prev, workItems: updatedItems };
     });
   };
@@ -977,6 +1013,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         ...state,
         addWorkItem,
         updateWorkItem,
+        reorderWorkItems,
         deleteWorkItem,
         copyWorkItem,
         addComment,

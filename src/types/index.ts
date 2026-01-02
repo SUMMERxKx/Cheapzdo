@@ -28,6 +28,7 @@ export interface WorkItem {
   createdAt: number;
   description?: string;
   comments: Comment[];
+  order?: number;
 }
 
 export interface Sprint {
