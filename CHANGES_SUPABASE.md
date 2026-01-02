@@ -54,7 +54,7 @@ npm run dev
 
 ## Password
 
-Still `lockin2024` - no changes to authentication flow.
+Password is configured via `VITE_BOARD_PASSWORD` environment variable.
 
 ## Database Schema
 

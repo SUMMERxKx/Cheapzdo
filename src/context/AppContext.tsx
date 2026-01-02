@@ -37,7 +37,9 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const PASSWORD = 'lockin2024';
+// Get password from environment variable
+// Note: Vite requires VITE_ prefix for client-side env vars
+const PASSWORD = import.meta.env.VITE_BOARD_PASSWORD || import.meta.env.BOARD_PASSWORD || '';
 
 // Helper function to calculate 2-week sprint dates
 const getSprintDates = (startDate?: number) => {
@@ -239,11 +241,75 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
     // Find active sprint
     const activeSprint = sprints.find(s => s.isActive)?.id || sprints[0]?.id || null;
 
+    // Load boards
+    const { data: boardsData, error: boardsError } = await supabase
+      .from('boards')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (boardsError) {
+      console.error('Error loading boards:', boardsError);
+    }
+
+    // Load board notes
+    const { data: boardNotesData, error: boardNotesError } = await supabase
+      .from('board_notes')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (boardNotesError) {
+      console.error('Error loading board notes:', boardNotesError);
+    }
+
+    // Load announcements
+    const { data: announcementsData, error: announcementsError } = await supabase
+      .from('announcements')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (announcementsError) {
+      console.error('Error loading announcements:', announcementsError);
+    }
+
+    // Convert boards data
+    const boards = (boardsData || []).map(b => ({
+      id: b.id,
+      name: b.name,
+      createdAt: typeof b.created_at === 'number' ? b.created_at : new Date(b.created_at).getTime(),
+    }));
+
+    // Convert board notes data
+    const boardNotes = (boardNotesData || []).map(n => ({
+      id: n.id,
+      boardId: n.board_id,
+      title: n.title,
+      content: n.content || undefined,
+      x: n.x,
+      y: n.y,
+      color: n.color || undefined,
+      createdAt: typeof n.created_at === 'number' ? n.created_at : new Date(n.created_at).getTime(),
+    }));
+
+    // Convert announcements data
+    const announcements = (announcementsData || []).map(a => ({
+      id: a.id,
+      title: a.title,
+      description: a.description || undefined,
+      createdAt: typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime(),
+    }));
+
+    // Find active board
+    const activeBoard = boards.length > 0 ? boards[0].id : null;
+
     return {
       workItems: workItemsWithComments,
       people: people.length > 0 ? people : defaultPeople,
       sprints: sprints.length > 0 ? sprints : defaultSprints,
       activeSprint: activeSprint || 'sprint-1',
+      boards,
+      boardNotes,
+      activeBoard,
+      announcements,
     };
   } catch (error) {
     console.error('Error loading data from Supabase:', error);
@@ -318,7 +384,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     boardNotes: [],
     activeBoard: null,
     announcements: [],
-    isAuthenticated: false,
+      isAuthenticated: false,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -334,6 +400,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         people: data.people || defaultPeople,
         sprints: data.sprints || defaultSprints,
         activeSprint: data.activeSprint || 'sprint-1',
+        boards: data.boards || [],
+        boardNotes: data.boardNotes || [],
+        activeBoard: data.activeBoard || null,
+        announcements: data.announcements || [],
       }));
       setIsLoading(false);
     };
@@ -696,8 +766,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return state.people.find(p => p.id === id);
   };
 
+  // Save board to Supabase
+  const saveBoardToSupabase = async (board: Board) => {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
+    try {
+      const { error } = await supabase
+        .from('boards')
+        .upsert({
+          id: board.id,
+          name: board.name,
+          created_at: board.createdAt,
+        });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving board:', error);
+    }
+  };
+
+  // Save board note to Supabase
+  const saveBoardNoteToSupabase = async (note: BoardNote) => {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
+    try {
+      const { error } = await supabase
+        .from('board_notes')
+        .upsert({
+          id: note.id,
+          board_id: note.boardId,
+          title: note.title,
+          content: note.content || null,
+          x: note.x,
+          y: note.y,
+          color: note.color || null,
+          created_at: note.createdAt,
+        });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving board note:', error);
+    }
+  };
+
+  // Save announcement to Supabase
+  const saveAnnouncementToSupabase = async (announcement: Announcement) => {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
+    try {
+      const { error } = await supabase
+        .from('announcements')
+        .upsert({
+          id: announcement.id,
+          title: announcement.title,
+          description: announcement.description || null,
+          created_at: announcement.createdAt,
+        });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving announcement:', error);
+    }
+  };
+
   // Board management functions
-  const addBoard = (name: string) => {
+  const addBoard = async (name: string) => {
     const newBoard: Board = {
       id: `board-${Date.now()}`,
       name,
@@ -713,9 +840,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activeBoard: newActiveBoard,
       };
     });
+    await saveBoardToSupabase(newBoard);
   };
 
-  const deleteBoard = (id: string) => {
+  const deleteBoard = async (id: string) => {
     setState(prev => {
       const newBoards = prev.boards.filter(b => b.id !== id);
       const newNotes = prev.boardNotes.filter(n => n.boardId !== id);
@@ -731,13 +859,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activeBoard: newActiveBoard,
       };
     });
+
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      try {
+        // Delete board notes first (cascade should handle this, but being explicit)
+        await supabase.from('board_notes').delete().eq('board_id', id);
+        // Delete board
+        await supabase.from('boards').delete().eq('id', id);
+      } catch (error) {
+        console.error('Error deleting board:', error);
+      }
+    }
   };
 
   const setActiveBoard = (id: string | null) => {
     setState(prev => ({ ...prev, activeBoard: id }));
   };
 
-  const addBoardNote = (boardId: string, title: string, content?: string, color?: string) => {
+  const addBoardNote = async (boardId: string, title: string, content?: string, color?: string) => {
     const newNote: BoardNote = {
       id: `note-${Date.now()}`,
       boardId,
@@ -752,26 +891,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ...prev,
       boardNotes: [...prev.boardNotes, newNote],
     }));
+    await saveBoardNoteToSupabase(newNote);
   };
 
-  const updateBoardNote = (id: string, updates: Partial<BoardNote>) => {
-    setState(prev => ({
-      ...prev,
-      boardNotes: prev.boardNotes.map(note =>
+  const updateBoardNote = async (id: string, updates: Partial<BoardNote>) => {
+    setState(prev => {
+      const updatedNotes = prev.boardNotes.map(note =>
         note.id === id ? { ...note, ...updates } : note
-      ),
-    }));
+      );
+      const updatedNote = updatedNotes.find(n => n.id === id);
+      if (updatedNote) {
+        saveBoardNoteToSupabase(updatedNote);
+      }
+      return {
+        ...prev,
+        boardNotes: updatedNotes,
+      };
+    });
   };
 
-  const deleteBoardNote = (id: string) => {
+  const deleteBoardNote = async (id: string) => {
     setState(prev => ({
       ...prev,
       boardNotes: prev.boardNotes.filter(note => note.id !== id),
     }));
+
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      try {
+        await supabase.from('board_notes').delete().eq('id', id);
+      } catch (error) {
+        console.error('Error deleting board note:', error);
+      }
+    }
   };
 
   // Announcement management functions
-  const addAnnouncement = (title: string, description: string) => {
+  const addAnnouncement = async (title: string, description: string) => {
     const newAnnouncement: Announcement = {
       id: `announcement-${Date.now()}`,
       title,
@@ -782,22 +937,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ...prev,
       announcements: [...prev.announcements, newAnnouncement],
     }));
+    await saveAnnouncementToSupabase(newAnnouncement);
   };
 
-  const updateAnnouncement = (id: string, updates: Partial<Announcement>) => {
-    setState(prev => ({
-      ...prev,
-      announcements: prev.announcements.map(announcement =>
+  const updateAnnouncement = async (id: string, updates: Partial<Announcement>) => {
+    setState(prev => {
+      const updatedAnnouncements = prev.announcements.map(announcement =>
         announcement.id === id ? { ...announcement, ...updates } : announcement
-      ),
-    }));
+      );
+      const updatedAnnouncement = updatedAnnouncements.find(a => a.id === id);
+      if (updatedAnnouncement) {
+        saveAnnouncementToSupabase(updatedAnnouncement);
+      }
+      return {
+        ...prev,
+        announcements: updatedAnnouncements,
+      };
+    });
   };
 
-  const deleteAnnouncement = (id: string) => {
+  const deleteAnnouncement = async (id: string) => {
     setState(prev => ({
       ...prev,
       announcements: prev.announcements.filter(announcement => announcement.id !== id),
     }));
+
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      try {
+        await supabase.from('announcements').delete().eq('id', id);
+      } catch (error) {
+        console.error('Error deleting announcement:', error);
+      }
+    }
   };
 
   return (

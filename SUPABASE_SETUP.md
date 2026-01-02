@@ -83,5 +83,5 @@ The `anon` key is safe to use in the frontend. Supabase Row Level Security (RLS)
 
 ## Password
 
-The password is still `lockin2024` (hardcoded, no Supabase auth needed).
+Password is configured via `VITE_BOARD_PASSWORD` environment variable.
 

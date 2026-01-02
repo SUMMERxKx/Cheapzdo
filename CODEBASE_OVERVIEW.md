@@ -49,7 +49,7 @@ src/
 - **Single Source of Truth**: `AppContext.tsx` manages all application state
 - **Persistence**: Data saved to `localStorage` automatically on state changes
 - **Storage Key**: `'topi-gang-task-board'`
-- **Password**: `'lockin2024'` (hardcoded for now)
+- **Password**: Configured via `VITE_BOARD_PASSWORD` environment variable
 
 ### 2. **Data Models**
 
@@ -257,7 +257,7 @@ npm run lint
 
 ## 🔐 Security Notes
 
-- Password is hardcoded: `'lockin2024'`
+- Password is configured via `VITE_BOARD_PASSWORD` environment variable
 - All data stored in localStorage (client-side only)
 - No backend/server required
 - No API calls

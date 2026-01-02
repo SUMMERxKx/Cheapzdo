@@ -50,7 +50,7 @@ That's it! The app will automatically:
 
 ## Password
 
-Still the same: `lockin2024`
+Password is configured via `VITE_BOARD_PASSWORD` environment variable.
 
 ## Fallback Mode
 

@@ -1,73 +1,83 @@
-# Welcome to your Lovable project
+# Cheapzdo Task Board
 
-## Project info
+A personal task management board for friends - built with React, TypeScript, and Supabase.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Quick Start
 
-## How can I edit this code?
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-There are several ways of editing your application.
+### 2. Set Up Supabase
+1. Create account at [supabase.com](https://supabase.com)
+2. Create a new project
+3. Go to SQL Editor and run `supabase-schema.sql`
+4. Get your credentials from Settings → API
 
-**Use Lovable**
+### 3. Configure Environment
+Create a `.env` file in the project root:
+```
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_BOARD_PASSWORD=your_password
+```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 4. Run Development Server
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### 5. Build for Production
+```bash
+npm run build
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Password
+Password is configured via `VITE_BOARD_PASSWORD` environment variable.
 
-**Use GitHub Codespaces**
+## Features
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Dashboard: Overview with graphs and statistics
+- Sprint Board: Manage tasks with sprints
+- Announcements: Post and manage announcements
+- Task Types: Study, Gym, Sports, Running, Entertainment, Other
+- People Management: Add and remove team members
+- Sprint Management: Create, edit, and delete sprints
+- Task Management: Full CRUD with descriptions and comments
 
-## What technologies are used for this project?
+## Database Schema
 
-This project is built with:
+The app uses Supabase (PostgreSQL) with the following tables:
+- `people` - Team members
+- `sprints` - Sprint definitions
+- `work_items` - Tasks and items
+- `comments` - Comments on work items
+- `boards` - Bulletin boards (for future use)
+- `board_notes` - Notes on boards (for future use)
+- `announcements` - Announcements
 
-- Vite
+## Deployment
+
+See `DEPLOYMENT.md` for detailed deployment instructions.
+
+### Quick Deploy to Vercel
+1. Push code to GitHub
+2. Import project in Vercel
+3. Add environment variables
+4. Deploy
+
+## Tech Stack
+
+- React 18
 - TypeScript
-- React
-- shadcn-ui
+- Vite
 - Tailwind CSS
+- shadcn/ui
+- Supabase
+- date-fns
+- recharts
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Private project
