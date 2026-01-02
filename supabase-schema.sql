@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS work_items (
   sprint_id TEXT REFERENCES sprints(id) ON DELETE SET NULL,
   description TEXT,
   created_at BIGINT NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  "order" INTEGER
 );
 
 -- Add the new type constraint

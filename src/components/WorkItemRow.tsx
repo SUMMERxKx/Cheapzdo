@@ -23,6 +23,13 @@ interface WorkItemRowProps {
   depth?: number;
   onRowClick: (item: WorkItem) => void;
   hideSprintColumn?: boolean;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  onDragStart?: (e: React.DragEvent, itemId: string) => void;
+  onDragOver?: (e: React.DragEvent, itemId: string) => void;
+  onDragLeave?: () => void;
+  onDrop?: (e: React.DragEvent, itemId: string) => void;
+  onDragEnd?: () => void;
 }
 
 const typeIcons: Record<string, React.ElementType> = {
@@ -56,7 +63,19 @@ const priorityColors: Record<Priority, string> = {
   'Low': 'text-muted-foreground',
 };
 
-export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = false }: WorkItemRowProps) {
+export function WorkItemRow({ 
+  item, 
+  depth = 0, 
+  onRowClick, 
+  hideSprintColumn = false,
+  isDragging = false,
+  isDragOver = false,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
+}: WorkItemRowProps) {
   const { deleteWorkItem, copyWorkItem, getChildItems, getPersonById, sprints, updateWorkItem } = useApp();
   const [expanded, setExpanded] = useState(true);
   const [isAddChildOpen, setIsAddChildOpen] = useState(false);
@@ -102,14 +121,43 @@ export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = fa
     updateWorkItem(item.id, { sprintId: sprintId || undefined });
   };
 
+  // Only make top-level items draggable (no parent)
+  const isDraggable = !item.parentId && depth === 0 && !!onDragStart;
+
+  const handleDragStart = (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (onDragStart) {
+      onDragStart(e, item.id);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (onDragOver) {
+      onDragOver(e, item.id);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (onDrop) {
+      onDrop(e, item.id);
+    }
+  };
+
   return (
     <>
       <tr 
         className={cn(
           'border-b border-border hover:bg-secondary/30 transition-colors cursor-pointer',
-          isBlocker && 'bg-destructive/5 hover:bg-destructive/10'
+          isBlocker && 'bg-destructive/5 hover:bg-destructive/10',
+          isDragging && 'opacity-50',
+          isDragOver && 'bg-primary/20 border-t-2 border-t-primary'
         )}
         onClick={handleRowClick}
+        draggable={isDraggable}
+        onDragStart={isDraggable ? handleDragStart : undefined}
+        onDragOver={isDraggable ? handleDragOver : undefined}
+        onDragLeave={isDraggable ? onDragLeave : undefined}
+        onDrop={isDraggable ? handleDrop : undefined}
+        onDragEnd={isDraggable ? onDragEnd : undefined}
       >
         {/* Plus button and expand arrow */}
         <td className="py-2 px-3 w-20">
@@ -266,6 +314,8 @@ export function WorkItemRow({ item, depth = 0, onRowClick, hideSprintColumn = fa
           depth={depth + 1} 
           onRowClick={onRowClick}
           hideSprintColumn={hideSprintColumn}
+          isDragging={false}
+          isDragOver={false}
         />
       ))}
 

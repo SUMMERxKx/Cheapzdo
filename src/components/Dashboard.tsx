@@ -136,49 +136,71 @@ export function Dashboard() {
         {/* State Distribution Pie Chart */}
         <Card className="p-4 bg-card border-border">
           <h3 className="text-sm font-bold mb-4 text-muted-foreground">STATE DISTRIBUTION</h3>
-          <ResponsiveContainer width="100%" height={150}>
-            <PieChart>
-              <Pie
-                data={stateDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={60}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {stateDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="relative">
+            <ResponsiveContainer width="100%" height={150}>
+              <PieChart>
+                <Pie
+                  data={stateDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={60}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {stateDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute bottom-0 right-0 space-y-1">
+              {stateDistribution.map((entry, index) => (
+                <div key={index} className="flex items-center gap-2 text-xs">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: entry.color }}></div>
+                  <span style={{ color: entry.color }}>
+                    {entry.name}: {entry.value > 0 ? ((entry.value / workItems.length) * 100).toFixed(0) : 0}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </Card>
 
         {/* Priority Distribution Pie Chart */}
         <Card className="p-4 bg-card border-border">
           <h3 className="text-sm font-bold mb-4 text-muted-foreground">PRIORITY DISTRIBUTION</h3>
-          <ResponsiveContainer width="100%" height={150}>
-            <PieChart>
-              <Pie
-                data={priorityDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={60}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {priorityDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="relative">
+            <ResponsiveContainer width="100%" height={150}>
+              <PieChart>
+                <Pie
+                  data={priorityDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={60}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {priorityDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute bottom-0 right-0 space-y-1">
+              {priorityDistribution.map((entry, index) => (
+                <div key={index} className="flex items-center gap-2 text-xs">
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: entry.color }}></div>
+                  <span style={{ color: entry.color }}>
+                    {entry.name}: {entry.value > 0 ? ((entry.value / workItems.length) * 100).toFixed(0) : 0}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </Card>
 
         {/* Active by Assignee Bar Chart */}
