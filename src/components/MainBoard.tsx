@@ -14,8 +14,10 @@ export function MainBoard() {
   const { workItems, activeSprint } = useApp();
   const [activeTab, setActiveTab] = useState<TabValue>('dashboard');
 
-  // Show all tasks in Sprint Board (todo board)
-  const allTasks = workItems;
+  // Filter tasks to only show items for the active sprint
+  const sprintTasks = activeSprint 
+    ? workItems.filter(item => item.sprintId === activeSprint)
+    : [];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -44,7 +46,7 @@ export function MainBoard() {
             >
               <Zap className="w-4 h-4" />
               Sprint Board
-              <span className="ml-1 text-xs text-muted-foreground">({allTasks.filter(i => !i.parentId).length})</span>
+              <span className="ml-1 text-xs text-muted-foreground">({sprintTasks.filter(i => !i.parentId).length})</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -61,7 +63,7 @@ export function MainBoard() {
           <SprintNavigation />
           <div className="flex-1 overflow-hidden">
             <WorkItemList 
-              items={allTasks} 
+              items={sprintTasks} 
               title="SPRINT BOARD" 
               defaultSprintId={activeSprint || undefined}
               hideSprintColumn={true}

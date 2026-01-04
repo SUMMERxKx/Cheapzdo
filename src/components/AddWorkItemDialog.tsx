@@ -36,26 +36,26 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: Add
     setIsSubmitting(true);
     try {
       await addWorkItem({
-        title: title.trim(),
-        type,
-        state: 'New',
-        priority,
-        assigneeId: assigneeId || undefined,
-        sprintId: sprintId || undefined,
-        parentId,
-        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-      });
+      title: title.trim(),
+      type,
+      state: 'New',
+      priority,
+      assigneeId: assigneeId || undefined,
+      sprintId: sprintId || undefined,
+      parentId,
+      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+    });
 
       toast.success('Task added successfully');
       
       // Reset form
-      setTitle('');
-      setTags('');
+    setTitle('');
+    setTags('');
       setAssigneeId('');
       setSprintId(defaultSprintId || '');
       setType(parentId ? 'Other' : 'Other');
       setPriority('Medium');
-      setOpen(false);
+    setOpen(false);
     } catch (error) {
       console.error('Error adding work item:', error);
       toast.error('Failed to add task. Check console for details.');
@@ -167,8 +167,8 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: Add
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="No Sprint" />
-                </SelectTrigger>
-                <SelectContent>
+                  </SelectTrigger>
+                  <SelectContent>
                   <SelectItem value="__none__">No Sprint</SelectItem>
                     {sprints.map(s => (
                       <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>

@@ -77,14 +77,15 @@ export function WorkItemRow({
   onDragEnd,
 }: WorkItemRowProps) {
   const { deleteWorkItem, copyWorkItem, getChildItems, getPersonById, sprints, updateWorkItem } = useApp();
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [isAddChildOpen, setIsAddChildOpen] = useState(false);
   const [isAddBlockerOpen, setIsAddBlockerOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const children = getChildItems(item.id);
   const hasChildren = children.length > 0;
-  const canHaveChildren = item.type === 'Study' || item.type === 'Sports' || item.type === 'Entertainment';
+  // All task types can have children, but only main tasks (not children) can have children
+  const canHaveChildren = !item.parentId;
   const isBlocker = item.tags.includes('Blocker');
   const Icon = typeIcons[item.type] || Circle;
   const assignee = item.assigneeId ? getPersonById(item.assigneeId) : null;
@@ -191,7 +192,7 @@ export function WorkItemRow({
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            {hasChildren || canHaveChildren ? (
+            {hasChildren ? (
               <Button
                 variant="ghost"
                 size="sm"
