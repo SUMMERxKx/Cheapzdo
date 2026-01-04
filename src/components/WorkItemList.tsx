@@ -165,19 +165,10 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
 
   return (
     <div className="flex flex-col h-full">
-      {!hideSprintColumn && (
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-bold tracking-wide">{title}</h2>
-          <AddWorkItemDialog defaultSprintId={defaultSprintId} />
-        </div>
-      )}
-
-      {hideSprintColumn && (
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-bold tracking-wide">{title}</h2>
-          <AddWorkItemDialog defaultSprintId={defaultSprintId} />
-        </div>
-      )}
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <h2 className="text-lg font-bold tracking-wide">{title}</h2>
+        <AddWorkItemDialog defaultSprintId={defaultSprintId} />
+      </div>
 
       <WorkItemFilters filters={filters} onFiltersChange={setFilters} />
 

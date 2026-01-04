@@ -265,7 +265,7 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
 
     if (boardNotesError) {
       console.error('Error loading board notes:', boardNotesError);
-    }
+  }
 
     // Load announcements
     const { data: announcementsData, error: announcementsError } = await supabase
@@ -644,11 +644,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const newSprint: Sprint = {
       id: `sprint-${Date.now()}`,
       name,
-      isActive: false,
+      isActive: true,
       startDate: sprintStartDate,
       endDate,
     };
-    setState(prev => ({ ...prev, sprints: [...prev.sprints, newSprint] }));
+    setState(prev => {
+      // Deactivate all other sprints
+      const updatedSprints = prev.sprints.map(s => ({ ...s, isActive: false }));
+      // Save all sprints to update is_active flags
+      updatedSprints.forEach(sprint => saveSprintToSupabase(sprint));
+      return {
+        ...prev,
+        sprints: [...updatedSprints, newSprint],
+        activeSprint: newSprint.id,
+      };
+    });
     await saveSprintToSupabase(newSprint);
   };
 
