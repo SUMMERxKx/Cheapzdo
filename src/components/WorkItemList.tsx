@@ -150,7 +150,6 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
     newOrder.splice(draggedIndex, 1);
     newOrder.splice(targetIndex, 0, draggedItemId);
 
-    // Update order in context
     reorderWorkItems(newOrder);
     setDraggedItemId(null);
   };

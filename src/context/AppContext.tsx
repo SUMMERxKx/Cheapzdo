@@ -38,11 +38,8 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Get password from environment variable
-// Note: Vite requires VITE_ prefix for client-side env vars
 const PASSWORD = import.meta.env.VITE_BOARD_PASSWORD || import.meta.env.BOARD_PASSWORD || '';
 
-// Helper function to calculate 2-week sprint dates
 const getSprintDates = (startDate?: number) => {
   const start = startDate || Date.now();
   const end = start + (14 * 24 * 60 * 60 * 1000); // 14 days in milliseconds

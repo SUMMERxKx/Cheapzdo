@@ -14,7 +14,6 @@ export function MainBoard() {
   const { workItems, activeSprint } = useApp();
   const [activeTab, setActiveTab] = useState<TabValue>('dashboard');
 
-  // Filter tasks to only show items for the active sprint
   const sprintTasks = activeSprint 
     ? workItems.filter(item => item.sprintId === activeSprint)
     : [];
