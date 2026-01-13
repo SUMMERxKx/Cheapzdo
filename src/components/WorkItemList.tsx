@@ -175,7 +175,7 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
         <table className="w-full">
           <thead className="sticky top-0 bg-card border-b border-border z-10">
             <tr className="text-left text-xs text-muted-foreground">
-              <th className="py-2 px-3 w-20"></th>
+              <th className="py-2 px-3 w-20">#</th>
               <th className="py-2 px-3">Title</th>
               <th className="py-2 px-3 w-28">Type</th>
               <th className="py-2 px-3 w-36">Assigned</th>
@@ -186,10 +186,11 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
             </tr>
           </thead>
           <tbody>
-            {filteredItems.map(item => (
+            {filteredItems.map((item, index) => (
               <WorkItemRow 
                 key={item.id} 
-                item={item} 
+                item={item}
+                index={index + 1}
                 onRowClick={handleRowClick}
                 hideSprintColumn={hideSprintColumn}
                 isDragging={draggedItemId === item.id}
