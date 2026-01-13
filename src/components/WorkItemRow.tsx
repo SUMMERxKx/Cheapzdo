@@ -21,6 +21,7 @@ import { ConfirmDialog } from './ConfirmDialog';
 interface WorkItemRowProps {
   item: WorkItem;
   depth?: number;
+  index?: number;
   onRowClick: (item: WorkItem) => void;
   hideSprintColumn?: boolean;
   isDragging?: boolean;
@@ -65,7 +66,8 @@ const priorityColors: Record<Priority, string> = {
 
 export function WorkItemRow({ 
   item, 
-  depth = 0, 
+  depth = 0,
+  index,
   onRowClick, 
   hideSprintColumn = false,
   isDragging = false,
@@ -160,9 +162,12 @@ export function WorkItemRow({
         onDrop={isDraggable ? handleDrop : undefined}
         onDragEnd={isDraggable ? onDragEnd : undefined}
       >
-        {/* Plus button and expand arrow */}
+        {/* Number, plus button and expand arrow */}
         <td className="py-2 px-3 w-20">
           <div className="flex items-center gap-1">
+            {index !== undefined && (
+              <span className="text-xs text-muted-foreground w-6 text-right">{index}</span>
+            )}
             {canHaveChildren && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -312,7 +317,7 @@ export function WorkItemRow({
         <WorkItemRow 
           key={child.id} 
           item={child} 
-          depth={depth + 1} 
+          depth={depth + 1}
           onRowClick={onRowClick}
           hideSprintColumn={hideSprintColumn}
           isDragging={false}
