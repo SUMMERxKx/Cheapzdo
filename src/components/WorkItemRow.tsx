@@ -13,7 +13,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronRight, ChevronDown, MoreVertical, Plus, AlertTriangle, BookOpen, Dumbbell, Gamepad2, Footprints, Film, Circle, Copy, Trash2, ArrowRight } from 'lucide-react';
+import { ChevronRight, ChevronDown, MoreVertical, Plus, AlertTriangle, BookOpen, Dumbbell, Gamepad2, Footprints, Film, Sparkles, Copy, Trash2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddChildItemDialog } from './AddChildItemDialog';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -39,7 +39,7 @@ const typeIcons: Record<string, React.ElementType> = {
   'Sports': Gamepad2,
   'Running': Footprints,
   'Entertainment': Film,
-  'Other': Circle,
+  'Other': Sparkles,
 };
 
 const typeColors: Record<string, string> = {
@@ -48,7 +48,7 @@ const typeColors: Record<string, string> = {
   'Sports': 'text-green-500',
   'Running': 'text-orange-500',
   'Entertainment': 'text-pink-500',
-  'Other': 'text-gray-500',
+  'Other': 'text-yellow-500',
 };
 
 const stateColors: Record<WorkItemState, string> = {
@@ -89,7 +89,7 @@ export function WorkItemRow({
   // All task types can have children, but only main tasks (not children) can have children
   const canHaveChildren = !item.parentId;
   const isBlocker = item.tags.includes('Blocker');
-  const Icon = typeIcons[item.type] || Circle;
+  const Icon = typeIcons[item.type] || Sparkles;
   const assignee = item.assigneeId ? getPersonById(item.assigneeId) : null;
 
   const handleRowClick = (e: React.MouseEvent) => {
