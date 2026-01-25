@@ -7,7 +7,6 @@ import { Header } from './Header';
 import { SprintNavigation } from './SprintNavigation';
 import { Announcements } from './Announcements';
 import { LayoutDashboard, Zap, Megaphone, Calendar } from 'lucide-react';
-import { Daily } from './Daily';
 
 type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily';
 
@@ -18,6 +17,9 @@ export function MainBoard() {
   const sprintTasks = activeSprint 
     ? workItems.filter(item => item.sprintId === activeSprint)
     : [];
+  
+  // Daily tasks are separate - only show tasks without sprintId
+  const dailyTasks = workItems.filter(item => !item.sprintId);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -78,8 +80,17 @@ export function MainBoard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="daily" className="flex-1 m-0 flex flex-col overflow-hidden">
-          <Daily />
+        <TabsContent value="daily" className="flex-1 m-0 flex flex-col">
+          <SprintNavigation />
+          <div className="flex-1 overflow-hidden">
+            <WorkItemList 
+              items={dailyTasks} 
+              title="DAILY" 
+              hideSprintColumn={true}
+              hideSprintInDialog={true}
+              hideStatePriorityTags={true}
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
