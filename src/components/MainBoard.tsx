@@ -6,9 +6,10 @@ import { Dashboard } from './Dashboard';
 import { Header } from './Header';
 import { SprintNavigation } from './SprintNavigation';
 import { Announcements } from './Announcements';
-import { LayoutDashboard, Zap, Megaphone } from 'lucide-react';
+import { LayoutDashboard, Zap, Megaphone, Calendar } from 'lucide-react';
+import { Daily } from './Daily';
 
-type TabValue = 'dashboard' | 'sprint' | 'announcements';
+type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily';
 
 export function MainBoard() {
   const { workItems, activeSprint } = useApp();
@@ -47,6 +48,13 @@ export function MainBoard() {
               Sprint Board
               <span className="ml-1 text-xs text-muted-foreground">({sprintTasks.filter(i => !i.parentId).length})</span>
             </TabsTrigger>
+            <TabsTrigger
+              value="daily"
+              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
+            >
+              <Calendar className="w-4 h-4" />
+              Daily
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -68,6 +76,10 @@ export function MainBoard() {
               hideSprintColumn={true}
             />
           </div>
+        </TabsContent>
+
+        <TabsContent value="daily" className="flex-1 m-0 overflow-hidden">
+          <Daily />
         </TabsContent>
       </Tabs>
     </div>
