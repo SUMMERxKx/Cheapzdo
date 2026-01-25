@@ -78,7 +78,7 @@ export function MainBoard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="daily" className="flex-1 m-0 overflow-hidden">
+        <TabsContent value="daily" className="flex-1 m-0 flex flex-col overflow-hidden">
           <Daily />
         </TabsContent>
       </Tabs>
