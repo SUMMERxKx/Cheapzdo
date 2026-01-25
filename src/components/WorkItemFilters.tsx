@@ -17,9 +17,23 @@ interface FiltersState {
 interface WorkItemFiltersProps {
   filters: FiltersState;
   onFiltersChange: (filters: FiltersState) => void;
-  hideStatePriorityTags?: boolean;
+  hideStatePriorityTags?: boolean; // Hide State, Priority, and Blocker filters (used for Daily board)
 }
 
+/**
+ * WorkItemFilters Component
+ * 
+ * Provides filtering controls for work items:
+ * - Search: Text search in task titles
+ * - Type: Filter by task type (Study, Gym, Sports, etc.)
+ * - State: Filter by state (New, Active, Done) - hidden on Daily board
+ * - Assignee: Filter by assigned person or unassigned
+ * - Priority: Filter by priority level - hidden on Daily board
+ * - Blockers: Toggle to show only blocker tasks - hidden on Daily board
+ * 
+ * When hideStatePriorityTags=true, State, Priority, and Blocker filters are hidden
+ * to match the simplified Daily board view.
+ */
 export function WorkItemFilters({ filters, onFiltersChange, hideStatePriorityTags = false }: WorkItemFiltersProps) {
   const { people } = useApp();
 

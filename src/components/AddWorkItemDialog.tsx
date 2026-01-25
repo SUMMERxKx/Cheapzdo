@@ -13,10 +13,21 @@ interface AddWorkItemDialogProps {
   defaultSprintId?: string;
   parentId?: string;
   parentType?: WorkItemType;
-  hideSprint?: boolean;
+  hideSprint?: boolean; // Hide sprint selector in dialog
+  isDailyBoard?: boolean; // If true, automatically adds "Daily" tag and excludes sprintId
 }
 
-export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideSprint = false }: AddWorkItemDialogProps) {
+/**
+ * AddWorkItemDialog Component
+ * 
+ * Dialog for adding new work items/tasks.
+ * 
+ * Behavior:
+ * - When isDailyBoard=true: Automatically adds "Daily" tag and sets sprintId to undefined
+ * - When hideSprint=true: Hides the sprint selector field
+ * - When parentId is provided: Only allows "Other" type (for child tasks)
+ */
+export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideSprint = false, isDailyBoard = false }: AddWorkItemDialogProps) {
   const { addWorkItem, people, sprints } = useApp();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -36,16 +47,32 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
 
     setIsSubmitting(true);
     try {
+      // Parse tags from comma-separated string
+      const taskTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+      
+      // Daily board tasks: automatically add "Daily" tag to ensure separation from Sprint tasks
+      if (isDailyBoard && !taskTags.includes('Daily')) {
+        taskTags.push('Daily');
+      }
+      
+      // Determine sprintId:
+      // - Daily board: always undefined (no sprint assignment)
+      // - hideSprint: undefined (sprint selector hidden)
+      // - Otherwise: use selected sprintId or defaultSprintId
+      const finalSprintId = isDailyBoard 
+        ? undefined 
+        : (hideSprint ? undefined : (sprintId || undefined));
+      
       await addWorkItem({
-      title: title.trim(),
-      type,
-      state: 'New',
-      priority,
-      assigneeId: assigneeId || undefined,
-      sprintId: hideSprint ? undefined : (sprintId || undefined),
-      parentId,
-      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-    });
+        title: title.trim(),
+        type,
+        state: 'New',
+        priority,
+        assigneeId: assigneeId || undefined,
+        sprintId: finalSprintId,
+        parentId,
+        tags: taskTags,
+      });
 
       toast.success('Task added successfully');
       
@@ -159,7 +186,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
               </Select>
             </div>
 
-            {!parentId && !hideSprint && (
+            {!parentId && !hideSprint && !isDailyBoard && (
               <div className="space-y-2">
                 <Label>Sprint</Label>
                 <Select 
