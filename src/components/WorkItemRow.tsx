@@ -24,6 +24,7 @@ interface WorkItemRowProps {
   index?: number;
   onRowClick: (item: WorkItem) => void;
   hideSprintColumn?: boolean;
+  hideStatePriorityTags?: boolean;
   isDragging?: boolean;
   isDragOver?: boolean;
   onDragStart?: (e: React.DragEvent, itemId: string) => void;
@@ -70,6 +71,7 @@ export function WorkItemRow({
   index,
   onRowClick, 
   hideSprintColumn = false,
+  hideStatePriorityTags = false,
   isDragging = false,
   isDragOver = false,
   onDragStart,
@@ -239,34 +241,38 @@ export function WorkItemRow({
           </span>
         </td>
 
-        {/* State */}
-        <td className="py-2 px-3 w-24">
-          <Badge className={cn('text-xs', stateColors[item.state])}>
-            {item.state}
-          </Badge>
-        </td>
-
-        {/* Priority */}
-        <td className="py-2 px-3 w-24">
-          <span className={cn('text-xs font-medium', priorityColors[item.priority])}>
-            {item.priority}
-          </span>
-        </td>
-
-        {/* Tags */}
-        <td className="py-2 px-3">
-          <div className="flex flex-wrap gap-1 justify-end">
-            {item.tags.map(tag => (
-              <Badge
-                key={tag}
-                variant={tag === 'Blocker' ? 'destructive' : 'secondary'}
-                className="text-xs"
-              >
-                {tag}
+        {!hideStatePriorityTags && (
+          <>
+            {/* State */}
+            <td className="py-2 px-3 w-24">
+              <Badge className={cn('text-xs', stateColors[item.state])}>
+                {item.state}
               </Badge>
-            ))}
-          </div>
-        </td>
+            </td>
+
+            {/* Priority */}
+            <td className="py-2 px-3 w-24">
+              <span className={cn('text-xs font-medium', priorityColors[item.priority])}>
+                {item.priority}
+              </span>
+            </td>
+
+            {/* Tags */}
+            <td className="py-2 px-3">
+              <div className="flex flex-wrap gap-1 justify-end">
+                {item.tags.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant={tag === 'Blocker' ? 'destructive' : 'secondary'}
+                    className="text-xs"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </td>
+          </>
+        )}
 
         {/* Three dots menu */}
         <td className="py-2 px-3 w-10">

@@ -17,9 +17,10 @@ interface FiltersState {
 interface WorkItemFiltersProps {
   filters: FiltersState;
   onFiltersChange: (filters: FiltersState) => void;
+  hideStatePriorityTags?: boolean;
 }
 
-export function WorkItemFilters({ filters, onFiltersChange }: WorkItemFiltersProps) {
+export function WorkItemFilters({ filters, onFiltersChange, hideStatePriorityTags = false }: WorkItemFiltersProps) {
   const { people } = useApp();
 
   const updateFilter = <K extends keyof FiltersState>(key: K, value: FiltersState[K]) => {
@@ -40,10 +41,10 @@ export function WorkItemFilters({ filters, onFiltersChange }: WorkItemFiltersPro
   const hasActiveFilters = 
     filters.search !== '' ||
     filters.type !== 'all' ||
-    filters.state !== 'all' ||
+    (!hideStatePriorityTags && filters.state !== 'all') ||
     filters.assignee !== 'all' ||
-    filters.priority !== 'all' ||
-    filters.blockerOnly;
+    (!hideStatePriorityTags && filters.priority !== 'all') ||
+    (!hideStatePriorityTags && filters.blockerOnly);
 
   return (
     <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border bg-card">
@@ -69,17 +70,19 @@ export function WorkItemFilters({ filters, onFiltersChange }: WorkItemFiltersPro
         </SelectContent>
       </Select>
 
-      <Select value={filters.state} onValueChange={(value) => updateFilter('state', value as WorkItemState | 'all')}>
-        <SelectTrigger className="w-28 h-8 text-sm">
-          <SelectValue placeholder="State" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All States</SelectItem>
-          <SelectItem value="New">New</SelectItem>
-          <SelectItem value="Active">Active</SelectItem>
-          <SelectItem value="Done">Done</SelectItem>
-        </SelectContent>
-      </Select>
+      {!hideStatePriorityTags && (
+        <Select value={filters.state} onValueChange={(value) => updateFilter('state', value as WorkItemState | 'all')}>
+          <SelectTrigger className="w-28 h-8 text-sm">
+            <SelectValue placeholder="State" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All States</SelectItem>
+            <SelectItem value="New">New</SelectItem>
+            <SelectItem value="Active">Active</SelectItem>
+            <SelectItem value="Done">Done</SelectItem>
+          </SelectContent>
+        </Select>
+      )}
 
       <Select value={filters.assignee} onValueChange={(value) => updateFilter('assignee', value)}>
         <SelectTrigger className="w-36 h-8 text-sm">
@@ -94,28 +97,32 @@ export function WorkItemFilters({ filters, onFiltersChange }: WorkItemFiltersPro
         </SelectContent>
       </Select>
 
-      <Select value={filters.priority} onValueChange={(value) => updateFilter('priority', value as Priority | 'all')}>
-        <SelectTrigger className="w-28 h-8 text-sm">
-          <SelectValue placeholder="Priority" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Priorities</SelectItem>
-          <SelectItem value="Critical">Critical</SelectItem>
-          <SelectItem value="High">High</SelectItem>
-          <SelectItem value="Medium">Medium</SelectItem>
-          <SelectItem value="Low">Low</SelectItem>
-        </SelectContent>
-      </Select>
+      {!hideStatePriorityTags && (
+        <>
+          <Select value={filters.priority} onValueChange={(value) => updateFilter('priority', value as Priority | 'all')}>
+            <SelectTrigger className="w-28 h-8 text-sm">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="Critical">Critical</SelectItem>
+              <SelectItem value="High">High</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Low">Low</SelectItem>
+            </SelectContent>
+          </Select>
 
-      <Button
-        variant={filters.blockerOnly ? 'destructive' : 'outline'}
-        size="sm"
-        className="h-8 gap-2"
-        onClick={() => updateFilter('blockerOnly', !filters.blockerOnly)}
-      >
-        <AlertTriangle className="w-4 h-4" />
-        Blockers
-      </Button>
+          <Button
+            variant={filters.blockerOnly ? 'destructive' : 'outline'}
+            size="sm"
+            className="h-8 gap-2"
+            onClick={() => updateFilter('blockerOnly', !filters.blockerOnly)}
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Blockers
+          </Button>
+        </>
+      )}
 
       {hasActiveFilters && (
         <Button variant="ghost" size="sm" className="h-8 gap-2" onClick={resetFilters}>

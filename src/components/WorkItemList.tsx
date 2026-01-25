@@ -20,9 +20,11 @@ interface WorkItemListProps {
   title: string;
   defaultSprintId?: string;
   hideSprintColumn?: boolean;
+  hideSprintInDialog?: boolean;
+  hideStatePriorityTags?: boolean;
 }
 
-export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false }: WorkItemListProps) {
+export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false, hideSprintInDialog = false, hideStatePriorityTags = false }: WorkItemListProps) {
   const { reorderWorkItems } = useApp();
   const [filters, setFilters] = useState<FiltersState>({
     search: '',
@@ -159,17 +161,17 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
     setDragOverItemId(null);
   };
 
-  // Calculate column count for empty state (Title, Type, Assigned, State, Priority, Tags, Actions)
-  const columnCount = 8;
+  // Calculate column count for empty state
+  const columnCount = hideStatePriorityTags ? 5 : 8; // #, Title, Type, Assigned, Actions (or + State, Priority, Tags)
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-lg font-bold tracking-wide">{title}</h2>
-        <AddWorkItemDialog defaultSprintId={defaultSprintId} />
+        <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} />
       </div>
 
-      <WorkItemFilters filters={filters} onFiltersChange={setFilters} />
+      <WorkItemFilters filters={filters} onFiltersChange={setFilters} hideStatePriorityTags={hideStatePriorityTags} />
 
       <div className="flex-1 overflow-auto">
         <table className="w-full">
@@ -179,9 +181,13 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
               <th className="py-2 px-3">Title</th>
               <th className="py-2 px-3 w-28">Type</th>
               <th className="py-2 px-3 w-36">Assigned</th>
-              <th className="py-2 px-3 w-24">State</th>
-              <th className="py-2 px-3 w-24">Priority</th>
-              <th className="py-2 px-3">Tags</th>
+              {!hideStatePriorityTags && (
+                <>
+                  <th className="py-2 px-3 w-24">State</th>
+                  <th className="py-2 px-3 w-24">Priority</th>
+                  <th className="py-2 px-3">Tags</th>
+                </>
+              )}
               <th className="py-2 px-3 w-10"></th>
             </tr>
           </thead>
@@ -193,6 +199,7 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
                 index={index + 1}
                 onRowClick={handleRowClick}
                 hideSprintColumn={hideSprintColumn}
+                hideStatePriorityTags={hideStatePriorityTags}
                 isDragging={draggedItemId === item.id}
                 isDragOver={dragOverItemId === item.id}
                 onDragStart={handleDragStart}

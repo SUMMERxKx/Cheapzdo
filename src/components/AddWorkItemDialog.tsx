@@ -13,9 +13,10 @@ interface AddWorkItemDialogProps {
   defaultSprintId?: string;
   parentId?: string;
   parentType?: WorkItemType;
+  hideSprint?: boolean;
 }
 
-export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: AddWorkItemDialogProps) {
+export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideSprint = false }: AddWorkItemDialogProps) {
   const { addWorkItem, people, sprints } = useApp();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -41,7 +42,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: Add
       state: 'New',
       priority,
       assigneeId: assigneeId || undefined,
-      sprintId: sprintId || undefined,
+      sprintId: hideSprint ? undefined : (sprintId || undefined),
       parentId,
       tags: tags.split(',').map(t => t.trim()).filter(Boolean),
     });
@@ -158,7 +159,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType }: Add
               </Select>
             </div>
 
-            {!parentId && (
+            {!parentId && !hideSprint && (
               <div className="space-y-2">
                 <Label>Sprint</Label>
                 <Select 
