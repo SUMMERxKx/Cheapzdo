@@ -1,19 +1,24 @@
 import { useState, useMemo } from 'react';
 import { WorkItem } from '@/types';
 import { useApp } from '@/context/AppContext';
-import { AddWorkItemDialog } from './AddWorkItemDialog';
+import { AddDailyTaskDialog } from './AddDailyTaskDialog';
 import { TaskCardModal } from './TaskCardModal';
+import { ConfirmDialog } from './ConfirmDialog';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 
 export function Daily() {
-  const { workItems, getPersonById } = useApp();
+  const { workItems, getPersonById, deleteWorkItem } = useApp();
   const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
-  // Get all top-level items (no parent), sorted by order or createdAt
+  // Get all top-level items (no parent) that don't have a sprintId (Daily tasks are separate from Sprint tasks)
   const allTasks = useMemo(() => {
     return workItems
-      .filter(item => !item.parentId)
+      .filter(item => !item.parentId && !item.sprintId) // Only tasks without sprintId
       .filter(item => {
         if (search && !item.title.toLowerCase().includes(search.toLowerCase())) {
           return false;
@@ -39,11 +44,24 @@ export function Daily() {
     }
   };
 
+  const handleDeleteClick = (e: React.MouseEvent, taskId: string) => {
+    e.stopPropagation();
+    setTaskToDelete(taskId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (taskToDelete) {
+      deleteWorkItem(taskToDelete);
+      setTaskToDelete(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-lg font-bold tracking-wide">DAILY</h2>
-        <AddWorkItemDialog />
+        <AddDailyTaskDialog />
       </div>
 
       {/* Simple search */}
@@ -64,6 +82,7 @@ export function Daily() {
               <th className="py-2 px-3 w-20">#</th>
               <th className="py-2 px-3">Task</th>
               <th className="py-2 px-3 w-36">Assigned</th>
+              <th className="py-2 px-3 w-10"></th>
             </tr>
           </thead>
           <tbody>
@@ -72,26 +91,42 @@ export function Daily() {
               return (
                 <tr
                   key={item.id}
-                  className="border-b border-border hover:bg-secondary/30 transition-colors cursor-pointer"
-                  onClick={() => handleRowClick(item)}
+                  className="border-b border-border hover:bg-secondary/30 transition-colors"
                 >
                   <td className="py-2 px-3 w-20">
                     <span className="text-xs text-muted-foreground">{index + 1}</span>
                   </td>
-                  <td className="py-2 px-3">
+                  <td 
+                    className="py-2 px-3 cursor-pointer"
+                    onClick={() => handleRowClick(item)}
+                  >
                     <span className="text-sm">{item.title}</span>
                   </td>
-                  <td className="py-2 px-3 w-36">
+                  <td 
+                    className="py-2 px-3 w-36 cursor-pointer"
+                    onClick={() => handleRowClick(item)}
+                  >
                     <span className="text-xs">
                       {assignee ? assignee.name : 'Unassigned'}
                     </span>
+                  </td>
+                  <td className="py-2 px-3 w-10">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-6 h-6 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => handleDeleteClick(e, item.id)}
+                      title="Delete task"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </td>
                 </tr>
               );
             })}
             {allTasks.length === 0 && (
               <tr>
-                <td colSpan={3} className="py-8 text-center text-muted-foreground">
+                <td colSpan={4} className="py-8 text-center text-muted-foreground">
                   {search ? 'No tasks found' : 'No tasks yet'}
                 </td>
               </tr>
@@ -104,6 +139,17 @@ export function Daily() {
         workItem={selectedWorkItem} 
         open={isModalOpen} 
         onOpenChange={handleModalClose} 
+      />
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Task"
+        description="Are you sure you want to delete this task? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={confirmDelete}
+        variant="destructive"
       />
     </div>
   );
