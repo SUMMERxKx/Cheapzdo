@@ -20,13 +20,13 @@ import { ConfirmDialog } from './ConfirmDialog';
 
 interface WorkItemRowProps {
   item: WorkItem;
-  depth?: number;
-  index?: number;
+  depth?: number; // Nesting depth for child items (for indentation)
+  index?: number; // Row number for display
   onRowClick: (item: WorkItem) => void;
-  hideSprintColumn?: boolean;
-  hideStatePriorityTags?: boolean;
-  isDragging?: boolean;
-  isDragOver?: boolean;
+  hideSprintColumn?: boolean; // Hide sprint column in table
+  hideStatePriorityTags?: boolean; // Hide State, Priority, and Tags columns (used for Daily board)
+  isDragging?: boolean; // Visual state during drag operation
+  isDragOver?: boolean; // Visual state when item is drag target
   onDragStart?: (e: React.DragEvent, itemId: string) => void;
   onDragOver?: (e: React.DragEvent, itemId: string) => void;
   onDragLeave?: () => void;
@@ -34,6 +34,9 @@ interface WorkItemRowProps {
   onDragEnd?: () => void;
 }
 
+/**
+ * Icon mappings for different work item types
+ */
 const typeIcons: Record<string, React.ElementType> = {
   'Study': BookOpen,
   'Gym': Dumbbell,
@@ -43,6 +46,9 @@ const typeIcons: Record<string, React.ElementType> = {
   'Other': Sparkles,
 };
 
+/**
+ * Color mappings for work item types
+ */
 const typeColors: Record<string, string> = {
   'Study': 'text-blue-500',
   'Gym': 'text-purple-500',
@@ -52,12 +58,18 @@ const typeColors: Record<string, string> = {
   'Other': 'text-yellow-500',
 };
 
+/**
+ * Color mappings for work item states
+ */
 const stateColors: Record<WorkItemState, string> = {
   'New': 'bg-secondary text-secondary-foreground',
   'Active': 'bg-warning text-warning-foreground',
   'Done': 'bg-success text-success-foreground',
 };
 
+/**
+ * Color mappings for priority levels
+ */
 const priorityColors: Record<Priority, string> = {
   'Critical': 'text-destructive',
   'High': 'text-warning',
@@ -65,6 +77,22 @@ const priorityColors: Record<Priority, string> = {
   'Low': 'text-muted-foreground',
 };
 
+/**
+ * WorkItemRow Component
+ * 
+ * Renders a single work item row in the task list table.
+ * 
+ * Features:
+ * - Displays task information (number, title, type, assignee, etc.)
+ * - Supports nested child items with indentation
+ * - Drag and drop reordering (top-level items only)
+ * - Expandable/collapsible child items
+ * - Actions menu (copy, move to sprint, delete)
+ * - Add child tasks or blockers
+ * 
+ * When hideStatePriorityTags=true, State, Priority, and Tags columns are hidden
+ * to match the simplified Daily board view.
+ */
 export function WorkItemRow({ 
   item, 
   depth = 0,

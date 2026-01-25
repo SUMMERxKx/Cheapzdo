@@ -398,30 +398,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       await initializeDatabase();
       const data = await loadDataFromSupabase();
-      
-      // Clean up: Delete all existing daily tasks (tasks without sprintId) from database
-      const dailyTaskIds = (data.workItems || defaultWorkItems)
-        .filter(item => !item.sprintId)
-        .map(item => item.id);
-      
-      if (dailyTaskIds.length > 0 && supabase && import.meta.env.VITE_SUPABASE_URL) {
-        try {
-          // Delete comments first
-          await supabase.from('comments').delete().in('work_item_id', dailyTaskIds);
-          // Delete work items
-          await supabase.from('work_items').delete().in('id', dailyTaskIds);
-        } catch (error) {
-          console.error('Error deleting daily tasks:', error);
-        }
-      }
-      
-      // Filter out daily tasks from initial state (they've been deleted)
-      const filteredWorkItems = (data.workItems || defaultWorkItems)
-        .filter(item => item.sprintId !== null && item.sprintId !== undefined);
-      
       setState(prev => ({
         ...prev,
-        workItems: filteredWorkItems,
+        workItems: data.workItems || defaultWorkItems,
         people: data.people || defaultPeople,
         sprints: data.sprints || defaultSprints,
         activeSprint: data.activeSprint || 'sprint-1',

@@ -151,3 +151,25 @@
     box-shadow: 0 0 20px hsl(var(--blocker) / 0.3);
   }
 }
+
+/**
+ * Fix gap issue in TabsContent for Sprint and Daily boards
+ * 
+ * Radix UI TabsContent has default margin-top that creates unwanted spacing.
+ * These rules force zero margin/padding for Sprint and Daily tab panels to ensure
+ * SprintNavigation appears directly below the tab navigation without gaps.
+ */
+[role="tabpanel"][id*="sprint"],
+[role="tabpanel"][id*="daily"] {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+[role="tabpanel"].flex-1.m-0 {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}

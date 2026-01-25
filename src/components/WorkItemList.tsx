@@ -19,12 +19,27 @@ interface WorkItemListProps {
   items: WorkItem[];
   title: string;
   defaultSprintId?: string;
-  hideSprintColumn?: boolean;
-  hideSprintInDialog?: boolean;
-  hideStatePriorityTags?: boolean;
+  hideSprintColumn?: boolean; // Hide sprint column in table (used when sprint is shown in navigation)
+  hideSprintInDialog?: boolean; // Hide sprint selector in add dialog
+  hideStatePriorityTags?: boolean; // Hide State, Priority, and Tags columns (used for Daily board)
+  isDailyBoard?: boolean; // If true, tasks added will get "Daily" tag automatically
 }
 
-export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false, hideSprintInDialog = false, hideStatePriorityTags = false }: WorkItemListProps) {
+/**
+ * WorkItemList Component
+ * 
+ * Displays a list of work items in a table format with:
+ * - Filtering capabilities (search, type, state, assignee, priority, blockers)
+ * - Drag and drop reordering
+ * - Click to view/edit task details
+ * - Add new task dialog
+ * 
+ * Features:
+ * - Shows only top-level items (children are nested in WorkItemRow)
+ * - Supports hiding columns for simplified views (Daily board)
+ * - Automatic task tagging for Daily board separation
+ */
+export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false, hideSprintInDialog = false, hideStatePriorityTags = false, isDailyBoard = false }: WorkItemListProps) {
   const { reorderWorkItems } = useApp();
   const [filters, setFilters] = useState<FiltersState>({
     search: '',
@@ -111,6 +126,10 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
     }
   };
 
+  /**
+   * Drag and Drop Handlers
+   * Allows reordering of tasks by dragging and dropping
+   */
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
     setDraggedItemId(itemId);
     e.dataTransfer.effectAllowed = 'move';
@@ -138,6 +157,7 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
       return;
     }
 
+    // Calculate new order based on drag position
     const currentOrder = filteredItems.map(item => item.id);
     const draggedIndex = currentOrder.indexOf(draggedItemId);
     const targetIndex = currentOrder.indexOf(targetItemId);
@@ -147,7 +167,7 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
       return;
     }
 
-    // Reorder the array
+    // Reorder: remove dragged item and insert at target position
     const newOrder = [...currentOrder];
     newOrder.splice(draggedIndex, 1);
     newOrder.splice(targetIndex, 0, draggedItemId);
@@ -161,14 +181,16 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
     setDragOverItemId(null);
   };
 
-  // Calculate column count for empty state
-  const columnCount = hideStatePriorityTags ? 5 : 8; // #, Title, Type, Assigned, Actions (or + State, Priority, Tags)
+  // Calculate column count for empty state message
+  // Daily board: 5 columns (#, Title, Type, Assigned, Actions)
+  // Sprint board: 8 columns (+ State, Priority, Tags)
+  const columnCount = hideStatePriorityTags ? 5 : 8;
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-lg font-bold tracking-wide">{title}</h2>
-        <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} />
+        <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} isDailyBoard={isDailyBoard} />
       </div>
 
       <WorkItemFilters filters={filters} onFiltersChange={setFilters} hideStatePriorityTags={hideStatePriorityTags} />
