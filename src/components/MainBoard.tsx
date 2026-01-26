@@ -6,9 +6,9 @@ import { Dashboard } from './Dashboard';
 import { Header } from './Header';
 import { SprintNavigation } from './SprintNavigation';
 import { Announcements } from './Announcements';
-import { LayoutDashboard, Zap, Megaphone, Calendar } from 'lucide-react';
+import { LayoutDashboard, Zap, Megaphone } from 'lucide-react';
 
-type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily';
+type TabValue = 'dashboard' | 'sprint' | 'announcements';
 
 /**
  * MainBoard Component
@@ -17,7 +17,8 @@ type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily';
  * - Announcements: Team announcements and updates
  * - Dashboard: Analytics and team overview
  * - Sprint Board: Sprint-based task management
- * - Daily Board: Daily task management (simplified view without State/Priority/Tags)
+ * 
+ * Note: Daily Board is now a separate page at /daily route
  * 
  * Task Separation:
  * - Sprint tasks: Have sprintId and do NOT have "Daily" tag
@@ -32,10 +33,6 @@ export function MainBoard() {
   const sprintTasks = activeSprint 
     ? workItems.filter(item => item.sprintId === activeSprint && !item.tags.includes('Daily'))
     : [];
-  
-  // Filter Daily tasks: items with "Daily" tag (regardless of sprintId)
-  // Tasks added from Daily board automatically get "Daily" tag
-  const dailyTasks = workItems.filter(item => item.tags.includes('Daily'));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -66,13 +63,6 @@ export function MainBoard() {
               Sprint Board
               <span className="ml-1 text-xs text-muted-foreground">({sprintTasks.filter(i => !i.parentId).length})</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="daily"
-              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
-            >
-              <Calendar className="w-4 h-4" />
-              Daily
-            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -93,22 +83,6 @@ export function MainBoard() {
               title="SPRINT BOARD" 
               defaultSprintId={activeSprint || undefined}
               hideSprintColumn={true}
-            />
-          </div>
-        </TabsContent>
-
-        {/* Daily Board: Simplified task management without State/Priority/Tags columns */}
-        {/* Uses same structure as Sprint board but with hideStatePriorityTags flag */}
-        {/* Tasks added here automatically get "Daily" tag to separate from Sprint tasks */}
-        <TabsContent value="daily" className="flex-1 m-0 !mt-0 p-0 flex flex-col overflow-hidden min-h-0">
-          <SprintNavigation />
-          <div className="flex-1 overflow-hidden min-h-0">
-            <WorkItemList 
-              items={dailyTasks} 
-              title="DAILY" 
-              hideSprintColumn={true}
-              isDailyBoard={true}
-              hideStatePriorityTags={true}
             />
           </div>
         </TabsContent>
