@@ -198,7 +198,21 @@ export function WorkItemRow({
             {index !== undefined && (
               <span className="text-xs text-muted-foreground w-6 text-right">{index}</span>
             )}
-            {canHaveChildren && (
+            {canHaveChildren && hideStatePriorityTags && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-6 h-6 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsAddChildOpen(true);
+                }}
+                title="Add child task"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            )}
+            {canHaveChildren && !hideStatePriorityTags && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

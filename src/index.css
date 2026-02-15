@@ -7,7 +7,9 @@
 @import "@fontsource/jetbrains-mono/700.css";
 
 @layer base {
-  :root {
+  /* ===== DEFAULT — Dark Crimson ===== */
+  :root,
+  [data-theme="default"] {
     --background: 0 0% 6%;
     --foreground: 0 0% 95%;
 
@@ -62,6 +64,342 @@
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 0 72% 51%;
+  }
+
+  /* ===== RAIN — Moody blue-grey storm ===== */
+  [data-theme="rain"] {
+    --background: 215 25% 8%;
+    --foreground: 210 20% 90%;
+
+    --card: 215 22% 12%;
+    --card-foreground: 210 20% 90%;
+
+    --popover: 215 22% 12%;
+    --popover-foreground: 210 20% 90%;
+
+    --primary: 205 65% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 18% 18%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 215 15% 22%;
+    --muted-foreground: 210 10% 50%;
+
+    --accent: 215 18% 18%;
+    --accent-foreground: 210 20% 90%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 15% 20%;
+    --input: 215 15% 20%;
+    --ring: 205 65% 48%;
+    --radius: 0.25rem;
+
+    --blocker: 0 65% 50%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 160 55% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 70% 48%;
+    --warning-foreground: 0 0% 0%;
+    --info: 205 65% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --epic: 260 60% 55%;
+    --story: 205 65% 48%;
+    --task: 210 10% 50%;
+    --bug: 0 65% 50%;
+    --operation: 38 70% 48%;
+
+    --sidebar-background: 215 25% 10%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 205 65% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 18% 18%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 215 15% 20%;
+    --sidebar-ring: 205 65% 48%;
+  }
+
+  /* ===== SNOW — Soft cool white ===== */
+  [data-theme="snow"] {
+    --background: 210 30% 10%;
+    --foreground: 210 25% 92%;
+
+    --card: 210 25% 14%;
+    --card-foreground: 210 25% 92%;
+
+    --popover: 210 25% 14%;
+    --popover-foreground: 210 25% 92%;
+
+    --primary: 200 50% 58%;
+    --primary-foreground: 210 30% 8%;
+
+    --secondary: 210 20% 20%;
+    --secondary-foreground: 210 25% 92%;
+
+    --muted: 210 18% 24%;
+    --muted-foreground: 210 15% 55%;
+
+    --accent: 210 20% 20%;
+    --accent-foreground: 210 25% 92%;
+
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 18% 22%;
+    --input: 210 18% 22%;
+    --ring: 200 50% 58%;
+    --radius: 0.25rem;
+
+    --blocker: 0 60% 50%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 155 50% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 70% 50%;
+    --warning-foreground: 0 0% 0%;
+    --info: 200 50% 58%;
+    --info-foreground: 210 30% 8%;
+
+    --epic: 265 55% 58%;
+    --story: 200 50% 58%;
+    --task: 210 15% 55%;
+    --bug: 0 60% 50%;
+    --operation: 38 70% 50%;
+
+    --sidebar-background: 210 30% 12%;
+    --sidebar-foreground: 210 25% 92%;
+    --sidebar-primary: 200 50% 58%;
+    --sidebar-primary-foreground: 210 30% 8%;
+    --sidebar-accent: 210 20% 20%;
+    --sidebar-accent-foreground: 210 25% 92%;
+    --sidebar-border: 210 18% 22%;
+    --sidebar-ring: 200 50% 58%;
+  }
+
+  /* ===== SUNNY — Warm golden daylight ===== */
+  [data-theme="sunny"] {
+    --background: 40 20% 8%;
+    --foreground: 45 30% 93%;
+
+    --card: 40 18% 12%;
+    --card-foreground: 45 30% 93%;
+
+    --popover: 40 18% 12%;
+    --popover-foreground: 45 30% 93%;
+
+    --primary: 42 90% 52%;
+    --primary-foreground: 40 20% 8%;
+
+    --secondary: 40 14% 18%;
+    --secondary-foreground: 45 30% 93%;
+
+    --muted: 40 12% 22%;
+    --muted-foreground: 40 10% 52%;
+
+    --accent: 40 14% 18%;
+    --accent-foreground: 45 30% 93%;
+
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 12% 20%;
+    --input: 40 12% 20%;
+    --ring: 42 90% 52%;
+    --radius: 0.25rem;
+
+    --blocker: 0 65% 50%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 142 65% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 28 85% 52%;
+    --warning-foreground: 0 0% 0%;
+    --info: 205 70% 55%;
+    --info-foreground: 0 0% 100%;
+
+    --epic: 271 70% 55%;
+    --story: 205 70% 55%;
+    --task: 40 10% 52%;
+    --bug: 0 65% 50%;
+    --operation: 28 85% 52%;
+
+    --sidebar-background: 40 20% 10%;
+    --sidebar-foreground: 45 30% 93%;
+    --sidebar-primary: 42 90% 52%;
+    --sidebar-primary-foreground: 40 20% 8%;
+    --sidebar-accent: 40 14% 18%;
+    --sidebar-accent-foreground: 45 30% 93%;
+    --sidebar-border: 40 12% 20%;
+    --sidebar-ring: 42 90% 52%;
+  }
+
+  /* ===== WINTER — Deep icy frost ===== */
+  [data-theme="winter"] {
+    --background: 220 30% 6%;
+    --foreground: 215 30% 90%;
+
+    --card: 220 28% 10%;
+    --card-foreground: 215 30% 90%;
+
+    --popover: 220 28% 10%;
+    --popover-foreground: 215 30% 90%;
+
+    --primary: 195 70% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 22% 16%;
+    --secondary-foreground: 215 30% 90%;
+
+    --muted: 220 18% 20%;
+    --muted-foreground: 215 15% 48%;
+
+    --accent: 220 22% 16%;
+    --accent-foreground: 215 30% 90%;
+
+    --destructive: 0 60% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 18% 18%;
+    --input: 220 18% 18%;
+    --ring: 195 70% 50%;
+    --radius: 0.25rem;
+
+    --blocker: 0 60% 48%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 160 50% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 65% 48%;
+    --warning-foreground: 0 0% 0%;
+    --info: 195 70% 50%;
+    --info-foreground: 0 0% 100%;
+
+    --epic: 255 55% 55%;
+    --story: 195 70% 50%;
+    --task: 215 15% 48%;
+    --bug: 0 60% 48%;
+    --operation: 38 65% 48%;
+
+    --sidebar-background: 220 30% 8%;
+    --sidebar-foreground: 215 30% 90%;
+    --sidebar-primary: 195 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 22% 16%;
+    --sidebar-accent-foreground: 215 30% 90%;
+    --sidebar-border: 220 18% 18%;
+    --sidebar-ring: 195 70% 50%;
+  }
+
+  /* ===== AUTUMN — Warm amber & burnt orange ===== */
+  [data-theme="autumn"] {
+    --background: 20 25% 7%;
+    --foreground: 30 20% 90%;
+
+    --card: 20 22% 11%;
+    --card-foreground: 30 20% 90%;
+
+    --popover: 20 22% 11%;
+    --popover-foreground: 30 20% 90%;
+
+    --primary: 24 80% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 20 16% 16%;
+    --secondary-foreground: 30 20% 90%;
+
+    --muted: 20 14% 20%;
+    --muted-foreground: 25 10% 50%;
+
+    --accent: 20 16% 16%;
+    --accent-foreground: 30 20% 90%;
+
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 20 14% 18%;
+    --input: 20 14% 18%;
+    --ring: 24 80% 50%;
+    --radius: 0.25rem;
+
+    --blocker: 0 65% 48%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 140 55% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 80% 48%;
+    --warning-foreground: 0 0% 0%;
+    --info: 200 60% 50%;
+    --info-foreground: 0 0% 100%;
+
+    --epic: 280 55% 52%;
+    --story: 200 60% 50%;
+    --task: 25 10% 50%;
+    --bug: 0 65% 48%;
+    --operation: 38 80% 48%;
+
+    --sidebar-background: 20 25% 9%;
+    --sidebar-foreground: 30 20% 90%;
+    --sidebar-primary: 24 80% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 20 16% 16%;
+    --sidebar-accent-foreground: 30 20% 90%;
+    --sidebar-border: 20 14% 18%;
+    --sidebar-ring: 24 80% 50%;
+  }
+
+  /* ===== SPRING — Fresh cherry-blossom pink & green ===== */
+  [data-theme="spring"] {
+    --background: 150 18% 7%;
+    --foreground: 140 15% 92%;
+
+    --card: 150 16% 11%;
+    --card-foreground: 140 15% 92%;
+
+    --popover: 150 16% 11%;
+    --popover-foreground: 140 15% 92%;
+
+    --primary: 330 60% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 150 12% 16%;
+    --secondary-foreground: 140 15% 92%;
+
+    --muted: 150 10% 20%;
+    --muted-foreground: 145 8% 50%;
+
+    --accent: 150 12% 16%;
+    --accent-foreground: 140 15% 92%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 150 10% 18%;
+    --input: 150 10% 18%;
+    --ring: 330 60% 58%;
+    --radius: 0.25rem;
+
+    --blocker: 0 62% 50%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 145 60% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 75% 50%;
+    --warning-foreground: 0 0% 0%;
+    --info: 210 65% 55%;
+    --info-foreground: 0 0% 100%;
+
+    --epic: 275 58% 55%;
+    --story: 210 65% 55%;
+    --task: 145 8% 50%;
+    --bug: 0 62% 50%;
+    --operation: 38 75% 50%;
+
+    --sidebar-background: 150 18% 9%;
+    --sidebar-foreground: 140 15% 92%;
+    --sidebar-primary: 330 60% 58%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 150 12% 16%;
+    --sidebar-accent-foreground: 140 15% 92%;
+    --sidebar-border: 150 10% 18%;
+    --sidebar-ring: 330 60% 58%;
   }
 }
 
@@ -152,24 +490,154 @@
   }
 }
 
-/**
- * Fix gap issue in TabsContent for Sprint and Daily boards
- * 
- * Radix UI TabsContent has default margin-top that creates unwanted spacing.
- * These rules force zero margin/padding for Sprint and Daily tab panels to ensure
- * SprintNavigation appears directly below the tab navigation without gaps.
- */
-[role="tabpanel"][id*="sprint"],
-[role="tabpanel"][id*="daily"] {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
+/* ================================================================
+   Weather particle animations
+   ================================================================ */
+
+/* --- Rain --- */
+@keyframes rain-fall {
+  0%   { transform: translateY(-10vh) translateX(0);   opacity: 0; }
+  10%  { opacity: 0.7; }
+  90%  { opacity: 0.5; }
+  100% { transform: translateY(110vh) translateX(-20px); opacity: 0; }
 }
 
-[role="tabpanel"].flex-1.m-0 {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
+.weather-particles-rain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.weather-particles-rain .drop {
+  position: absolute;
+  top: -20px;
+  width: 1.5px;
+  height: 18px;
+  background: linear-gradient(to bottom, transparent, hsl(205 70% 60% / 0.5));
+  border-radius: 0 0 2px 2px;
+  animation: rain-fall linear infinite;
+}
+
+/* --- Snow --- */
+@keyframes snow-fall {
+  0%   { transform: translateY(-10vh) translateX(0) rotate(0deg);   opacity: 0; }
+  10%  { opacity: 0.9; }
+  50%  { transform: translateY(50vh) translateX(30px) rotate(180deg); }
+  90%  { opacity: 0.4; }
+  100% { transform: translateY(110vh) translateX(-10px) rotate(360deg); opacity: 0; }
+}
+
+.weather-particles-snow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.weather-particles-snow .flake {
+  position: absolute;
+  top: -10px;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, hsl(200 30% 95% / 0.9) 0%, hsl(200 30% 95% / 0.2) 70%);
+  border-radius: 50%;
+  animation: snow-fall linear infinite;
+}
+
+/* --- Leaves (Autumn) --- */
+@keyframes leaf-fall {
+  0%   { transform: translateY(-10vh) translateX(0) rotate(0deg) scale(1);     opacity: 0; }
+  10%  { opacity: 0.85; }
+  25%  { transform: translateY(25vh) translateX(40px) rotate(90deg) scale(0.9); }
+  50%  { transform: translateY(50vh) translateX(-20px) rotate(200deg) scale(1); }
+  75%  { transform: translateY(75vh) translateX(30px) rotate(300deg) scale(0.85); }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(110vh) translateX(10px) rotate(400deg) scale(0.8); opacity: 0; }
+}
+
+.weather-particles-leaves {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.weather-particles-leaves .leaf {
+  position: absolute;
+  top: -20px;
+  font-size: 14px;
+  animation: leaf-fall linear infinite;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+
+/* --- Petals (Spring) --- */
+@keyframes petal-fall {
+  0%   { transform: translateY(-10vh) translateX(0) rotate(0deg);     opacity: 0; }
+  10%  { opacity: 0.8; }
+  30%  { transform: translateY(30vh) translateX(50px) rotate(120deg); }
+  60%  { transform: translateY(60vh) translateX(-30px) rotate(240deg); }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(110vh) translateX(20px) rotate(380deg);  opacity: 0; }
+}
+
+.weather-particles-petals {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.weather-particles-petals .petal {
+  position: absolute;
+  top: -16px;
+  font-size: 12px;
+  animation: petal-fall linear infinite;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+}
+
+/* --- Sun rays (Sunny) --- */
+@keyframes sun-drift {
+  0%   { transform: translateY(-10vh) translateX(0);   opacity: 0; }
+  15%  { opacity: 0.5; }
+  85%  { opacity: 0.25; }
+  100% { transform: translateY(110vh) translateX(10px); opacity: 0; }
+}
+
+.weather-particles-sun-rays {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.weather-particles-sun-rays .ray {
+  position: absolute;
+  top: -20px;
+  width: 2px;
+  height: 30px;
+  background: linear-gradient(to bottom, hsl(42 90% 60% / 0.4), transparent);
+  border-radius: 2px;
+  animation: sun-drift linear infinite;
+}
+
+/**
+ * Fix hidden TabsContent elements becoming visible.
+ *
+ * Radix UI keeps inactive TabsContent in the DOM with the `hidden` attribute.
+ * Tailwind's `.flex` utility (`display: flex`) overrides the browser/preflight
+ * `[hidden] { display: none }` because both have (0,1,0) specificity and
+ * utilities are generated after the base layer.  This makes inactive panels
+ * participate in the flex layout and create visible gaps.
+ *
+ * Using `!important` here ensures hidden tab panels stay hidden regardless
+ * of any Tailwind display utility applied to them.
+ */
+[role="tabpanel"][hidden] {
+  display: none !important;
 }

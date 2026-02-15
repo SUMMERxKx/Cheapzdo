@@ -6,9 +6,10 @@ import { Dashboard } from './Dashboard';
 import { Header } from './Header';
 import { SprintNavigation } from './SprintNavigation';
 import { Announcements } from './Announcements';
-import { LayoutDashboard, Zap, Megaphone } from 'lucide-react';
+import { DailyContent } from './Daily';
+import { LayoutDashboard, Zap, Megaphone, CalendarDays } from 'lucide-react';
 
-type TabValue = 'dashboard' | 'sprint' | 'announcements';
+type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily';
 
 /**
  * MainBoard Component
@@ -17,8 +18,7 @@ type TabValue = 'dashboard' | 'sprint' | 'announcements';
  * - Announcements: Team announcements and updates
  * - Dashboard: Analytics and team overview
  * - Sprint Board: Sprint-based task management
- * 
- * Note: Daily Board is now a separate page at /daily route
+ * - Daily: Daily task management
  * 
  * Task Separation:
  * - Sprint tasks: Have sprintId and do NOT have "Daily" tag
@@ -63,6 +63,13 @@ export function MainBoard() {
               Sprint Board
               <span className="ml-1 text-xs text-muted-foreground">({sprintTasks.filter(i => !i.parentId).length})</span>
             </TabsTrigger>
+            <TabsTrigger
+              value="daily"
+              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
+            >
+              <CalendarDays className="w-4 h-4" />
+              Daily
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -85,6 +92,11 @@ export function MainBoard() {
               hideSprintColumn={true}
             />
           </div>
+        </TabsContent>
+
+        {/* Daily Board: Simplified daily task management */}
+        <TabsContent value="daily" className="flex-1 m-0 !mt-0 p-0 flex flex-col overflow-hidden min-h-0">
+          <DailyContent />
         </TabsContent>
       </Tabs>
     </div>
