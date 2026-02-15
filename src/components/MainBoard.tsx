@@ -7,9 +7,10 @@ import { Header } from './Header';
 import { SprintNavigation } from './SprintNavigation';
 import { Announcements } from './Announcements';
 import { DailyContent } from './Daily';
-import { LayoutDashboard, Zap, Megaphone, CalendarDays } from 'lucide-react';
+import { Leaderboard } from './Leaderboard';
+import { LayoutDashboard, Zap, Megaphone, CalendarDays, Trophy } from 'lucide-react';
 
-type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily';
+type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily' | 'leaderboard';
 
 /**
  * MainBoard Component
@@ -19,6 +20,7 @@ type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily';
  * - Dashboard: Analytics and team overview
  * - Sprint Board: Sprint-based task management
  * - Daily: Daily task management
+ * - Leaderboard: Team performance rankings
  * 
  * Task Separation:
  * - Sprint tasks: Have sprintId and do NOT have "Daily" tag
@@ -70,6 +72,13 @@ export function MainBoard() {
               <CalendarDays className="w-4 h-4" />
               Daily
             </TabsTrigger>
+            <TabsTrigger
+              value="leaderboard"
+              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
+            >
+              <Trophy className="w-4 h-4" />
+              Leaderboard
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -97,6 +106,11 @@ export function MainBoard() {
         {/* Daily Board: Simplified daily task management */}
         <TabsContent value="daily" className="flex-1 m-0 !mt-0 p-0 flex flex-col overflow-hidden min-h-0">
           <DailyContent />
+        </TabsContent>
+
+        {/* Leaderboard: Team performance rankings */}
+        <TabsContent value="leaderboard" className="flex-1 mt-0 overflow-auto">
+          <Leaderboard />
         </TabsContent>
       </Tabs>
     </div>
