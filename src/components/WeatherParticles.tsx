@@ -19,6 +19,7 @@ interface ParticleConfig {
 
 const LEAF_CHARS = ['🍂', '🍁', '🍃'];
 const PETAL_CHARS = ['🌸', '💮'];
+const LANTERN_CHARS = ['🏮', '🏮', '🏮', '🧧', '✨'];
 
 function getConfig(particles: ThemeDefinition['particles']): ParticleConfig | null {
   switch (particles) {
@@ -86,6 +87,20 @@ function getConfig(particles: ThemeDefinition['particles']): ParticleConfig | nu
           height: `${20 + seededRandom(i * 5) * 25}px`,
           opacity: 0.15 + seededRandom(i * 13) * 0.25,
         }),
+      };
+    case 'lanterns':
+      return {
+        count: 24,
+        className: 'weather-particles-lanterns',
+        childClass: 'lantern',
+        buildStyle: (i) => ({
+          left: `${seededRandom(i * 7) * 100}%`,
+          animationDuration: `${9 + seededRandom(i * 3) * 8}s`,
+          animationDelay: `${seededRandom(i * 11) * 7}s`,
+          fontSize: `${12 + seededRandom(i * 5) * 12}px`,
+          opacity: 0.45 + seededRandom(i * 13) * 0.5,
+        }),
+        buildContent: (i) => LANTERN_CHARS[Math.floor(seededRandom(i * 17) * LANTERN_CHARS.length)],
       };
     default:
       return null;

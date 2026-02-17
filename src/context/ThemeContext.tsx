@@ -7,17 +7,19 @@ export type ThemeId =
   | 'sunny'
   | 'winter'
   | 'autumn'
-  | 'spring';
+  | 'spring'
+  | 'chinese-new-year';
 
 export interface ThemeDefinition {
   id: ThemeId;
   name: string;
   emoji: string;
   description: string;
-  particles?: 'rain' | 'snow' | 'leaves' | 'petals' | 'sun-rays';
+  particles?: 'rain' | 'snow' | 'leaves' | 'petals' | 'sun-rays' | 'lanterns';
 }
 
 export const themes: ThemeDefinition[] = [
+  { id: 'chinese-new-year', name: 'Chinese New Year', emoji: '🧧', description: 'Festive red and gold', particles: 'lanterns' },
   { id: 'default',  name: 'Default',  emoji: '🔴', description: 'Dark crimson' },
   { id: 'rain',     name: 'Rainy',    emoji: '🌧️', description: 'Moody downpour',   particles: 'rain' },
   { id: 'snow',     name: 'Snowy',    emoji: '🌨️', description: 'Gentle snowfall',  particles: 'snow' },
@@ -40,7 +42,7 @@ const STORAGE_KEY = 'cheapzdo-theme';
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return (saved as ThemeId) || 'default';
+    return (saved as ThemeId) || 'chinese-new-year';
   });
 
   const setTheme = (id: ThemeId) => {

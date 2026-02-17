@@ -401,6 +401,62 @@
     --sidebar-border: 150 10% 18%;
     --sidebar-ring: 330 60% 58%;
   }
+
+  /* ===== CHINESE NEW YEAR — Festive red & gold ===== */
+  [data-theme="chinese-new-year"] {
+    --background: 356 46% 7%;
+    --foreground: 44 92% 90%;
+
+    --card: 356 42% 11%;
+    --card-foreground: 44 92% 90%;
+
+    --popover: 356 42% 11%;
+    --popover-foreground: 44 92% 90%;
+
+    --primary: 43 95% 57%;
+    --primary-foreground: 356 42% 8%;
+
+    --secondary: 356 32% 18%;
+    --secondary-foreground: 44 92% 90%;
+
+    --muted: 356 24% 23%;
+    --muted-foreground: 43 32% 66%;
+
+    --accent: 356 30% 18%;
+    --accent-foreground: 42 90% 90%;
+
+    --destructive: 0 70% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 356 26% 22%;
+    --input: 356 26% 22%;
+    --ring: 43 95% 57%;
+    --radius: 0.25rem;
+
+    --blocker: 0 70% 52%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 142 63% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 42 92% 54%;
+    --warning-foreground: 0 0% 0%;
+    --info: 210 72% 56%;
+    --info-foreground: 0 0% 100%;
+
+    --epic: 280 65% 56%;
+    --story: 210 72% 56%;
+    --task: 42 30% 62%;
+    --bug: 0 70% 52%;
+    --operation: 42 92% 54%;
+
+    --sidebar-background: 356 42% 10%;
+    --sidebar-foreground: 42 90% 90%;
+    --sidebar-primary: 42 95% 54%;
+    --sidebar-primary-foreground: 356 42% 8%;
+    --sidebar-accent: 356 30% 18%;
+    --sidebar-accent-foreground: 42 90% 90%;
+    --sidebar-border: 356 26% 22%;
+    --sidebar-ring: 43 95% 57%;
+  }
 }
 
 @layer base {
@@ -411,6 +467,14 @@
   body {
     @apply bg-background text-foreground font-mono antialiased;
     font-family: 'JetBrains Mono', monospace;
+  }
+
+  [data-theme="chinese-new-year"] body {
+    background-image:
+      radial-gradient(circle at 12% 8%, hsl(43 95% 57% / 0.08), transparent 25%),
+      radial-gradient(circle at 88% 12%, hsl(43 95% 57% / 0.07), transparent 22%),
+      radial-gradient(circle at 50% 100%, hsl(0 80% 52% / 0.14), transparent 35%);
+    background-attachment: fixed;
   }
 
   /* Custom scrollbar */
@@ -624,6 +688,34 @@
   background: linear-gradient(to bottom, hsl(42 90% 60% / 0.4), transparent);
   border-radius: 2px;
   animation: sun-drift linear infinite;
+}
+
+/* --- Lanterns (Chinese New Year) --- */
+@keyframes lantern-float {
+  0%   { transform: translateY(110vh) translateX(0) rotate(-6deg) scale(0.95); opacity: 0; }
+  12%  { opacity: 0.92; }
+  35%  { transform: translateY(68vh) translateX(26px) rotate(4deg) scale(1); }
+  60%  { transform: translateY(35vh) translateX(-18px) rotate(-3deg) scale(1.04); }
+  86%  { opacity: 0.7; }
+  100% { transform: translateY(-15vh) translateX(12px) rotate(2deg) scale(0.92); opacity: 0; }
+}
+
+.weather-particles-lanterns {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.weather-particles-lanterns .lantern {
+  position: absolute;
+  bottom: -20px;
+  animation: lantern-float linear infinite;
+  filter:
+    drop-shadow(0 2px 8px hsl(43 95% 57% / 0.30))
+    drop-shadow(0 0 14px hsl(43 95% 57% / 0.22));
+  text-shadow: 0 0 12px hsl(43 95% 57% / 0.25);
 }
 
 /**
