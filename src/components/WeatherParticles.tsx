@@ -90,15 +90,15 @@ function getConfig(particles: ThemeDefinition['particles']): ParticleConfig | nu
       };
     case 'lanterns':
       return {
-        count: 24,
+        count: 20,
         className: 'weather-particles-lanterns',
         childClass: 'lantern',
         buildStyle: (i) => ({
           left: `${seededRandom(i * 7) * 100}%`,
-          animationDuration: `${9 + seededRandom(i * 3) * 8}s`,
-          animationDelay: `${seededRandom(i * 11) * 7}s`,
-          fontSize: `${12 + seededRandom(i * 5) * 12}px`,
-          opacity: 0.45 + seededRandom(i * 13) * 0.5,
+          animationDuration: `${14 + seededRandom(i * 3) * 12}s`,
+          animationDelay: `${seededRandom(i * 11) * 10}s`,
+          fontSize: `${16 + seededRandom(i * 5) * 14}px`,
+          opacity: 0.55 + seededRandom(i * 13) * 0.4,
         }),
         buildContent: (i) => LANTERN_CHARS[Math.floor(seededRandom(i * 17) * LANTERN_CHARS.length)],
       };
