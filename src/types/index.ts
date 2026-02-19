@@ -74,3 +74,32 @@ export interface AppState {
   announcements: Announcement[];
   isAuthenticated: boolean;
 }
+
+// ---------- AI Feature Types ----------
+
+export interface AIGeneratedTask {
+  title: string;
+  description?: string;
+  type: WorkItemType;
+  state: WorkItemState;
+  priority: Priority;
+  assigneeId?: string;
+  tags: string[];
+  sprintId?: string;
+  parentId?: string;
+}
+
+export interface AIWorkloadImbalance {
+  personId: string;
+  reason: string;
+}
+
+export interface AIInsights {
+  summary: string;
+  risks: string[];
+  blockers: string[];
+  workloadImbalance: AIWorkloadImbalance[];
+  momentumAnalysis: string;
+  priorityDistributionComment: string;
+  recommendations: string[];
+}

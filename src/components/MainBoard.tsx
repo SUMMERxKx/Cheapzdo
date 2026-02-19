@@ -17,9 +17,9 @@ type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily' | 'leaderboar
  * 
  * Main application board with tabbed interface containing:
  * - Announcements: Team announcements and updates
- * - Dashboard: Analytics and team overview
- * - Sprint Board: Sprint-based task management
- * - Daily: Daily task management
+ * - Dashboard: Analytics and team overview (+ AI Insights)
+ * - Sprint Board: Sprint-based task management (+ AI Task Creator)
+ * - Daily: Daily task management (+ AI Task Creator)
  * - Leaderboard: Team performance rankings
  * 
  * Task Separation:
@@ -112,6 +112,7 @@ export function MainBoard() {
         <TabsContent value="leaderboard" className="flex-1 mt-0 overflow-auto">
           <Leaderboard />
         </TabsContent>
+
       </Tabs>
     </div>
   );

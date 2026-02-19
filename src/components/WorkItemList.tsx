@@ -5,6 +5,7 @@ import { WorkItemRow } from './WorkItemRow';
 import { WorkItemFilters } from './WorkItemFilters';
 import { AddWorkItemDialog } from './AddWorkItemDialog';
 import { TaskCardModal } from './TaskCardModal';
+import { AITaskCreator } from './ai/AITaskCreator';
 
 interface FiltersState {
   search: string;
@@ -190,7 +191,10 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-lg font-bold tracking-wide">{title}</h2>
-        <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} isDailyBoard={isDailyBoard} />
+        <div className="flex items-center gap-2">
+          <AITaskCreator defaultSprintId={defaultSprintId} isDailyBoard={isDailyBoard} />
+          <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} isDailyBoard={isDailyBoard} />
+        </div>
       </div>
 
       <WorkItemFilters filters={filters} onFiltersChange={setFilters} hideStatePriorityTags={hideStatePriorityTags} />

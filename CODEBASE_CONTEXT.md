@@ -13,9 +13,10 @@ Primary problem solved:
 
 Product behavior at a glance:
 - Password gate before board access
-- Tabbed workspace with `Announcements`, `Dashboard`, `Sprint Board`, `Daily`, `Leaderboard`
+- Tabbed workspace with `Announcements`, `Dashboard`, `Sprint Board`, `Daily`, `Leaderboard`, `AI`
 - Supabase-backed persistence for all core entities
 - Optional theme system with weather/season visual effects
+- AI-powered task creation and board analytics (via OpenRouter)
 
 
 ## 2. Tech Stack
@@ -294,6 +295,17 @@ Permissions:
 - **Files:** `ThemeContext.tsx`, `ThemeSwitcher.tsx`, `WeatherParticles.tsx`, `index.css`
 - **Data flow:** theme selection updates `data-theme` attribute; CSS variable sets + particle classes drive visuals
 
+### J. AI Feature System (Task Creator + Insights)
+- **What it does:** Natural-language task creation and executive-level board analytics via OpenRouter AI
+- **Files:** `lib/ai.ts`, `context/AppContext.tsx`, `components/ai/AITaskCreator.tsx`, `components/ai/AIInsightsPanel.tsx`
+- **Data flow:**
+  - Components call context methods (`generateAITask`, `generateAIInsights`)
+  - Context builds dynamic system prompts (injecting current people/sprints/scoring model)
+  - Context calls `queryAI()` in `lib/ai.ts` which hits OpenRouter API
+  - Response is validated/corrected and returned to component
+  - Task acceptance calls existing `addWorkItem()` (optimistic update + Supabase persist)
+- **Gating:** Disabled if `VITE_OPENROUTER_API_KEY` is not set
+
 
 ## 10. Environment Variables
 
@@ -315,8 +327,16 @@ Used variables:
 - Also checked in `AppContext`
 - Fallback source if `VITE_BOARD_PASSWORD` missing
 
+5. `VITE_OPENROUTER_API_KEY`
+- Used in `lib/ai.ts` for OpenRouter API authentication
+- If not set, AI tab is disabled (greyed out) — no other features affected
+- Never logged or persisted
+
 Behavior when Supabase env missing:
 - App logs warning and continues with default/local in-memory behavior
+
+Behavior when OpenRouter key missing:
+- AI tab shows as disabled; all other features work normally
 
 
 ## 11. Deployment Flow
@@ -395,4 +415,183 @@ Practical onboarding sequence:
 3. Read `MainBoard.tsx` for app navigation model
 4. Read `WorkItemList`/`WorkItemRow` for core task workflow
 5. Read `Leaderboard.tsx` and `Daily.tsx` for recent domain rules
+6. Read `lib/ai.ts` and `components/ai/` for AI feature architecture
+
+
+## 14. AI Feature System
+
+### Overview
+
+The AI feature system adds two capabilities to Cheapzdo:
+1. **AI Task Creator** — converts natural language descriptions into structured work items
+2. **AI Trends & Insights** — analyzes the board's tasks, people, and sprints to produce executive-level analytics
+
+Both features live under the **AI** tab in the main navigation and are powered by OpenRouter's API (client-side fetch, no custom backend).
+
+### Architecture
+
+```
+User Input
+    │
+    ▼
+┌─────────────────────────┐
+│  UI Components          │
+│  AITaskCreator.tsx       │  ← Textarea + preview card + accept/regenerate
+│  AIInsightsPanel.tsx     │  ← Generate button + rendered insight sections
+└──────────┬──────────────┘
+           │ calls context methods
+           ▼
+┌─────────────────────────┐
+│  AppContext              │
+│  generateAITask()       │  ← Builds system prompt, calls AI, validates response
+│  generateAIInsights()   │  ← Builds compact snapshot, calls AI, validates response
+└──────────┬──────────────┘
+           │ calls queryAI()
+           ▼
+┌─────────────────────────┐
+│  src/lib/ai.ts          │
+│  queryAI()              │  ← OpenRouter fetch, JSON repair, retry, timeout
+└─────────────────────────┘
+```
+
+Components never call the API directly. All AI logic (prompt construction, API calls, response validation) is centralized in AppContext, consistent with the existing service-layer pattern.
+
+### Files
+
+| File | Role |
+|------|------|
+| `src/lib/ai.ts` | OpenRouter API wrapper — fetch, JSON repair, retry, rate-limit, timeout |
+| `src/types/index.ts` | `AIGeneratedTask`, `AIInsights`, `AIWorkloadImbalance` type definitions |
+| `src/context/AppContext.tsx` | `generateAITask()`, `generateAIInsights()`, system prompts, field validation |
+| `src/components/ai/AITaskCreator.tsx` | Natural-language → structured task UI |
+| `src/components/ai/AIInsightsPanel.tsx` | Board analytics / insights rendering UI |
+| `src/components/MainBoard.tsx` | AI tab registration in tab navigation |
+
+### Environment Variable
+
+```
+VITE_OPENROUTER_API_KEY=<your-openrouter-api-key>
+```
+
+- If not set, the AI tab is **disabled** (greyed out with "(off)" label)
+- If set, the tab is fully functional
+- The key is read at runtime via `import.meta.env.VITE_OPENROUTER_API_KEY`
+- The key is never logged or persisted to any storage
+
+### AI Service Layer (`src/lib/ai.ts`)
+
+Responsibilities:
+- Wraps the OpenRouter chat completions endpoint (`POST https://openrouter.ai/api/v1/chat/completions`)
+- Uses `mistralai/mistral-7b-instruct:free` as the default model (cheapest viable instruct model)
+- Accepts: `prompt`, `systemPrompt`, `temperature`
+- Returns: parsed JSON (typed via generic `queryAI<T>()`)
+- Handles rate-limit (HTTP 429) with one automatic retry after 2s delay
+- Handles network errors (TypeError) with one automatic retry
+- Applies a 30-second abort timeout
+- Repairs malformed JSON responses (strips markdown fences, extracts first `{...}` or `[...]` block)
+- Exposes `isAIConfigured()` for feature-gating
+
+### How to swap models
+
+Change the single `MODEL` constant on line 2 of `src/lib/ai.ts`:
+
+```typescript
+const MODEL = 'mistralai/mistral-7b-instruct:free';
+```
+
+Replace with any OpenRouter model ID. No other changes required.
+
+### Prompt Engineering
+
+Two system prompts are built dynamically inside `AppContext`:
+
+**Task Creator System Prompt** (`buildTaskCreatorSystemPrompt()`):
+- Injects the current `people[]` list with IDs and names
+- Injects the current `sprints[]` list with IDs, names, and active flag
+- Explains the full WorkItem schema (title, description, type, state, priority, tags, assignee_id, sprint_id, parent_id)
+- Explains tag conventions (Daily tag for daily tasks, Blocker tag for blockers)
+- Explains priority mapping (P0/P1 = Critical, P2 = High, P3 = Medium, P4 = Low)
+- Enforces JSON-only output
+- Temperature: 0.2
+
+**Insights System Prompt** (`buildInsightsSystemPrompt()`):
+- Explains the leaderboard scoring model (Completion Rate 50pts, Priority Impact 30pts, Momentum 20pts)
+- Requests executive-level analysis
+- Specifies the exact JSON response shape with 7 fields
+- Prohibits markdown and commentary outside JSON
+- Temperature: 0.4
+
+### Response Validation
+
+All AI responses pass through strict validation functions:
+
+**`validateAITask(raw)`** corrects:
+- Invalid `type` → falls back to `"Other"`
+- Invalid `state` → falls back to `"New"`
+- Invalid `priority` → falls back to `"Medium"`
+- Unknown `assignee_id` (not in current people list) → set to `undefined`
+- Unknown `sprint_id` (not in current sprints list) → set to `undefined`
+- Missing/empty `title` → set to `"Untitled Task"`
+- Non-array `tags` → set to `[]`
+
+**`validateAIInsights(raw)`** corrects:
+- Any missing field → sensible default (empty string, empty array)
+- Invalid `workload_imbalance` entries → filtered out
+- Field name conversion from snake_case API response to camelCase TypeScript types
+
+### AI Task Creator Flow
+
+1. User types a natural language description in the textarea
+2. Clicks "Generate Task"
+3. `AppContext.generateAITask(text)` builds the system prompt, calls `queryAI()`, validates the response
+4. A preview card shows the generated task fields (title, type, state, priority, assignee, sprint, tags)
+5. User can:
+   - **Accept** → calls existing `addWorkItem()` (optimistic update + Supabase persist) → toast success
+   - **Regenerate** → re-runs the AI call with the same input
+   - **Edit** → returns to the input phase with text preserved
+   - **Dismiss** → resets to blank state
+
+### AI Insights Flow
+
+1. User clicks "Generate AI Insights"
+2. `AppContext.generateAIInsights()` compresses the board snapshot to minimal fields and sends it
+3. AI returns structured analysis
+4. Panel renders six sections:
+   - **Summary** — 2-3 sentence executive overview
+   - **Risks** — bullet list with yellow indicator dots
+   - **Blockers** — bullet list with red indicator dots
+   - **Workload Imbalance** — person badges with reason tooltips
+   - **Momentum Analysis** — paragraph on team velocity
+   - **Priority Distribution** — paragraph on priority spread
+   - **Recommendations** — numbered actionable list
+5. A "Refresh" button allows re-generation
+
+### Data Sent to AI
+
+For task creation: only the user's natural-language input text.
+
+For insights: a compressed snapshot containing only:
+```json
+{
+  "tasks": [{ "id", "title", "state", "priority", "assignee_id", "sprint_id", "tags" }],
+  "people": [{ "id", "name" }],
+  "sprints": [{ "id", "name", "is_active" }]
+}
+```
+
+No descriptions, comments, timestamps, or other fields are sent.
+
+### Security Constraints
+
+- API key is never logged to console
+- AI responses are not persisted to database
+- User input text is not logged
+- No Supabase schema changes required
+- Feature is entirely client-side
+
+### How to Disable
+
+- Remove `VITE_OPENROUTER_API_KEY` from environment → tab greys out, shows "(off)"
+- Or remove the AI tab trigger and content from `MainBoard.tsx` for complete removal
+- No other features are affected — zero coupling to existing functionality
 

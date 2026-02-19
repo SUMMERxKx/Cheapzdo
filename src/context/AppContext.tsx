@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { WorkItem, Person, Sprint, AppState, WorkItemType, WorkItemState, Priority, Comment, Board, BoardNote, Announcement } from '@/types';
+import { WorkItem, Person, Sprint, AppState, WorkItemType, WorkItemState, Priority, Comment, Board, BoardNote, Announcement, AIGeneratedTask, AIInsights } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { queryAI, isAIConfigured } from '@/lib/ai';
 
 interface AppContextType extends AppState {
   addWorkItem: (item: Omit<WorkItem, 'id' | 'createdAt' | 'comments'>) => void;
@@ -34,6 +35,9 @@ interface AppContextType extends AppState {
   updateAnnouncement: (id: string, updates: Partial<Announcement>) => void;
   deleteAnnouncement: (id: string) => void;
   isLoading: boolean;
+  isAIEnabled: boolean;
+  generateAITask: (inputText: string) => Promise<AIGeneratedTask>;
+  generateAIInsights: () => Promise<AIInsights>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -1014,6 +1018,139 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ─── AI Feature Layer ────────────────────────────────────────────────
+
+  const aiEnabled = isAIConfigured();
+
+  const VALID_TYPES: WorkItemType[] = ['Study', 'Gym', 'Sports', 'Running', 'Entertainment', 'Other'];
+  const VALID_STATES: WorkItemState[] = ['New', 'Active', 'Done'];
+  const VALID_PRIORITIES: Priority[] = ['Critical', 'High', 'Medium', 'Low'];
+
+  const buildTaskCreatorSystemPrompt = (): string => {
+    const peopleList = state.people.map(p => `id="${p.id}" name="${p.name}"`).join('; ');
+    const sprintList = state.sprints.map(s => `id="${s.id}" name="${s.name}"${s.isActive ? ' (active)' : ''}`).join('; ');
+    return `You are a structured task generator for the Cheapzdo Task Board.
+
+SCHEMA:
+- title: string (concise, actionable)
+- description: string (optional detail)
+- type: one of ${JSON.stringify(VALID_TYPES)}
+- state: one of ${JSON.stringify(VALID_STATES)} — default "New"
+- priority: one of ${JSON.stringify(VALID_PRIORITIES)} — map P0/P1=Critical, P2=High, P3=Medium, P4=Low
+- assignee_id: a valid person id or null. People: ${peopleList}
+- tags: string[] — use relevant short tags. If the task is a daily routine use ["Daily"]. If it is a blocker use ["Blocker"].
+- sprint_id: a valid sprint id or null. Sprints: ${sprintList}
+- parent_id: null (only set if user explicitly references a parent task)
+
+RULES:
+- Return ONLY a single JSON object, no markdown, no explanation.
+- Choose the most appropriate type from the list.
+- Infer priority from urgency cues in the user text.
+- If a person name is mentioned, match to the closest person id.
+- If no person is mentioned, set assignee_id to null.
+- If no sprint is mentioned, set sprint_id to the active sprint id if one exists, else null.`;
+  };
+
+  const buildInsightsSystemPrompt = (): string => {
+    return `You are an executive analytics assistant for the Cheapzdo Task Board.
+
+SCORING MODEL (for context):
+- Completion Rate (50 pts): done / total assigned
+- Priority Impact (30 pts): avg priority weight of done items (Critical=1, High=0.75, Medium=0.5, Low=0.25)
+- Momentum (20 pts): active / (active + new) ratio
+
+You will receive a JSON snapshot of all tasks, people, and sprints.
+
+Return ONLY a JSON object with this exact shape:
+{
+  "summary": "<2-3 sentence executive summary>",
+  "risks": ["<risk 1>", ...],
+  "blockers": ["<blocker description>", ...],
+  "workload_imbalance": [{ "person_id": "<id>", "reason": "<why>" }, ...],
+  "momentum_analysis": "<paragraph>",
+  "priority_distribution_comment": "<paragraph>",
+  "recommendations": ["<recommendation 1>", ...]
+}
+
+No markdown. No commentary outside the JSON. Keep it concise and actionable.`;
+  };
+
+  const validateAITask = (raw: any): AIGeneratedTask => {
+    const type = VALID_TYPES.includes(raw.type) ? raw.type : 'Other';
+    const stateVal = VALID_STATES.includes(raw.state) ? raw.state : 'New';
+    const priority = VALID_PRIORITIES.includes(raw.priority) ? raw.priority : 'Medium';
+
+    let assigneeId: string | undefined;
+    if (raw.assignee_id && state.people.some(p => p.id === raw.assignee_id)) {
+      assigneeId = raw.assignee_id;
+    }
+
+    let sprintId: string | undefined;
+    if (raw.sprint_id && state.sprints.some(s => s.id === raw.sprint_id)) {
+      sprintId = raw.sprint_id;
+    }
+
+    return {
+      title: typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : 'Untitled Task',
+      description: typeof raw.description === 'string' ? raw.description : undefined,
+      type,
+      state: stateVal,
+      priority,
+      assigneeId,
+      tags: Array.isArray(raw.tags) ? raw.tags.filter((t: any) => typeof t === 'string') : [],
+      sprintId,
+      parentId: typeof raw.parent_id === 'string' ? raw.parent_id : undefined,
+    };
+  };
+
+  const validateAIInsights = (raw: any): AIInsights => {
+    return {
+      summary: typeof raw.summary === 'string' ? raw.summary : 'No summary available.',
+      risks: Array.isArray(raw.risks) ? raw.risks.filter((r: any) => typeof r === 'string') : [],
+      blockers: Array.isArray(raw.blockers) ? raw.blockers.filter((b: any) => typeof b === 'string') : [],
+      workloadImbalance: Array.isArray(raw.workload_imbalance)
+        ? raw.workload_imbalance
+            .filter((w: any) => w && typeof w.person_id === 'string')
+            .map((w: any) => ({ personId: w.person_id, reason: typeof w.reason === 'string' ? w.reason : '' }))
+        : [],
+      momentumAnalysis: typeof raw.momentum_analysis === 'string' ? raw.momentum_analysis : '',
+      priorityDistributionComment: typeof raw.priority_distribution_comment === 'string' ? raw.priority_distribution_comment : '',
+      recommendations: Array.isArray(raw.recommendations) ? raw.recommendations.filter((r: any) => typeof r === 'string') : [],
+    };
+  };
+
+  const generateAITask = async (inputText: string): Promise<AIGeneratedTask> => {
+    const raw = await queryAI<any>({
+      prompt: inputText,
+      systemPrompt: buildTaskCreatorSystemPrompt(),
+      temperature: 0.2,
+    });
+    return validateAITask(raw);
+  };
+
+  const generateAIInsights = async (): Promise<AIInsights> => {
+    const compactItems = state.workItems.map(w => ({
+      id: w.id,
+      title: w.title,
+      state: w.state,
+      priority: w.priority,
+      assignee_id: w.assigneeId || null,
+      sprint_id: w.sprintId || null,
+      tags: w.tags,
+    }));
+    const compactPeople = state.people.map(p => ({ id: p.id, name: p.name }));
+    const compactSprints = state.sprints.map(s => ({ id: s.id, name: s.name, is_active: s.isActive }));
+
+    const snapshot = JSON.stringify({ tasks: compactItems, people: compactPeople, sprints: compactSprints });
+
+    const raw = await queryAI<any>({
+      prompt: `Here is the current board snapshot:\n${snapshot}`,
+      systemPrompt: buildInsightsSystemPrompt(),
+      temperature: 0.4,
+    });
+    return validateAIInsights(raw);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1049,6 +1186,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateAnnouncement,
         deleteAnnouncement,
         isLoading,
+        isAIEnabled: aiEnabled,
+        generateAITask,
+        generateAIInsights,
       }}
     >
       {children}

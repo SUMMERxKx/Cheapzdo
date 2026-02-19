@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Users, Zap, AlertTriangle, Layers, Plus, X } from 'lucide-react';
 import { ConfirmDialog } from './ConfirmDialog';
+import { AIInsightsPanel } from './ai/AIInsightsPanel';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export function Dashboard() {
@@ -320,6 +321,9 @@ export function Dashboard() {
           </div>
         </Card>
       )}
+
+      {/* AI Insights */}
+      <AIInsightsPanel />
 
       {/* Delete Person Confirmation Dialog */}
       <ConfirmDialog
