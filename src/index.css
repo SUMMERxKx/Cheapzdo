@@ -705,32 +705,23 @@
   100% { transform: translateY(-120vh) translateX(-6px) rotate(0deg) scale(0.88); opacity: 0; }
 }
 
-@keyframes lantern-glow {
-  0%, 100% { filter: drop-shadow(0 0 8px hsl(43 95% 57% / 0.35)) drop-shadow(0 0 18px hsl(30 95% 50% / 0.25)); }
-  50%      { filter: drop-shadow(0 0 14px hsl(43 95% 57% / 0.55)) drop-shadow(0 0 28px hsl(30 95% 50% / 0.35)); }
-}
-
 .weather-particles-lanterns {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 50;
   overflow: hidden;
+  contain: layout paint;
 }
 
 .weather-particles-lanterns .lantern {
   position: absolute;
   bottom: -30px;
-  animation:
-    lantern-float linear infinite,
-    lantern-glow ease-in-out infinite 3s;
-  filter:
-    drop-shadow(0 0 10px hsl(43 95% 57% / 0.40))
-    drop-shadow(0 0 22px hsl(30 95% 50% / 0.30))
-    drop-shadow(0 0 40px hsl(0 80% 52% / 0.12));
-  text-shadow:
-    0 0 10px hsl(43 95% 57% / 0.35),
-    0 0 24px hsl(30 90% 50% / 0.20);
+  animation: lantern-float linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  filter: drop-shadow(0 0 12px hsl(43 95% 57% / 0.35));
+  text-shadow: 0 0 8px hsl(43 95% 57% / 0.25);
 }
 
 /**
