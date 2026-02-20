@@ -37,7 +37,7 @@ interface AppContextType extends AppState {
   isLoading: boolean;
   isAIEnabled: boolean;
   generateAITask: (inputText: string) => Promise<AIGeneratedTask>;
-  generateAIInsights: () => Promise<AIInsights>;
+  generateAIInsights: (options?: { sprintId: string | null }) => Promise<AIInsights>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -1128,8 +1128,14 @@ No markdown. No commentary outside the JSON. Keep it concise and actionable.`;
     return validateAITask(raw);
   };
 
-  const generateAIInsights = async (): Promise<AIInsights> => {
-    const compactItems = state.workItems.map(w => ({
+  const generateAIInsights = async (options?: { sprintId: string | null }): Promise<AIInsights> => {
+    const sprintId = options?.sprintId ?? null;
+
+    const filteredItems = sprintId
+      ? state.workItems.filter(w => w.sprintId === sprintId)
+      : state.workItems;
+
+    const compactItems = filteredItems.map(w => ({
       id: w.id,
       title: w.title,
       state: w.state,
@@ -1141,10 +1147,14 @@ No markdown. No commentary outside the JSON. Keep it concise and actionable.`;
     const compactPeople = state.people.map(p => ({ id: p.id, name: p.name }));
     const compactSprints = state.sprints.map(s => ({ id: s.id, name: s.name, is_active: s.isActive }));
 
+    const scopeNote = sprintId
+      ? `Scope: Analyze ONLY the sprint "${state.sprints.find(s => s.id === sprintId)?.name ?? sprintId}". Tasks below are already filtered to this sprint.`
+      : 'Scope: Analyze the ENTIRE board across all sprints.';
+
     const snapshot = JSON.stringify({ tasks: compactItems, people: compactPeople, sprints: compactSprints });
 
     const raw = await queryAI<any>({
-      prompt: `Here is the current board snapshot:\n${snapshot}`,
+      prompt: `${scopeNote}\n\nHere is the board snapshot:\n${snapshot}`,
       systemPrompt: buildInsightsSystemPrompt(),
       temperature: 0.4,
     });

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
   BrainCircuit,
@@ -18,17 +20,26 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
+type InsightScope = 'current' | 'all' | string;
+
 export function AIInsightsPanel() {
-  const { generateAIInsights, people, isAIEnabled } = useApp();
+  const { generateAIInsights, people, sprints, activeSprint, isAIEnabled } = useApp();
   const [insights, setInsights] = useState<AIInsights | null>(null);
   const [loading, setLoading] = useState(false);
+  const [scope, setScope] = useState<InsightScope>('current');
 
   if (!isAIEnabled) return null;
+
+  const getSprintIdForScope = (): string | null => {
+    if (scope === 'all') return null;
+    if (scope === 'current') return activeSprint;
+    return scope;
+  };
 
   const handleGenerate = async () => {
     setLoading(true);
     try {
-      const result = await generateAIInsights();
+      const result = await generateAIInsights({ sprintId: getSprintIdForScope() });
       setInsights(result);
     } catch (err: any) {
       const msg = err?.message || 'Failed to generate insights. Please try again.';
@@ -40,6 +51,15 @@ export function AIInsightsPanel() {
 
   const getPersonName = (id: string) => people.find(p => p.id === id)?.name || id;
 
+  const scopeLabel =
+    scope === 'current'
+      ? activeSprint
+        ? `Current sprint (${sprints.find(s => s.id === activeSprint)?.name ?? 'Active'})`
+        : 'Current sprint (none)'
+      : scope === 'all'
+        ? 'Whole board'
+        : sprints.find(s => s.id === scope)?.name ?? scope;
+
   if (!insights) {
     return (
       <Card className="border-border/60">
@@ -49,25 +69,47 @@ export function AIInsightsPanel() {
             AI Trends & Insights
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground mb-4">
-            Analyze your board's tasks, workload distribution, risks, and momentum to get executive-level insights.
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Analyze tasks, workload, risks, and momentum. Choose which scope to analyze:
           </p>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Scope</Label>
+            <Select
+              value={scope}
+              onValueChange={(v) => setScope(v as InsightScope)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="current">
+                  Current sprint{activeSprint ? ` (${sprints.find(s => s.id === activeSprint)?.name})` : ''}
+                </SelectItem>
+                <SelectItem value="all">Whole board (all sprints)</SelectItem>
+                {sprints.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}{s.isActive ? ' (active)' : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             onClick={handleGenerate}
-            disabled={loading}
+            disabled={loading || (scope === 'current' && !activeSprint)}
             className="w-full gap-2"
             size="sm"
           >
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Analyzing board…
+                Analyzing…
               </>
             ) : (
               <>
                 <BrainCircuit className="w-4 h-4" />
-                Generate AI Insights
+                Generate AI Insights {scope !== 'all' ? `(${scopeLabel})` : ''}
               </>
             )}
           </Button>
@@ -80,10 +122,13 @@ export function AIInsightsPanel() {
     <Card className="border-border/60">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <BrainCircuit className="w-4 h-4 text-primary" />
-            AI Trends & Insights
-          </CardTitle>
+          <div>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <BrainCircuit className="w-4 h-4 text-primary" />
+              AI Trends & Insights
+            </CardTitle>
+            <p className="text-[10px] text-muted-foreground mt-1">Scope: {scopeLabel}</p>
+          </div>
           <Button
             variant="ghost"
             size="sm"
