@@ -13,10 +13,10 @@ Primary problem solved:
 
 Product behavior at a glance:
 - Password gate before board access
-- Tabbed workspace with `Announcements`, `Dashboard`, `Sprint Board`, `Daily`, `Leaderboard`, `AI`
+- Tabbed workspace with `Announcements`, `Dashboard`, `Sprint Board`, `Daily`, `Leaderboard` (no separate AI tab; AI lives in boards and Dashboard)
 - Supabase-backed persistence for all core entities
-- Optional theme system with weather/season visual effects
-- AI-powered task creation and board analytics (via OpenRouter)
+- Optional theme system with weather/season visual effects (default: Chinese New Year with lanterns)
+- AI-powered task creation (Sprint/Daily boards) and insights (Dashboard) via OpenRouter
 
 
 ## 2. Tech Stack
@@ -291,20 +291,21 @@ Permissions:
   - renders top-3 podium and full ranked table
 
 ### I. Theming + Weather Effects
-- **What it does:** 7 themes with tokenized colors + animated visual overlays
+- **What it does:** Multiple themes with tokenized colors + animated visual overlays; default is Chinese New Year (lanterns animating bottom-to-top)
 - **Files:** `ThemeContext.tsx`, `ThemeSwitcher.tsx`, `WeatherParticles.tsx`, `index.css`
 - **Data flow:** theme selection updates `data-theme` attribute; CSS variable sets + particle classes drive visuals
+- **Performance:** Lanterns use transform-only animation, `will-change: transform`, `contain: layout paint`, and static drop-shadow (no filter animation) for smooth rendering
 
 ### J. AI Feature System (Task Creator + Insights)
-- **What it does:** Natural-language task creation and executive-level board analytics via OpenRouter AI
-- **Files:** `lib/ai.ts`, `context/AppContext.tsx`, `components/ai/AITaskCreator.tsx`, `components/ai/AIInsightsPanel.tsx`
+- **What it does:** Natural-language task creation (dialog on Sprint and Daily boards) and executive-level board analytics (Dashboard only, with scope: current sprint / whole board / specific sprint) via OpenRouter AI
+- **Files:** `lib/ai.ts`, `context/AppContext.tsx`, `components/ai/AITaskCreator.tsx`, `components/ai/AIInsightsPanel.tsx`; AITaskCreator is used from `WorkItemList.tsx`; AIInsightsPanel from `Dashboard.tsx`
 - **Data flow:**
-  - Components call context methods (`generateAITask`, `generateAIInsights`)
+  - Components call context methods (`generateAITask`, `generateAIInsights({ sprintId })`)
   - Context builds dynamic system prompts (injecting current people/sprints/scoring model)
   - Context calls `queryAI()` in `lib/ai.ts` which hits OpenRouter API
   - Response is validated/corrected and returned to component
   - Task acceptance calls existing `addWorkItem()` (optimistic update + Supabase persist)
-- **Gating:** Disabled if `VITE_OPENROUTER_API_KEY` is not set
+- **Gating:** AI features (Generate button, Insights panel) are disabled/hidden when `VITE_OPENROUTER_API_KEY` is not set
 
 
 ## 10. Environment Variables
@@ -329,14 +330,14 @@ Used variables:
 
 5. `VITE_OPENROUTER_API_KEY`
 - Used in `lib/ai.ts` for OpenRouter API authentication
-- If not set, AI tab is disabled (greyed out) — no other features affected
+- If not set, AI features (task generation, insights) are disabled or hidden — no other features affected
 - Never logged or persisted
 
 Behavior when Supabase env missing:
 - App logs warning and continues with default/local in-memory behavior
 
 Behavior when OpenRouter key missing:
-- AI tab shows as disabled; all other features work normally
+- AI Generate and Insights UI are disabled or hidden; all other features work normally
 
 
 ## 11. Deployment Flow
@@ -423,10 +424,10 @@ Practical onboarding sequence:
 ### Overview
 
 The AI feature system adds two capabilities to Cheapzdo:
-1. **AI Task Creator** — converts natural language descriptions into structured work items
-2. **AI Trends & Insights** — analyzes the board's tasks, people, and sprints to produce executive-level analytics
+1. **AI Task Creator** — converts natural language descriptions into structured work items (dialog next to "Add Task" on Sprint Board and Daily board)
+2. **AI Trends & Insights** — analyzes the board's tasks, people, and sprints to produce executive-level analytics (Dashboard only, with scope selector: current sprint / whole board / specific sprint)
 
-Both features live under the **AI** tab in the main navigation and are powered by OpenRouter's API (client-side fetch, no custom backend).
+There is **no separate AI tab**. Both features are powered by OpenRouter's API (client-side fetch, no custom backend).
 
 ### Architecture
 
@@ -436,8 +437,8 @@ User Input
     ▼
 ┌─────────────────────────┐
 │  UI Components          │
-│  AITaskCreator.tsx       │  ← Textarea + preview card + accept/regenerate
-│  AIInsightsPanel.tsx     │  ← Generate button + rendered insight sections
+│  AITaskCreator.tsx       │  ← Dialog on Sprint/Daily (WorkItemList); textarea + preview + accept/regenerate
+│  AIInsightsPanel.tsx     │  ← In Dashboard; scope selector + Generate + insight sections
 └──────────┬──────────────┘
            │ calls context methods
            ▼
@@ -463,9 +464,10 @@ Components never call the API directly. All AI logic (prompt construction, API c
 | `src/lib/ai.ts` | OpenRouter API wrapper — fetch, JSON repair, retry, rate-limit, timeout |
 | `src/types/index.ts` | `AIGeneratedTask`, `AIInsights`, `AIWorkloadImbalance` type definitions |
 | `src/context/AppContext.tsx` | `generateAITask()`, `generateAIInsights()`, system prompts, field validation |
-| `src/components/ai/AITaskCreator.tsx` | Natural-language → structured task UI |
-| `src/components/ai/AIInsightsPanel.tsx` | Board analytics / insights rendering UI |
-| `src/components/MainBoard.tsx` | AI tab registration in tab navigation |
+| `src/components/ai/AITaskCreator.tsx` | Natural-language → structured task UI (used in WorkItemList for Sprint + Daily) |
+| `src/components/ai/AIInsightsPanel.tsx` | Board analytics / insights rendering UI (used in Dashboard) |
+| `src/components/WorkItemList.tsx` | Hosts AITaskCreator button + AddWorkItemDialog |
+| `src/components/Dashboard.tsx` | Hosts AIInsightsPanel |
 
 ### Environment Variable
 
@@ -473,8 +475,8 @@ Components never call the API directly. All AI logic (prompt construction, API c
 VITE_OPENROUTER_API_KEY=<your-openrouter-api-key>
 ```
 
-- If not set, the AI tab is **disabled** (greyed out with "(off)" label)
-- If set, the tab is fully functional
+- If not set, AI features (Generate task, Insights) are **disabled** or hidden
+- If set, AI task creation and insights are fully functional
 - The key is read at runtime via `import.meta.env.VITE_OPENROUTER_API_KEY`
 - The key is never logged or persisted to any storage
 
@@ -482,7 +484,7 @@ VITE_OPENROUTER_API_KEY=<your-openrouter-api-key>
 
 Responsibilities:
 - Wraps the OpenRouter chat completions endpoint (`POST https://openrouter.ai/api/v1/chat/completions`)
-- Uses `mistralai/mistral-7b-instruct:free` as the default model (cheapest viable instruct model)
+- Uses `deepseek/deepseek-chat` as the primary model with fallback `google/gemma-3-27b-it:free`
 - Accepts: `prompt`, `systemPrompt`, `temperature`
 - Returns: parsed JSON (typed via generic `queryAI<T>()`)
 - Handles rate-limit (HTTP 429) with one automatic retry after 2s delay
@@ -493,13 +495,7 @@ Responsibilities:
 
 ### How to swap models
 
-Change the single `MODEL` constant on line 2 of `src/lib/ai.ts`:
-
-```typescript
-const MODEL = 'mistralai/mistral-7b-instruct:free';
-```
-
-Replace with any OpenRouter model ID. No other changes required.
+In `src/lib/ai.ts`, update the primary `MODEL` constant (and optional fallback). Replace with any OpenRouter model ID. No other changes required.
 
 ### Prompt Engineering
 
@@ -553,8 +549,8 @@ All AI responses pass through strict validation functions:
 
 ### AI Insights Flow
 
-1. User clicks "Generate AI Insights"
-2. `AppContext.generateAIInsights()` compresses the board snapshot to minimal fields and sends it
+1. User selects scope in Dashboard (current sprint / whole board / specific sprint) and clicks "Generate AI Insights"
+2. `AppContext.generateAIInsights({ sprintId })` compresses the board snapshot to minimal fields and sends it
 3. AI returns structured analysis
 4. Panel renders six sections:
    - **Summary** — 2-3 sentence executive overview
@@ -591,7 +587,7 @@ No descriptions, comments, timestamps, or other fields are sent.
 
 ### How to Disable
 
-- Remove `VITE_OPENROUTER_API_KEY` from environment → tab greys out, shows "(off)"
-- Or remove the AI tab trigger and content from `MainBoard.tsx` for complete removal
+- Remove `VITE_OPENROUTER_API_KEY` from environment → AI Generate and Insights UI are disabled/hidden
+- Or remove AITaskCreator from `WorkItemList.tsx` and AIInsightsPanel from `Dashboard.tsx` for complete removal
 - No other features are affected — zero coupling to existing functionality
 
