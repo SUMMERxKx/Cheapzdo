@@ -24,6 +24,7 @@ interface WorkItemListProps {
   hideSprintInDialog?: boolean; // Hide sprint selector in add dialog
   hideStatePriorityTags?: boolean; // Hide State, Priority, and Tags columns (used for Daily board)
   isDailyBoard?: boolean; // If true, tasks added will get "Daily" tag automatically
+  isArcBoard?: boolean; // If true, tasks added will get "Arc" tag automatically
 }
 
 /**
@@ -40,7 +41,7 @@ interface WorkItemListProps {
  * - Supports hiding columns for simplified views (Daily board)
  * - Automatic task tagging for Daily board separation
  */
-export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false, hideSprintInDialog = false, hideStatePriorityTags = false, isDailyBoard = false }: WorkItemListProps) {
+export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false, hideSprintInDialog = false, hideStatePriorityTags = false, isDailyBoard = false, isArcBoard = false }: WorkItemListProps) {
   const { reorderWorkItems } = useApp();
   const [filters, setFilters] = useState<FiltersState>({
     search: '',
@@ -192,8 +193,8 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-lg font-bold tracking-wide">{title}</h2>
         <div className="flex items-center gap-2">
-          <AITaskCreator defaultSprintId={defaultSprintId} isDailyBoard={isDailyBoard} />
-          <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} isDailyBoard={isDailyBoard} />
+          <AITaskCreator defaultSprintId={defaultSprintId} isDailyBoard={isDailyBoard} isArcBoard={isArcBoard} />
+          <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} isDailyBoard={isDailyBoard} isArcBoard={isArcBoard} />
         </div>
       </div>
 

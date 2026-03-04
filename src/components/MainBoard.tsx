@@ -30,14 +30,13 @@ export function MainBoard() {
   const { workItems, activeSprint } = useApp();
   const [activeTab, setActiveTab] = useState<TabValue>('dashboard');
 
-  // Filter Sprint tasks: items assigned to active sprint that don't have "Daily" tag
-  // This ensures Daily board tasks don't appear in Sprint board
+  // Filter Sprint tasks: items in active sprint, excluding Daily and Arc board items
   const sprintTasks = activeSprint 
-    ? workItems.filter(item => item.sprintId === activeSprint && !item.tags.includes('Daily'))
+    ? workItems.filter(item => item.sprintId === activeSprint && !item.tags.includes('Daily') && !item.tags.includes('Arc'))
     : [];
 
-  // Arc Board: all items that belong to any sprint (cross-sprint PI view), no Daily tasks
-  const arcTasks = workItems.filter(item => item.sprintId && !item.tags.includes('Daily'));
+  // Arc Board: items explicitly tagged "Arc" — fully separate from Sprint board
+  const arcTasks = workItems.filter(item => item.tags.includes('Arc') && !item.tags.includes('Daily'));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -114,13 +113,14 @@ export function MainBoard() {
           </div>
         </TabsContent>
 
-        {/* Arc Board: Cross-sprint PI planning view — all sprint items in one place */}
+        {/* Arc Board: Separate PI-style planning board with its own items (tagged "Arc") */}
         <TabsContent value="arc" className="flex-1 m-0 !mt-0 p-0 flex flex-col overflow-hidden min-h-0">
           <div className="flex-1 overflow-hidden min-h-0">
             <WorkItemList
               items={arcTasks}
               title="ARC BOARD"
-              hideSprintColumn={false}
+              hideSprintColumn={true}
+              isArcBoard={true}
             />
           </div>
         </TabsContent>

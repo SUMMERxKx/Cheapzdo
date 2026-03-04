@@ -15,6 +15,7 @@ interface AddWorkItemDialogProps {
   parentType?: WorkItemType;
   hideSprint?: boolean; // Hide sprint selector in dialog
   isDailyBoard?: boolean; // If true, automatically adds "Daily" tag and excludes sprintId
+  isArcBoard?: boolean; // If true, automatically adds "Arc" tag and hides sprint selector
 }
 
 /**
@@ -27,7 +28,7 @@ interface AddWorkItemDialogProps {
  * - When hideSprint=true: Hides the sprint selector field
  * - When parentId is provided: Only allows "Other" type (for child tasks)
  */
-export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideSprint = false, isDailyBoard = false }: AddWorkItemDialogProps) {
+export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideSprint = false, isDailyBoard = false, isArcBoard = false }: AddWorkItemDialogProps) {
   const { addWorkItem, people, sprints } = useApp();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -54,12 +55,18 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
       if (isDailyBoard && !taskTags.includes('Daily')) {
         taskTags.push('Daily');
       }
+
+      // Arc board tasks: automatically add "Arc" tag to keep them separate from Sprint tasks
+      if (isArcBoard && !taskTags.includes('Arc')) {
+        taskTags.push('Arc');
+      }
       
       // Determine sprintId:
       // - Daily board: always undefined (no sprint assignment)
+      // - Arc board: always undefined (arc items are not sprint-scoped)
       // - hideSprint: undefined (sprint selector hidden)
       // - Otherwise: use selected sprintId or defaultSprintId
-      const finalSprintId = isDailyBoard 
+      const finalSprintId = isDailyBoard || isArcBoard
         ? undefined 
         : (hideSprint ? undefined : (sprintId || undefined));
       
@@ -186,7 +193,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
               </Select>
             </div>
 
-            {!parentId && !hideSprint && !isDailyBoard && (
+            {!parentId && !hideSprint && !isDailyBoard && !isArcBoard && (
               <div className="space-y-2">
                 <Label>Sprint</Label>
                 <Select 

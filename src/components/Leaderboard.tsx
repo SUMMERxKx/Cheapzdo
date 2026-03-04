@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Person, WorkItem, Priority, Sprint } from '@/types';
-import { Trophy, Medal, Crown, Flame, CheckCircle2, Zap, TrendingUp, Info, ChevronDown, Layers } from 'lucide-react';
+import { Trophy, Medal, Crown, Flame, CheckCircle2, Zap, TrendingUp, Info, ChevronDown } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 /* ------------------------------------------------------------------ */
@@ -416,30 +416,19 @@ export function Leaderboard() {
           <Trophy className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-bold tracking-wide">LEADERBOARD</h2>
         </div>
-      </div>
-
-      {/* Sprint filter pills */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          variant={selectedSprint === ALL_SPRINTS ? 'default' : 'outline'}
-          size="sm"
-          className="h-8 gap-1.5"
-          onClick={() => setSelectedSprint(ALL_SPRINTS)}
-        >
-          <Layers className="w-3.5 h-3.5" />
-          Overall
-        </Button>
-        {sortedSprints.map((sprint) => (
-          <Button
-            key={sprint.id}
-            variant={selectedSprint === sprint.id ? 'default' : 'outline'}
-            size="sm"
-            className="h-8"
-            onClick={() => setSelectedSprint(sprint.id)}
-          >
-            {sprint.name}
-          </Button>
-        ))}
+        <Select value={selectedSprint} onValueChange={setSelectedSprint}>
+          <SelectTrigger className="w-44 h-8 text-xs">
+            <SelectValue placeholder="Overall" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_SPRINTS}>Overall</SelectItem>
+            {sortedSprints.map((sprint) => (
+              <SelectItem key={sprint.id} value={sprint.id}>
+                {sprint.name}{sprint.isActive ? ' ●' : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Scoring Legend (collapsible) */}
