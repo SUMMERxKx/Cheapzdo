@@ -4,21 +4,27 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, Zap, AlertTriangle, Layers, Plus, X } from 'lucide-react';
+import { Users, Zap, AlertTriangle, Layers, Plus, X, LayoutDashboard } from 'lucide-react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { AIInsightsPanel } from './ai/AIInsightsPanel';
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { cn } from '@/lib/utils';
 
 export function Dashboard() {
-  const { workItems, people, getPersonById, addPerson, deletePerson } = useApp();
+  const { workItems, people, sprints, getPersonById, addPerson, deletePerson } = useApp();
   const [newPersonName, setNewPersonName] = useState('');
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
   const [isDeletePersonConfirmOpen, setIsDeletePersonConfirmOpen] = useState(false);
   const [personToDelete, setPersonToDelete] = useState<string | null>(null);
+  const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
 
-  const activeItems = workItems.filter(item => item.state === 'Active');
-  const blockers = workItems.filter(item => item.tags.includes('Blocker') && item.state !== 'Done');
-  const doneItems = workItems.filter(item => item.state === 'Done');
+  const filteredItems = selectedSprintId
+    ? workItems.filter(item => item.sprintId === selectedSprintId)
+    : workItems;
+
+  const activeItems = filteredItems.filter(item => item.state === 'Active');
+  const blockers = filteredItems.filter(item => item.tags.includes('Blocker') && item.state !== 'Done');
+  const doneItems = filteredItems.filter(item => item.state === 'Done');
 
   // Data for charts
   const activeByAssignee = activeItems.reduce((acc, item) => {
@@ -33,16 +39,16 @@ export function Dashboard() {
   }, {} as Record<string, number>);
 
   const stateDistribution = [
-    { name: 'New', value: workItems.filter(i => i.state === 'New').length, color: '#94a3b8' },
+    { name: 'New', value: filteredItems.filter(i => i.state === 'New').length, color: '#94a3b8' },
     { name: 'Active', value: activeItems.length, color: '#f59e0b' },
     { name: 'Done', value: doneItems.length, color: '#10b981' },
   ];
 
   const priorityDistribution = [
-    { name: 'Critical', value: workItems.filter(i => i.priority === 'Critical').length, color: '#ef4444' },
-    { name: 'High', value: workItems.filter(i => i.priority === 'High').length, color: '#f59e0b' },
-    { name: 'Medium', value: workItems.filter(i => i.priority === 'Medium').length, color: '#3b82f6' },
-    { name: 'Low', value: workItems.filter(i => i.priority === 'Low').length, color: '#6b7280' },
+    { name: 'Critical', value: filteredItems.filter(i => i.priority === 'Critical').length, color: '#ef4444' },
+    { name: 'High', value: filteredItems.filter(i => i.priority === 'High').length, color: '#f59e0b' },
+    { name: 'Medium', value: filteredItems.filter(i => i.priority === 'Medium').length, color: '#3b82f6' },
+    { name: 'Low', value: filteredItems.filter(i => i.priority === 'Low').length, color: '#6b7280' },
   ];
 
   // Convert to chart data format
@@ -76,9 +82,44 @@ export function Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Zap className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-bold tracking-wide">are we slacking?</h2>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <Zap className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-bold tracking-wide">are we slacking?</h2>
+        </div>
+
+        {/* Sprint filter toggle */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setSelectedSprintId(null)}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors',
+              selectedSprintId === null
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card text-muted-foreground border-border hover:border-primary hover:text-primary'
+            )}
+          >
+            <LayoutDashboard className="w-3 h-3" />
+            All Board
+          </button>
+          {sprints.map(sprint => (
+            <button
+              key={sprint.id}
+              onClick={() => setSelectedSprintId(sprint.id)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors',
+                selectedSprintId === sprint.id
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-muted-foreground border-border hover:border-primary hover:text-primary'
+              )}
+            >
+              {sprint.name}
+              {sprint.isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -161,7 +202,7 @@ export function Dashboard() {
                 <div key={index} className="flex items-center gap-2 text-xs">
                   <div className="w-3 h-3 rounded" style={{ backgroundColor: entry.color }}></div>
                   <span style={{ color: entry.color }}>
-                    {entry.name}: {entry.value > 0 ? ((entry.value / workItems.length) * 100).toFixed(0) : 0}%
+                    {entry.name}: {entry.value > 0 && filteredItems.length > 0 ? ((entry.value / filteredItems.length) * 100).toFixed(0) : 0}%
                   </span>
                 </div>
               ))}
@@ -196,7 +237,7 @@ export function Dashboard() {
                 <div key={index} className="flex items-center gap-2 text-xs">
                   <div className="w-3 h-3 rounded" style={{ backgroundColor: entry.color }}></div>
                   <span style={{ color: entry.color }}>
-                    {entry.name}: {entry.value > 0 ? ((entry.value / workItems.length) * 100).toFixed(0) : 0}%
+                    {entry.name}: {entry.value > 0 && filteredItems.length > 0 ? ((entry.value / filteredItems.length) * 100).toFixed(0) : 0}%
                   </span>
                 </div>
               ))}
