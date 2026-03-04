@@ -4,11 +4,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, Zap, AlertTriangle, Layers, Plus, X, LayoutDashboard } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users, Zap, AlertTriangle, Layers, Plus, X } from 'lucide-react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { AIInsightsPanel } from './ai/AIInsightsPanel';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { cn } from '@/lib/utils';
 
 export function Dashboard() {
   const { workItems, people, sprints, getPersonById, addPerson, deletePerson } = useApp();
@@ -88,38 +88,23 @@ export function Dashboard() {
           <h2 className="text-lg font-bold tracking-wide">are we slacking?</h2>
         </div>
 
-        {/* Sprint filter toggle */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={() => setSelectedSprintId(null)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors',
-              selectedSprintId === null
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card text-muted-foreground border-border hover:border-primary hover:text-primary'
-            )}
-          >
-            <LayoutDashboard className="w-3 h-3" />
-            All Board
-          </button>
-          {sprints.map(sprint => (
-            <button
-              key={sprint.id}
-              onClick={() => setSelectedSprintId(sprint.id)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors',
-                selectedSprintId === sprint.id
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-muted-foreground border-border hover:border-primary hover:text-primary'
-              )}
-            >
-              {sprint.name}
-              {sprint.isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Sprint filter dropdown */}
+        <Select
+          value={selectedSprintId ?? 'all'}
+          onValueChange={(val) => setSelectedSprintId(val === 'all' ? null : val)}
+        >
+          <SelectTrigger className="w-44 h-8 text-xs">
+            <SelectValue placeholder="All Board" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Board</SelectItem>
+            {sprints.map(sprint => (
+              <SelectItem key={sprint.id} value={sprint.id}>
+                {sprint.name}{sprint.isActive ? ' ●' : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Stats Cards */}

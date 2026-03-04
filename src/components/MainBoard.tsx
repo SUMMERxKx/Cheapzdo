@@ -8,9 +8,9 @@ import { SprintNavigation } from './SprintNavigation';
 import { Announcements } from './Announcements';
 import { DailyContent } from './Daily';
 import { Leaderboard } from './Leaderboard';
-import { LayoutDashboard, Zap, Megaphone, CalendarDays, Trophy } from 'lucide-react';
+import { LayoutDashboard, Zap, Megaphone, CalendarDays, Trophy, Layers } from 'lucide-react';
 
-type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily' | 'leaderboard';
+type TabValue = 'dashboard' | 'sprint' | 'arc' | 'announcements' | 'daily' | 'leaderboard';
 
 /**
  * MainBoard Component
@@ -35,6 +35,9 @@ export function MainBoard() {
   const sprintTasks = activeSprint 
     ? workItems.filter(item => item.sprintId === activeSprint && !item.tags.includes('Daily'))
     : [];
+
+  // Arc Board: all items that belong to any sprint (cross-sprint PI view), no Daily tasks
+  const arcTasks = workItems.filter(item => item.sprintId && !item.tags.includes('Daily'));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -64,6 +67,14 @@ export function MainBoard() {
               <Zap className="w-4 h-4" />
               Sprint Board
               <span className="ml-1 text-xs text-muted-foreground">({sprintTasks.filter(i => !i.parentId).length})</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="arc"
+              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
+            >
+              <Layers className="w-4 h-4" />
+              Arc Board
+              <span className="ml-1 text-xs text-muted-foreground">({arcTasks.filter(i => !i.parentId).length})</span>
             </TabsTrigger>
             <TabsTrigger
               value="daily"
@@ -99,6 +110,17 @@ export function MainBoard() {
               title="SPRINT BOARD" 
               defaultSprintId={activeSprint || undefined}
               hideSprintColumn={true}
+            />
+          </div>
+        </TabsContent>
+
+        {/* Arc Board: Cross-sprint PI planning view — all sprint items in one place */}
+        <TabsContent value="arc" className="flex-1 m-0 !mt-0 p-0 flex flex-col overflow-hidden min-h-0">
+          <div className="flex-1 overflow-hidden min-h-0">
+            <WorkItemList
+              items={arcTasks}
+              title="ARC BOARD"
+              hideSprintColumn={false}
             />
           </div>
         </TabsContent>
