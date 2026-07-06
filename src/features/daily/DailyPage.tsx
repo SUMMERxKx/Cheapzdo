@@ -20,7 +20,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { GripVertical, Lock, Plus, Sparkles, Trash2, Users } from "lucide-react";
 import { DailyCheckbox } from "./DailyCheckbox";
 import { Button } from "@/components/ui/button";
@@ -394,7 +394,7 @@ export default function DailyPage() {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
+            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
             onDragEnd={onDragEnd}
           >
             <SortableContext items={open.map((i) => i.id)} strategy={verticalListSortingStrategy}>

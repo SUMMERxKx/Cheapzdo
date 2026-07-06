@@ -21,6 +21,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { GripVertical, TriangleAlert } from "lucide-react";
@@ -206,6 +207,8 @@ export function KanbanView({
   // Local grouping that mirrors the query data and is mutated live during drag.
   const [groups, setGroups] = useState<Record<string, Task[]>>({});
   const [active, setActive] = useState<Task | null>(null);
+  // Column drags stay on the horizontal axis, cards move freely between columns.
+  const [draggingColumn, setDraggingColumn] = useState(false);
   // Column order mirrors statuses and is reordered live during a column drag.
   const [colOrder, setColOrder] = useState<string[]>([]);
   const orderedStatuses = useMemo(() => {
@@ -241,7 +244,10 @@ export function KanbanView({
   const isColumnDrag = (id: unknown) => String(id).startsWith("col:");
 
   const onDragStart = (e: DragStartEvent) => {
-    if (isColumnDrag(e.active.id)) return;
+    if (isColumnDrag(e.active.id)) {
+      setDraggingColumn(true);
+      return;
+    }
     const col = columnOf(String(e.active.id));
     const t = col ? groups[col].find((x) => x.id === e.active.id) : undefined;
     setActive(t ?? null);
@@ -279,6 +285,7 @@ export function KanbanView({
   const onDragEnd = async (e: DragEndEvent) => {
     const { active: a, over } = e;
     setActive(null);
+    setDraggingColumn(false);
     // Commit a column reorder in one atomic call.
     if (isColumnDrag(a.id)) {
       const res = await reorderStatuses(boardId, colOrder);
@@ -329,9 +336,15 @@ export function KanbanView({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
+      autoScroll={{ threshold: { x: 0.15, y: 0.15 } }}
+      modifiers={draggingColumn ? [restrictToHorizontalAxis] : undefined}
       onDragStart={canEdit ? onDragStart : undefined}
       onDragOver={canEdit ? onDragOver : undefined}
       onDragEnd={canEdit ? onDragEnd : undefined}
+      onDragCancel={() => {
+        setActive(null);
+        setDraggingColumn(false);
+      }}
     >
       <SortableContext
         items={orderedStatuses.map((s) => `col:${s.id}`)}

@@ -25,7 +25,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  restrictToHorizontalAxis,
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
 import { ArrowDown, ArrowUp, GripVertical, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -175,6 +179,10 @@ export function ListView({
   // Manual row ordering only makes sense in position order, so it turns off
   // while a header sort is active.
   const rowsDraggable = canEdit && sorting.length === 0;
+  // Track what is being dragged so the right clamp applies. Rows lock to the
+  // vertical axis, headers to the horizontal one, and both stay inside their
+  // parent so a drag can never run past the last element or scroll forever.
+  const [dragKind, setDragKind] = useState<"row" | "column" | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -355,8 +363,18 @@ export function ListView({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
-        onDragEnd={onDragEnd}
-        modifiers={rowsDraggable ? undefined : [restrictToVerticalAxis]}
+        autoScroll={{ threshold: { x: 0.15, y: 0.15 } }}
+        onDragStart={(e) => setDragKind(isHeaderDrag(e.active.id) ? "column" : "row")}
+        onDragCancel={() => setDragKind(null)}
+        onDragEnd={(e) => {
+          setDragKind(null);
+          void onDragEnd(e);
+        }}
+        modifiers={
+          dragKind === "column"
+            ? [restrictToHorizontalAxis, restrictToParentElement]
+            : [restrictToVerticalAxis, restrictToParentElement]
+        }
       >
         <table className="w-full text-left">
           <thead className="border-b border-border bg-secondary/40">
