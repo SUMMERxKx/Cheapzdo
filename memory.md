@@ -11,22 +11,20 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 5 Arc Board and Sprint Board — done
+- Current phase: Phase 6 Daily board — done
 - Last updated: 2026-07-06
-- Active branch: phase-5-boards (stacked on phase-4-rbac, pushed to origin)
-- Built so far: Phases 1 to 4 plus Phase 5, the flagship. Arc Board with rollup
-  ring epic cards, arc selector with a backlog bucket, start new arc. Sprint
-  Board with list (default, TanStack Table, inline status and priority edits)
-  and kanban (dnd-kit multi container with live column parting and a drag
-  overlay), sprint navigation, close sprint with move incomplete, task detail
-  sheet with comments, reparenting, sprint move, and blocker flag. Lifecycle
-  RPCs create_arc and close_sprint in migration 0017, proven by 10 SQL tests.
+- Active branch: phase-6-daily (stacked on phase-5-boards, pushed to origin)
+- Built so far: Phases 1 to 5 plus Phase 6, the private rolling Daily checklist
+  with an animated draw in checkbox, progress ring, inline composer, inline
+  rename, drag reorder of open items, and a done section. Privacy enforced by
+  the daily_all RLS policy proven in phase 2.
 - In progress or half done: user dashboard config still pending from phase 3
   (Site URL, redirect list, leaked password protection toggle).
-- Next action: on "go phase 6", build the Daily board. Branch off phase-5-boards.
+- Next action: on "go phase 7", build the Leaderboard and Dashboard. Branch off
+  phase-6-daily.
 - Known broken right now: nothing. Full gate is green.
 - Env and config: migrations 0001 to 0017 applied. Dev server on port 8080.
-- Branch stacking: phases 1 to 5 are stacked branches, none merged to main yet.
+- Branch stacking: phases 1 to 6 are stacked branches, none merged to main yet.
 
 ---
 
@@ -159,6 +157,23 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 6 — Daily board   [2026-07-06]
+- Delivered:
+  - daily data module (list, create with the client local date, update, delete).
+  - DailyCheckbox with a drawn in check mark and a tap spring, instant under
+    reduced motion.
+  - DailyPage: progress ring plus n of m header, inline add composer with enter,
+    inline rename, hover delete, drag reorder of open items (dnd-kit vertical
+    with the new @dnd-kit/modifiers restrictToVerticalAxis), done items sink to
+    a faded done section, an all done message, and a private empty state.
+  - Rolling list model per the plan decision, for_date recorded from the client
+    local date for a future per day view.
+- Gates: build, typecheck, lint, test green. DailyPage is a 7.7 kB lazy chunk.
+  Privacy was proven by the phase 2 RLS matrix (daily_private), no schema change
+  this phase so advisors are unchanged.
+- Deviations from plan: none.
+- Docs updated: memory.md. CLAUDE.md reviewed, no change needed.
 
 ### Phase 5 — Arc Board and Sprint Board   [2026-07-06]
 - Delivered:

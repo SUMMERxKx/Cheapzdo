@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="sprint" replace /> },
           { path: "arc", element: lazyEl(() => import("@/features/arc/ArcBoardPage")) },
           { path: "sprint", element: lazyEl(() => import("@/features/sprint/SprintBoardPage")) },
-          { path: "daily", element: <ComingSoon name="Daily" phase="phase 6" /> },
+          { path: "daily", element: lazyEl(() => import("@/features/daily/DailyPage")) },
           { path: "leaderboard", element: <ComingSoon name="Leaderboard" phase="phase 7" /> },
           { path: "dashboard", element: <ComingSoon name="Dashboard" phase="phase 7" /> },
           { path: "announcements", element: <ComingSoon name="Announcements" phase="phase 8" /> },
