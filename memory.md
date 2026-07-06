@@ -312,6 +312,15 @@
 - [ ] AI insights kept as opt in (default) vs dropped.
 
 ## FEATURE BACKLOG
+- Color coded statuses and priorities everywhere they appear (user request
+  2026-07-06). Statuses already store a color (picked in Settings, Statuses) and
+  the kanban column headers show it, but the list view status cell, the detail
+  sheet selects, and the epic sheet all render plain text. Make status render as
+  a tinted pill using its stored color (background at low alpha, text at full),
+  and give priority the same treatment with its semantic colors (critical
+  destructive, high warning, medium primary, low muted) instead of only a dot.
+  Applies to list view cells, kanban cards, detail sheets, and select triggers.
+  Scheduled for phase 8 polish alongside the column drag reorder.
 - Drag to reorder Kanban columns directly on the board (user request 2026-07-06).
   Column order is already editable through Settings, Statuses, up and down
   arrows. This adds direct drag on the board: a second draggable kind in the

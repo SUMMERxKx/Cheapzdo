@@ -2012,7 +2012,12 @@ order already editable via Settings → Statuses arrows; this adds direct
 manipulation: a second draggable kind in the Kanban DndContext discriminated by
 `data.type` (column vs task), `horizontalListSortingStrategy` for the column
 row, and an atomic position renumber — either an RPC or the existing temp-slot
-swap chain — persisted on drop, keyboard-drag included).
+swap chain — persisted on drop, keyboard-drag included);
+**color-coded statuses + priorities everywhere** (user request 2026-07-06 —
+statuses already store a color; render status as a tinted pill (stored color at
+low-alpha bg, full text) and priority with its semantic colors in: List view
+cells, Kanban cards, task/epic detail sheets, and select triggers — a shared
+`StatusPill`/`PriorityBadge` pair in `itemAtoms`, no plain-text statuses left).
 **Acceptance (add):** two browsers on one board see changes within ~1s **without
 duplicate toasts/flicker** (echo dedupe); no leaked channels on board switch;
 reconnect refetches; every async surface has a skeleton + empty state; global
