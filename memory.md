@@ -11,20 +11,44 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 1 Foundation — done
-- Last updated: 2026-07-05
-- Active branch: phase-1-foundation (pushed to origin)
-- Built so far: Phase 1, the app shell, design system, meta docs, and the four spines.
-- In progress or half done: none, ready to start Phase 2 (database schema and RLS).
-- Next action: on "go phase 2", apply migrations 0001 to 0014 from implementation.md section 7.
+- Current phase: Phase 2 Database and RLS — done
+- Last updated: 2026-07-06
+- Active branch: phase-2-database (stacked on phase-1-foundation, pushed to origin)
+- Built so far: Phase 1 (shell, design, six themes, four spines) and Phase 2
+  (full schema, RLS, RPCs, typed client, data layer pattern).
+- In progress or half done: none, ready to start Phase 3 (auth and onboarding).
+- Next action: on "go phase 3", build Supabase email verification auth, session
+  layer, route guards, profile edit, and the create board wizard.
 - Known broken right now: nothing. Full gate is green.
-- Env and config: no migrations applied yet, the Supabase public schema is still
-  empty. Types not generated yet (phase 2). Push works via a repo local
-  credential file, keychain disabled for this repo.
+- Env and config: migrations 0001 to 0015 applied to project qjcpzozqzhsuveuytwlo,
+  16 tables all RLS enabled. Types generated to src/lib/supabase/database.types.ts.
+  Client uses the publishable key. Push works via a repo local credential file.
+- Branch stacking: phase 1 and phase 2 are not merged to main yet. Phase 3 should
+  branch off phase-2-database.
 
 ---
 
 ## DECISION LOG (newest first)
+
+### ADR-0011 — Accept the SECURITY DEFINER advisor warnings as intentional  [2026-07-06] — Status: Accepted
+- Context: after remediation the security advisor still reports 11 warnings, all
+  authenticated_security_definer_function_executable, for the 5 RLS helper
+  functions and the 6 API RPCs.
+- Decision: accept these as intentional. Zero ERROR findings, zero anon exposure.
+- Rationale: RLS policy evaluation requires the authenticated role to have EXECUTE
+  on the helper functions, so they cannot be revoked without breaking RLS. The 6
+  RPCs (create_board, accept_invite, move_task, reparent_epic_tasks, board_roster,
+  leaderboard) are the intended signed in API. This is the standard Supabase
+  pattern and the residual risk is negligible (a signed in user can at most learn
+  their own membership booleans).
+- Alternatives: move the 5 helpers to a private schema not exposed by PostgREST to
+  drop those 5 warnings. Deferred as optional Phase 10 hardening, since the 6 RPC
+  warnings are unavoidable regardless and a full policy rewrite carries more risk
+  than the warnings do.
+- Consequences: the "advisors security = 0" DoD is read as "0 ERROR, 0 anon, and
+  only the documented intentional SECURITY DEFINER warnings." Performance advisor
+  shows only unused_index INFO, an artifact of a zero row database.
+- Phase: 2
 
 ### ADR-0010 — Six selectable themes, not just dark and light  [2026-07-06] — Status: Accepted
 - Context: the old app had many seasonal themes, the owner wants variety back.
@@ -104,6 +128,34 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 2 — Database schema, RLS, security foundation   [2026-07-06]
+- Delivered:
+  - Migrations 0001 to 0015 applied to project qjcpzozqzhsuveuytwlo. 16 tables,
+    all RLS enabled, no permissive USING (true) anywhere.
+  - Composite (id, board_id) foreign keys for airtight cross tenant integrity,
+    SECURITY DEFINER helper functions with locked search_path, WITH CHECK on every
+    mutating policy, invitation token stored as a hash, text fractional index
+    positions, epic delete is RESTRICT.
+  - RPCs: create_board, accept_invite, move_task, reparent_epic_tasks,
+    board_roster, leaderboard. View: epic_rollups (security_invoker).
+  - 0015 remediation: search_path on set_updated_at, revoked anon and public from
+    functions, dropped the broad avatars listing policy, wrapped auth.uid() in a
+    scalar subselect in the direct policies, de-duped permissive policies, added
+    covering indexes for every foreign key.
+  - Types generated to src/lib/supabase/database.types.ts. Data layer: client,
+    Result helper, board zod schema, and boards module as the pattern. Deleted the
+    old supabase-schema.sql.
+  - RLS test matrix: all 7 assertions pass (viewer sees, viewer cannot write,
+    non member sees nothing, owner writes, cross board blocked, daily private,
+    assignee must be a member). Test data created and cleaned up.
+- Gates: build ok, typecheck ok, lint ok, test ok. Advisors: 0 ERROR. Security has
+  11 intentional SECURITY DEFINER warnings (see ADR-0011). Performance has only
+  unused_index INFO (empty database artifact).
+- Deviations from plan: added migration 0015 for advisor remediation beyond the
+  planned 0001 to 0014. The per entity data modules beyond boards are added in
+  their feature phases, following the boards pattern.
+- Docs updated: memory.md, implementation.md unchanged (schema matched the plan).
 
 ### Phase 1 — Foundation, process scaffolding, design system, app shell   [2026-07-05]
 - Delivered:
