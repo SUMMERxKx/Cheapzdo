@@ -47,8 +47,8 @@ export const router = createBrowserRouter([
         element: <BoardLayout />,
         children: [
           { index: true, element: <Navigate to="sprint" replace /> },
-          { path: "arc", element: <ComingSoon name="Arc Board" phase="phase 5" /> },
-          { path: "sprint", element: <ComingSoon name="Sprint Board" phase="phase 5" /> },
+          { path: "arc", element: lazyEl(() => import("@/features/arc/ArcBoardPage")) },
+          { path: "sprint", element: lazyEl(() => import("@/features/sprint/SprintBoardPage")) },
           { path: "daily", element: <ComingSoon name="Daily" phase="phase 6" /> },
           { path: "leaderboard", element: <ComingSoon name="Leaderboard" phase="phase 7" /> },
           { path: "dashboard", element: <ComingSoon name="Dashboard" phase="phase 7" /> },

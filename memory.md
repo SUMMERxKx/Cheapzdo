@@ -11,21 +11,22 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 4 Boards, teams, members, RBAC — done
+- Current phase: Phase 5 Arc Board and Sprint Board — done
 - Last updated: 2026-07-06
-- Active branch: phase-4-rbac (stacked on phase-3-auth, pushed to origin)
-- Built so far: Phase 1 (shell, design, six themes, four spines), Phase 2 (schema,
-  RLS, RPCs, typed client), Phase 3 (auth, guards, onboarding wizard, profile),
-  Phase 4 (board settings with status and type editors, teams, members panel with
-  copy link invitations and role management, real usePermissions, last owner and
-  unassign guards in migration 0016).
+- Active branch: phase-5-boards (stacked on phase-4-rbac, pushed to origin)
+- Built so far: Phases 1 to 4 plus Phase 5, the flagship. Arc Board with rollup
+  ring epic cards, arc selector with a backlog bucket, start new arc. Sprint
+  Board with list (default, TanStack Table, inline status and priority edits)
+  and kanban (dnd-kit multi container with live column parting and a drag
+  overlay), sprint navigation, close sprint with move incomplete, task detail
+  sheet with comments, reparenting, sprint move, and blocker flag. Lifecycle
+  RPCs create_arc and close_sprint in migration 0017, proven by 10 SQL tests.
 - In progress or half done: user dashboard config still pending from phase 3
-  (Site URL and redirect list, plus enable leaked password protection).
-- Next action: on "go phase 5", build the Arc Board and Sprint Board (list plus
-  kanban) with sprint lifecycle. Branch off phase-4-rbac.
+  (Site URL, redirect list, leaked password protection toggle).
+- Next action: on "go phase 6", build the Daily board. Branch off phase-5-boards.
 - Known broken right now: nothing. Full gate is green.
-- Env and config: migrations 0001 to 0016 applied. Dev server on port 8080.
-- Branch stacking: phases 1 to 4 are stacked branches, none merged to main yet.
+- Env and config: migrations 0001 to 0017 applied. Dev server on port 8080.
+- Branch stacking: phases 1 to 5 are stacked branches, none merged to main yet.
 
 ---
 
@@ -158,6 +159,34 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 5 — Arc Board and Sprint Board   [2026-07-06]
+- Delivered:
+  - Migration 0017: create_arc (atomic next arc with N sprints, deactivates the
+    old arc and its sprints, activates the new first sprint) and close_sprint
+    (optionally moves unfinished tasks to the next sprint by status category,
+    hands over the active flag). Ten SQL assertions pass.
+  - Data modules: arcs, sprints, epics (with rollups from the epic_rollups
+    view and a RESTRICT aware delete message), tasks (create, update, move_task
+    RPC wrapper, delete), comments. Types for create_arc and close_sprint added
+    to database.types.ts, move_task p_status corrected to nullable.
+  - Arc Board: epic cards with an animated RadialGauge rollup ring, priority dot,
+    type chip, assignee avatar, done over total badge. Arc selector defaults to
+    the active arc and always offers the Backlog bucket. Start new arc button.
+    Epic detail sheet edits everything and deletes with the reparent message.
+  - Sprint Board: URL driven state (sprint, view, q, assignee, blockers). List
+    view is the default, TanStack Table with sortable columns and inline status
+    and priority selects. Kanban view on dnd-kit with pointer and keyboard
+    sensors, live cross column parting during drag, a rotated drag overlay, and
+    drops committed through move_task with a fresh fractional key. Sprint nav
+    with prev and next and an active badge, close sprint flow, new task dialog
+    that requires a parent epic, task detail sheet with comments and reparenting.
+- Gates: build, typecheck, lint, test green. ArcBoardPage 10 kB and
+  SprintBoardPage 31 kB lazy chunks, dnd-kit 50 kB loads with the sprint page.
+- Deviations from plan: task list virtualization and group by deferred (fine at
+  current scale, phase 10 revisits with seeded data). Comments are on tasks only
+  for now even though the schema supports epic comments.
+- Docs updated: memory.md. CLAUDE.md reviewed, no change needed.
 
 ### Phase 4 — Boards, teams, members, RBAC   [2026-07-06]
 - Delivered:

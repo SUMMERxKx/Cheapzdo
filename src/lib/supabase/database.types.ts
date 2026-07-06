@@ -676,6 +676,19 @@ export type Database = {
     }
     Functions: {
       accept_invite: { Args: { p_token: string }; Returns: string }
+      close_sprint: {
+        Args: { p_sprint: string; p_move_incomplete?: boolean }
+        Returns: string | null
+      }
+      create_arc: {
+        Args: {
+          p_board: string
+          p_arc_size?: number
+          p_sprint_length?: number
+          p_start?: string
+        }
+        Returns: string
+      }
       board_role: {
         Args: { b: string }
         Returns: Database["public"]["Enums"]["board_role"]
@@ -715,7 +728,7 @@ export type Database = {
         }[]
       }
       move_task: {
-        Args: { p_item: string; p_position: string; p_status: string }
+        Args: { p_item: string; p_position: string; p_status: string | null }
         Returns: undefined
       }
       reparent_epic_tasks: {
