@@ -2311,19 +2311,77 @@ for security — RLS is the gate; the client only hides things for UX.
 
 Ordered by the owner's priority. Full sketches in `memory.md` FEATURE BACKLOG.
 
-1. **[HIGH] Friend system** — search users by handle (via a SECURITY DEFINER
+1. **[HIGHEST] Admin console** (requested 2026-07-06) — a superadmin account and
+   an `/admin` screen that manages and tracks the whole app from inside the app
+   (no more poking the Supabase dashboard). Designed for 100k users from day one.
+
+   **Security model (the crux — do not shortcut):**
+   - `app_admins` table (`user_id PK → profiles`, `role text default
+     'superadmin'` reserved for a future support tier, `granted_by`,
+     `granted_at`). A **separate table, not a column on profiles** — profiles
+     are self-updatable, so a role column there would be a privilege-escalation
+     hole. **No client write policies at all**; the first admin is inserted by
+     a migration/SQL by the owner, deliberately.
+   - `is_app_admin()` SECURITY DEFINER helper (same pattern as
+     `is_board_member`).
+   - **Do NOT sprinkle `or is_app_admin()` into existing RLS policies** (too
+     easy to accidentally widen writes). Instead: every admin capability is an
+     explicit **`admin_*` SECURITY DEFINER RPC** that first checks
+     `is_app_admin()` then queries/mutates without RLS. The admin surface stays
+     enumerable, auditable, and normal-user policies stay untouched.
+   - `admin_audit_log` (append-only: admin_id, action, target_type, target_id,
+     detail jsonb, created_at, indexed by created_at). **Every admin RPC writes
+     a row.** Superpower with a paper trail.
+   - Auth-level operations (ban/unban, delete account, force password reset)
+     need the auth admin API → an `admin-ops` **Edge Function** (service role)
+     gated on `is_app_admin()`, same audit logging.
+   - User **impersonation is deliberately out of v1** (highest-risk feature);
+     start with a read-only inspector. If ever added: magic-link generation via
+     the auth admin API, heavily audited, time-boxed sessions.
+
+   **The `/admin` screen** (route guarded by an `is_app_admin` RPC check —
+   hidden nav for everyone else, enforced server-side regardless):
+   - **Overview:** total users / boards / teams / tasks / epics / events,
+     signups last 7/30 days, boards created, most-active boards, storage use.
+   - **Users tab:** paginated, searchable (email + handle) list via
+     `admin_list_users` (joins auth.users for email/last-sign-in — data the
+     client can never see otherwise): display name, boards count, created,
+     last sign-in. Actions: view their boards, ban/unban, force reset, delete
+     account (blocked while they own boards — transfer first).
+   - **Boards tab:** paginated list via `admin_list_boards`: name, owner,
+     member/task counts, created, last activity. Actions: read-only inspector,
+     transfer ownership, delete board (type-name confirm).
+   - **Audit tab:** the admin_audit_log, filterable.
+   - **Config (later):** the already-provisioned plan limits (`boards.plan`,
+     `max_teams`, `max_members`) get their enforcement switches here.
+
+   **Built for 100k users from the start:**
+   - Every list is a **keyset-paginated server-side RPC** — never "load all
+     users". Search hits indexed columns (auth.users email, profiles.handle).
+   - Counts come from aggregate RPCs (fine at 100k with indexes); growth
+     charts come from a nightly **`admin_daily_stats` rollup** (date,
+     new_users, new_boards, active_users, tasks_created) filled by pg_cron —
+     O(1) chart reads at any scale.
+   - Audit log append-only with a retention policy decision deferred.
+   - Admin traffic is tiny (a handful of admins) — no rate limiting needed,
+     but everything logged.
+
+   **Build order when picked up:** A1 read-only (app_admins + helper + audit
+   log + stats RPCs + overview + users/boards lists) → A2 management actions
+   (admin-ops Edge Function: ban, delete, transfer, board delete, all with
+   confirmations) → A3 scale layer (rollup table + charts + plan-limit
+   controls + support-role tier).
+
+2. **[HIGH] Friend system** — search users by handle (via a SECURITY DEFINER
    `search_users` RPC, since profile SELECT is shared-board-only), friend
    requests (`friendships` table: requester/addressee/status, unique pair),
    and an `invite_friend` RPC so inviting a friend to a board is a picker, not
    a copied token link. Token links remain for non-users.
-2. **[MEDIUM] Shared team dailies with assignees** — a second Daily lane scoped
-   to the board: items assignable to members, visible to the whole board
-   ("this task is for this guy"), grouped per person; the private personal lane
-   stays exactly as shipped. `daily_items.scope` (`personal`/`team`) +
-   `assignee_id`, split RLS per scope.
 3. **[LOW] Live messaging** — board/team channels + DMs between friends
-   (depends on #1), Supabase Realtime delivery, `messages` table with keyset
+   (depends on #2), Supabase Realtime delivery, `messages` table with keyset
    history, RLS by membership/friendship. Only after Phase 8 realtime is proven.
+
+(Shared team dailies, previously #2 here, shipped in Phase 8.)
 
 ---
 

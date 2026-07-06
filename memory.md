@@ -486,6 +486,20 @@
 - SHIPPED in phase 8: kanban column drag, color coded statuses and priorities,
   list view column rearranging, list view row reordering, and the shared team
   daily lane with assignees. Entries below are still open.
+- [HIGHEST] Admin console (user request 2026-07-06). A superadmin account plus
+  an /admin screen that tracks and manages the whole app from inside the app:
+  how many users, boards, teams, tasks, signups over time, plus direct actions
+  on users (ban, force reset, delete with an ownership transfer guard) and
+  boards (inspect, transfer, delete). Security shape: an app_admins table with
+  no client write policies (first admin inserted by migration, never a column
+  on profiles), an is_app_admin helper, every capability an explicit admin_*
+  SECURITY DEFINER rpc that logs to an append only admin_audit_log, and an
+  admin-ops edge function for auth level operations. Scale shape for 100k
+  users: keyset paginated list rpcs, indexed search, aggregate count rpcs, and
+  a nightly admin_daily_stats rollup via pg_cron for O(1) growth charts.
+  Impersonation deliberately excluded from v1. Build order A1 read only, A2
+  management actions, A3 rollup and plan limit controls. Full design in
+  implementation.md section 20b item 1. Ranked above the friend system.
 - [HIGH] Friend system (user request 2026-07-06). Search a user by handle, send a
   friend request, accept or decline, then invite friends to boards from a picker
   instead of copy pasting a token link. Needs a friendships table
