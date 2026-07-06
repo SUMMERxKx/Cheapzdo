@@ -2307,6 +2307,26 @@ for security — RLS is the gate; the client only hides things for UX.
 
 ---
 
+## §20b Post-v1 feature backlog (user-requested, build after Phase 10)
+
+Ordered by the owner's priority. Full sketches in `memory.md` FEATURE BACKLOG.
+
+1. **[HIGH] Friend system** — search users by handle (via a SECURITY DEFINER
+   `search_users` RPC, since profile SELECT is shared-board-only), friend
+   requests (`friendships` table: requester/addressee/status, unique pair),
+   and an `invite_friend` RPC so inviting a friend to a board is a picker, not
+   a copied token link. Token links remain for non-users.
+2. **[MEDIUM] Shared team dailies with assignees** — a second Daily lane scoped
+   to the board: items assignable to members, visible to the whole board
+   ("this task is for this guy"), grouped per person; the private personal lane
+   stays exactly as shipped. `daily_items.scope` (`personal`/`team`) +
+   `assignee_id`, split RLS per scope.
+3. **[LOW] Live messaging** — board/team channels + DMs between friends
+   (depends on #1), Supabase Realtime delivery, `messages` table with keyset
+   history, RLS by membership/friendship. Only after Phase 8 realtime is proven.
+
+---
+
 ## §21 🔴 Security note — rotate the shared keys before launch
 
 During setup, the **Supabase secret key** (`sb_secret_…`) and the **personal

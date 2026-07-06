@@ -327,6 +327,31 @@
 - [ ] AI insights kept as opt in (default) vs dropped.
 
 ## FEATURE BACKLOG
+- [HIGH] Friend system (user request 2026-07-06). Search a user by handle, send a
+  friend request, accept or decline, then invite friends to boards from a picker
+  instead of copy pasting a token link. Needs a friendships table
+  (requester_id, addressee_id, status pending or accepted or declined or
+  blocked, unique pair), a SECURITY DEFINER search_users RPC that matches
+  profiles.handle with a limit and returns only public fields (the profiles
+  SELECT policy is shared board only, so search must go through an RPC), a
+  requests inbox UI, and an invite_friend RPC that adds an accepted friend to a
+  board directly with a chosen role, reusing the last owner and role guards.
+  The token link flow stays for people who are not on the app yet.
+- [MEDIUM] Shared team dailies with assignees (user request 2026-07-06). Today
+  Daily is private per user. Add a second lane: a shared board daily list where
+  each item can be assigned to a member, everyone on the board sees the list and
+  who each item is for, and members check off their own. Personal lane stays
+  private exactly as built. Likely shape: daily_items gets a scope column
+  (personal or team) plus an assignee_id, RLS splits by scope (personal rows
+  keep the owner only policy, team rows use is_board_member for select and
+  can_edit or self assign for writes), UI shows Team and Personal tabs with the
+  same checkbox interaction and per person grouping in the team lane.
+- [LOW] Live messaging (user request 2026-07-06). Two surfaces: a board or team
+  channel, and direct messages between friends (depends on the friend system).
+  Realtime delivery over Supabase channels, a messages table with board_id or
+  team_id or a dm pair, keyset paginated history, RLS by membership or
+  friendship. Deliberately after friends ship, and only once realtime
+  infrastructure from phase 8 is in and proven.
 - Color coded statuses and priorities everywhere they appear (user request
   2026-07-06). Statuses already store a color (picked in Settings, Statuses) and
   the kanban column headers show it, but the list view status cell, the detail
