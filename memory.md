@@ -11,23 +11,24 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 7 Leaderboard and Dashboard — done
+- Current phase: Phase 8 Announcements, realtime, polish — done
 - Last updated: 2026-07-06
-- Active branch: phase-7-analytics (stacked on phase-6-daily, pushed to origin)
-- Built so far: Phases 1 to 7. Latest: leaderboard with a spring rise podium,
-  team vs team by default (team score is the average of member totals, ties on
-  completion, unassigned bucket) with drill down to members and their three
-  pillar bars, scope switch overall or per sprint. Dashboard with count metric
-  tiles, an animated burndown (done day approximated by updated_at), a status
-  donut colored from board_statuses, priority bars, open work by member, and a
-  blocker spotlight. Scoring math and burndown are unit tested.
+- Active branch: phase-8-polish (stacked on phase-7-analytics, pushed to origin)
+- Built so far: Phases 1 to 8. Latest: announcements feed with pinning and
+  attribution, live realtime sync per board (one channel, invalidation based
+  reconcile, reconnect refetch), drag to reorder kanban columns persisted by the
+  reorder_statuses RPC, color coded status pills and priority badges across the
+  list view and selects, and a working cmd K command palette (sections, boards,
+  themes, profile, sign out).
 - In progress or half done: user dashboard config still pending from phase 3
   (Site URL, redirect list, leaked password protection toggle).
-- Next action: on "go phase 8", build announcements, realtime, and the polish
-  pass including the two backlogged UI items. Branch off phase-7-analytics.
+- Next action: on "go phase 9", build LeetPing backend first. Branch off
+  phase-8-polish. Two backlog items from the user shipped this phase, the
+  remaining backlog (friends high, shared dailies medium, messaging low) is
+  post phase 10.
 - Known broken right now: nothing. Full gate is green, 11 unit tests pass.
-- Env and config: migrations 0001 to 0017 applied. Dev server on port 8080.
-- Branch stacking: phases 1 to 7 are stacked branches, none merged to main yet.
+- Env and config: migrations 0001 to 0019 applied. Dev server on port 8080.
+- Branch stacking: phases 1 to 8 are stacked branches, none merged to main yet.
 
 ---
 
@@ -160,6 +161,38 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 8 — Announcements, realtime, polish   [2026-07-06]
+- Delivered:
+  - Migration 0018 reorder_statuses RPC (park high then renumber, atomic,
+    can_edit checked, proven by SQL test). Migration 0019 adds arcs,
+    board_statuses, and work_item_types to the realtime publication with full
+    replica identity.
+  - Announcements: data module and page, pinned posts float first with a tinted
+    card, author chip and relative time, inline composer for editors, pin and
+    delete controls, viewers read only per RLS.
+  - Realtime: useBoardRealtime mounts in BoardLayout, one channel per board over
+    eight tables filtered by board_id, events invalidate the matching query keys
+    (idempotent, so self echoes are harmless and nothing toasts), reconnect
+    triggers a full board refetch, channel removed on unmount.
+  - Kanban column drag (user backlog item): columns are sortable by a header
+    grip, discriminated from card drags by a col: id prefix and data.type, live
+    horizontal parting during drag, drop persists through reorder_statuses with
+    rollback on error. Settings arrows still work.
+  - Color coding (user backlog item): StatusPill (stored status color as tinted
+    pill) and PriorityBadge (semantic tinted badge) in itemAtoms, applied to the
+    list view cells for viewers and as tinted select triggers for editors, and
+    inside the select menus.
+  - Command palette: cmd K or ctrl K opens it anywhere in the app shell, jumps
+    to any section of the active board or any board, switches all six themes,
+    profile and sign out. The topbar search button now opens it too.
+- Gates: build, typecheck, lint green, 11 unit tests pass, reorder RPC proven by
+  two SQL assertions. Announcements is a 5.7 kB lazy chunk.
+- Deviations from plan: realtime reconciles by query invalidation rather than
+  surgical setQueryData, simpler and correct at this scale, revisit only if
+  refetch volume becomes a problem. The keyboard cheatsheet overlay and presence
+  are deferred to phase 10 polish.
+- Docs updated: memory.md. CLAUDE.md reviewed, no change needed.
 
 ### Phase 7 — Leaderboard and Dashboard   [2026-07-06]
 - Delivered:
@@ -355,6 +388,8 @@
 - [ ] AI insights kept as opt in (default) vs dropped.
 
 ## FEATURE BACKLOG
+- SHIPPED in phase 8: kanban column drag reorder, and color coded statuses and
+  priorities. Entries below are still open.
 - [HIGH] Friend system (user request 2026-07-06). Search a user by handle, send a
   friend request, accept or decline, then invite friends to boards from a picker
   instead of copy pasting a token link. Needs a friendships table

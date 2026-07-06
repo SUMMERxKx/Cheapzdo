@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { AppTopbar } from "@/components/app/AppTopbar";
+import { CommandPalette } from "@/components/app/CommandPalette";
 import { FullScreenLoader } from "@/components/FullScreenLoader";
 import { useAuth } from "@/features/auth/useAuth";
 
@@ -20,6 +21,7 @@ export function AuthedLayout() {
           <Outlet />
         </main>
       </div>
+      <CommandPalette />
     </div>
   );
 }

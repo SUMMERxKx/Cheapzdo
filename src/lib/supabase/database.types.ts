@@ -731,6 +731,10 @@ export type Database = {
         Args: { p_item: string; p_position: string; p_status: string | null }
         Returns: undefined
       }
+      reorder_statuses: {
+        Args: { p_board: string; p_ids: string[] }
+        Returns: undefined
+      }
       reparent_epic_tasks: {
         Args: { p_from: string; p_to: string }
         Returns: number

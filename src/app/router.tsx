@@ -52,7 +52,7 @@ export const router = createBrowserRouter([
           { path: "daily", element: lazyEl(() => import("@/features/daily/DailyPage")) },
           { path: "leaderboard", element: lazyEl(() => import("@/features/leaderboard/LeaderboardPage")) },
           { path: "dashboard", element: lazyEl(() => import("@/features/dashboard/DashboardPage")) },
-          { path: "announcements", element: <ComingSoon name="Announcements" phase="phase 8" /> },
+          { path: "announcements", element: lazyEl(() => import("@/features/announcements/AnnouncementsPage")) },
           { path: "leetping", element: <ComingSoon name="LeetPing" phase="phase 9" /> },
           { path: "settings", element: lazyEl(() => import("@/features/boards/BoardSettingsPage")) },
         ],

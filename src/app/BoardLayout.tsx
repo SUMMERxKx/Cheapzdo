@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBoardStore } from "@/stores/boardStore";
+import { useBoardRealtime } from "@/features/realtime/useBoardRealtime";
 
 const sections = [
   { to: "arc", label: "Arc Board", icon: Layers },
@@ -29,6 +30,7 @@ const sections = [
 export function BoardLayout() {
   const { boardId } = useParams();
   const setActiveBoard = useBoardStore((s) => s.setActiveBoard);
+  useBoardRealtime(boardId);
 
   useEffect(() => {
     setActiveBoard(boardId ?? null);

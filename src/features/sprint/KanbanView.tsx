@@ -14,6 +14,8 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
@@ -21,12 +23,12 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { TriangleAlert } from "lucide-react";
+import { GripVertical, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MemberChip, PriorityDot, TypeChip } from "@/components/itemAtoms";
 import { keyBetween } from "@/lib/fractionalIndex";
 import { moveTask, type Task } from "@/lib/supabase/tasks";
-import type { BoardStatus } from "@/lib/supabase/statuses";
+import { reorderStatuses, type BoardStatus } from "@/lib/supabase/statuses";
 import type { WorkItemType } from "@/lib/supabase/workItemTypes";
 import type { RosterMember } from "@/lib/supabase/members";
 import type { Epic } from "@/lib/supabase/epics";
@@ -127,9 +129,34 @@ function Column({
   disabled: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status.id });
+  // The column itself is draggable by its header grip so the board layout can
+  // be rearranged in place. Cards keep their own drag behavior inside.
+  const colSort = useSortable({
+    id: `col:${status.id}`,
+    data: { type: "column" },
+    disabled,
+  });
+
   return (
-    <div className="flex w-72 shrink-0 snap-start flex-col rounded-xl bg-secondary/40">
+    <div
+      ref={colSort.setNodeRef}
+      style={{ transform: CSS.Transform.toString(colSort.transform), transition: colSort.transition }}
+      className={cn(
+        "flex w-72 shrink-0 snap-start flex-col rounded-xl bg-secondary/40",
+        colSort.isDragging && "opacity-60 ring-2 ring-primary/40"
+      )}
+    >
       <div className="flex items-center gap-2 px-3 py-2.5">
+        {!disabled && (
+          <button
+            className="cursor-grab text-muted-foreground/40 hover:text-muted-foreground"
+            aria-label={`Drag to move the ${status.name} column`}
+            {...colSort.attributes}
+            {...colSort.listeners}
+          >
+            <GripVertical className="h-3.5 w-3.5" />
+          </button>
+        )}
         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: status.color ?? undefined }} />
         <span className="text-sm font-medium">{status.name}</span>
         <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
@@ -179,6 +206,13 @@ export function KanbanView({
   // Local grouping that mirrors the query data and is mutated live during drag.
   const [groups, setGroups] = useState<Record<string, Task[]>>({});
   const [active, setActive] = useState<Task | null>(null);
+  // Column order mirrors statuses and is reordered live during a column drag.
+  const [colOrder, setColOrder] = useState<string[]>([]);
+  const orderedStatuses = useMemo(() => {
+    const byId = new Map(statuses.map((s) => [s.id, s]));
+    const ordered = colOrder.map((id) => byId.get(id)).filter(Boolean) as BoardStatus[];
+    return ordered.length === statuses.length ? ordered : statuses;
+  }, [colOrder, statuses]);
 
   const grouped = useMemo(() => {
     const g: Record<string, Task[]> = {};
@@ -195,12 +229,19 @@ export function KanbanView({
     setGroups(grouped);
   }, [grouped]);
 
+  useEffect(() => {
+    setColOrder(statuses.map((s) => s.id));
+  }, [statuses]);
+
   const columnOf = (id: string): string | undefined => {
     if (groups[id]) return id;
     return Object.keys(groups).find((col) => groups[col].some((t) => t.id === id));
   };
 
+  const isColumnDrag = (id: unknown) => String(id).startsWith("col:");
+
   const onDragStart = (e: DragStartEvent) => {
+    if (isColumnDrag(e.active.id)) return;
     const col = columnOf(String(e.active.id));
     const t = col ? groups[col].find((x) => x.id === e.active.id) : undefined;
     setActive(t ?? null);
@@ -209,6 +250,17 @@ export function KanbanView({
   const onDragOver = (e: DragOverEvent) => {
     const { active: a, over } = e;
     if (!over) return;
+    // Column drags reorder the column strip live.
+    if (isColumnDrag(a.id)) {
+      if (!isColumnDrag(over.id) || a.id === over.id) return;
+      setColOrder((prev) => {
+        const from = prev.indexOf(String(a.id).slice(4));
+        const to = prev.indexOf(String(over.id).slice(4));
+        if (from < 0 || to < 0) return prev;
+        return arrayMove(prev, from, to);
+      });
+      return;
+    }
     const from = columnOf(String(a.id));
     const to = columnOf(String(over.id));
     if (!from || !to || from === to) return;
@@ -227,6 +279,16 @@ export function KanbanView({
   const onDragEnd = async (e: DragEndEvent) => {
     const { active: a, over } = e;
     setActive(null);
+    // Commit a column reorder in one atomic call.
+    if (isColumnDrag(a.id)) {
+      const res = await reorderStatuses(boardId, colOrder);
+      if (!res.ok) {
+        toast.error(res.error.message);
+        setColOrder(statuses.map((s) => s.id));
+      }
+      void qc.invalidateQueries({ queryKey: ["board", boardId, "statuses"] });
+      return;
+    }
     if (!over) {
       setGroups(grouped);
       return;
@@ -271,18 +333,23 @@ export function KanbanView({
       onDragOver={canEdit ? onDragOver : undefined}
       onDragEnd={canEdit ? onDragEnd : undefined}
     >
-      <div className="flex snap-x gap-3 overflow-x-auto pb-3">
-        {statuses.map((s) => (
-          <Column
-            key={s.id}
-            status={s}
-            tasks={groups[s.id] ?? []}
-            ctx={ctx}
-            onOpen={onOpen}
-            disabled={!canEdit}
-          />
-        ))}
-      </div>
+      <SortableContext
+        items={orderedStatuses.map((s) => `col:${s.id}`)}
+        strategy={horizontalListSortingStrategy}
+      >
+        <div className="flex snap-x gap-3 overflow-x-auto pb-3">
+          {orderedStatuses.map((s) => (
+            <Column
+              key={s.id}
+              status={s}
+              tasks={groups[s.id] ?? []}
+              ctx={ctx}
+              onOpen={onOpen}
+              disabled={!canEdit}
+            />
+          ))}
+        </div>
+      </SortableContext>
       <DragOverlay>{active ? <Card task={active} ctx={ctx} overlay /> : null}</DragOverlay>
     </DndContext>
   );

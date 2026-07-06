@@ -65,6 +65,13 @@ export async function deleteStatus(id: string): Promise<Result<null>> {
   return ok(null);
 }
 
+// Persist a dragged column order in one atomic call.
+export async function reorderStatuses(boardId: string, ids: string[]): Promise<Result<null>> {
+  const { error } = await supabase.rpc("reorder_statuses", { p_board: boardId, p_ids: ids });
+  if (error) return fail(fromPostgrestError(error));
+  return ok(null);
+}
+
 // Swap two rows' positions. UNIQUE(board_id, position) blocks a direct swap, so
 // route one row through a temporary slot.
 export async function swapStatusPositions(

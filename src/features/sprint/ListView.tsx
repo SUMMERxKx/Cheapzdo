@@ -18,7 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MemberChip, PRIORITY_LABEL, PriorityDot, TypeChip } from "@/components/itemAtoms";
+import {
+  MemberChip,
+  PRIORITY_LABEL,
+  PriorityBadge,
+  StatusPill,
+  TypeChip,
+} from "@/components/itemAtoms";
 import { updateTask, type Priority, type Task } from "@/lib/supabase/tasks";
 import type { BoardStatus } from "@/lib/supabase/statuses";
 import type { WorkItemType } from "@/lib/supabase/workItemTypes";
@@ -101,24 +107,33 @@ export function ListView({
         header: "Status",
         cell: (info) => {
           const t = info.row.original;
+          const st = statuses.find((s) => s.id === t.status_id);
           return canEdit ? (
             <span onClick={(e) => e.stopPropagation()}>
               <Select
                 value={t.status_id ?? ""}
                 onValueChange={(v) => void patch(t.id, { status_id: v })}
               >
-                <SelectTrigger className="h-7 w-28 text-xs">
+                <SelectTrigger
+                  className="h-7 w-28 border-0 text-xs font-medium"
+                  style={{
+                    backgroundColor: st?.color ? `${st.color}22` : undefined,
+                    color: st?.color ?? undefined,
+                  }}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {statuses.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    <SelectItem key={s.id} value={s.id}>
+                      <StatusPill name={s.name} color={s.color} />
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </span>
           ) : (
-            <span className="text-xs">{statuses.find((s) => s.id === t.status_id)?.name}</span>
+            <StatusPill name={st?.name} color={st?.color} />
           );
         },
       }),
@@ -126,27 +141,32 @@ export function ListView({
         header: "Priority",
         cell: (info) => {
           const t = info.row.original;
+          const tone: Record<Priority, string> = {
+            critical: "bg-destructive/15 text-destructive",
+            high: "bg-warning/15 text-warning",
+            medium: "bg-primary/15 text-primary",
+            low: "bg-muted text-muted-foreground",
+          };
           return canEdit ? (
             <span onClick={(e) => e.stopPropagation()}>
               <Select
                 value={t.priority}
                 onValueChange={(v) => void patch(t.id, { priority: v as Priority })}
               >
-                <SelectTrigger className="h-7 w-24 text-xs">
+                <SelectTrigger className={`h-7 w-28 border-0 text-xs font-medium ${tone[t.priority]}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {(Object.keys(PRIORITY_LABEL) as Priority[]).map((p) => (
-                    <SelectItem key={p} value={p}>{PRIORITY_LABEL[p]}</SelectItem>
+                    <SelectItem key={p} value={p}>
+                      <PriorityBadge priority={p} />
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </span>
           ) : (
-            <span className="flex items-center gap-1.5 text-xs">
-              <PriorityDot priority={t.priority} />
-              {PRIORITY_LABEL[t.priority]}
-            </span>
+            <PriorityBadge priority={t.priority} />
           );
         },
       }),

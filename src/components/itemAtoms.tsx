@@ -29,6 +29,54 @@ export function PriorityDot({ priority, className }: { priority: Priority; class
   );
 }
 
+// Priority as a tinted badge, the color code the owner asked for.
+const PRIORITY_BADGE: Record<Priority, string> = {
+  critical: "bg-destructive/15 text-destructive",
+  high: "bg-warning/15 text-warning",
+  medium: "bg-primary/15 text-primary",
+  low: "bg-muted text-muted-foreground",
+};
+
+export function PriorityBadge({ priority }: { priority: Priority }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[11px] font-medium",
+        PRIORITY_BADGE[priority]
+      )}
+    >
+      <PriorityDot priority={priority} />
+      {PRIORITY_LABEL[priority]}
+    </span>
+  );
+}
+
+// Status as a tinted pill using the status's stored color.
+export function StatusPill({
+  name,
+  color,
+}: {
+  name: string | undefined;
+  color: string | null | undefined;
+}) {
+  if (!name) return null;
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[11px] font-medium"
+      style={{
+        backgroundColor: color ? `${color}22` : undefined,
+        color: color ?? undefined,
+      }}
+    >
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: color ?? "currentColor" }}
+      />
+      {name}
+    </span>
+  );
+}
+
 export function TypeChip({ type }: { type: WorkItemType | undefined }) {
   if (!type) return null;
   const Icon = resolveTypeIcon(type.icon);
