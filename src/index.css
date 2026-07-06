@@ -1,3 +1,8 @@
+/* Fonts: Geist for UI/body, Space Grotesk for display, JetBrains Mono for numerics only. */
+@import "@fontsource-variable/geist/index.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
 @import "@fontsource/jetbrains-mono/700.css";
@@ -6,456 +11,126 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Arcflow design tokens.
+  The palette is a blue tinted near black canvas with a cobalt iris accent.
+  Shadcn style variables are HSL triples so the existing Tailwind mapping and
+  Radix primitives keep working. Dark is the default. Light is a real theme.
+*/
 @layer base {
-  /* ===== DEFAULT — Dark Crimson ===== */
   :root,
-  [data-theme="default"] {
-    --background: 0 0% 6%;
-    --foreground: 0 0% 95%;
+  [data-theme="dark"] {
+    --background: 220 29% 6%;
+    --foreground: 222 32% 93%;
 
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 95%;
+    --card: 222 27% 10%;
+    --card-foreground: 222 32% 93%;
 
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 222 27% 10%;
+    --popover-foreground: 222 32% 93%;
 
-    --primary: 0 72% 51%;
+    --primary: 227 94% 67%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 222 25% 14%;
+    --secondary-foreground: 222 32% 93%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 220 23% 18%;
+    --muted-foreground: 220 12% 62%;
 
-    --accent: 0 0% 14%;
-    --accent-foreground: 0 0% 95%;
+    --accent: 222 25% 16%;
+    --accent-foreground: 222 32% 93%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 358 75% 59%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 0 72% 51%;
+    --border: 220 23% 18%;
+    --input: 220 23% 18%;
+    --ring: 227 94% 67%;
 
-    --radius: 0.25rem;
+    --radius: 0.625rem;
 
-    /* Custom tokens */
-    --blocker: 0 72% 51%;
+    /* semantic status tokens */
+    --blocker: 358 75% 59%;
     --blocker-foreground: 0 0% 100%;
-    --success: 142 71% 45%;
+    --success: 158 49% 49%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
-    --info: 217 91% 60%;
-    --info-foreground: 0 0% 100%;
+    --warning: 36 79% 57%;
+    --warning-foreground: 0 0% 8%;
+    --info: 192 70% 59%;
+    --info-foreground: 0 0% 8%;
 
-    --epic: 271 81% 56%;
-    --story: 217 91% 60%;
-    --task: 0 0% 55%;
-    --bug: 0 72% 51%;
-    --operation: 38 92% 50%;
+    /* categorical chart ramp */
+    --chart-1: 227 94% 67%;
+    --chart-2: 192 70% 59%;
+    --chart-3: 158 49% 49%;
+    --chart-4: 36 79% 57%;
+    --chart-5: 358 75% 59%;
+    --chart-6: 268 70% 66%;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 72% 51%;
+    --sidebar-background: 221 30% 8%;
+    --sidebar-foreground: 222 32% 90%;
+    --sidebar-primary: 227 94% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 14%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 0 72% 51%;
+    --sidebar-accent: 222 25% 15%;
+    --sidebar-accent-foreground: 222 32% 92%;
+    --sidebar-border: 220 23% 16%;
+    --sidebar-ring: 227 94% 67%;
   }
 
-  /* ===== RAIN — Moody blue-grey storm ===== */
-  [data-theme="rain"] {
-    --background: 215 25% 8%;
-    --foreground: 210 20% 90%;
+  [data-theme="light"] {
+    --background: 222 40% 97%;
+    --foreground: 220 28% 15%;
 
-    --card: 215 22% 12%;
-    --card-foreground: 210 20% 90%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 28% 15%;
 
-    --popover: 215 22% 12%;
-    --popover-foreground: 210 20% 90%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 28% 15%;
 
-    --primary: 205 65% 48%;
+    --primary: 227 90% 62%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 18% 18%;
-    --secondary-foreground: 210 20% 90%;
+    --secondary: 222 30% 92%;
+    --secondary-foreground: 220 28% 15%;
 
-    --muted: 215 15% 22%;
-    --muted-foreground: 210 10% 50%;
+    --muted: 222 25% 90%;
+    --muted-foreground: 220 12% 40%;
 
-    --accent: 215 18% 18%;
-    --accent-foreground: 210 20% 90%;
+    --accent: 222 30% 90%;
+    --accent-foreground: 220 28% 15%;
 
-    --destructive: 0 65% 50%;
+    --destructive: 358 70% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 15% 20%;
-    --input: 215 15% 20%;
-    --ring: 205 65% 48%;
-    --radius: 0.25rem;
+    --border: 222 22% 87%;
+    --input: 222 22% 87%;
+    --ring: 227 90% 62%;
 
-    --blocker: 0 65% 50%;
+    --blocker: 358 70% 52%;
     --blocker-foreground: 0 0% 100%;
-    --success: 160 55% 40%;
+    --success: 158 55% 38%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 70% 48%;
-    --warning-foreground: 0 0% 0%;
-    --info: 205 65% 48%;
+    --warning: 34 85% 45%;
+    --warning-foreground: 0 0% 100%;
+    --info: 200 75% 42%;
     --info-foreground: 0 0% 100%;
 
-    --epic: 260 60% 55%;
-    --story: 205 65% 48%;
-    --task: 210 10% 50%;
-    --bug: 0 65% 50%;
-    --operation: 38 70% 48%;
+    --chart-1: 227 90% 60%;
+    --chart-2: 200 75% 45%;
+    --chart-3: 158 55% 38%;
+    --chart-4: 34 85% 45%;
+    --chart-5: 358 70% 52%;
+    --chart-6: 268 65% 58%;
 
-    --sidebar-background: 215 25% 10%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 205 65% 48%;
+    --sidebar-background: 222 35% 94%;
+    --sidebar-foreground: 220 28% 18%;
+    --sidebar-primary: 227 90% 62%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 18% 18%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 215 15% 20%;
-    --sidebar-ring: 205 65% 48%;
-  }
-
-  /* ===== SNOW — Soft cool white ===== */
-  [data-theme="snow"] {
-    --background: 210 30% 10%;
-    --foreground: 210 25% 92%;
-
-    --card: 210 25% 14%;
-    --card-foreground: 210 25% 92%;
-
-    --popover: 210 25% 14%;
-    --popover-foreground: 210 25% 92%;
-
-    --primary: 200 50% 58%;
-    --primary-foreground: 210 30% 8%;
-
-    --secondary: 210 20% 20%;
-    --secondary-foreground: 210 25% 92%;
-
-    --muted: 210 18% 24%;
-    --muted-foreground: 210 15% 55%;
-
-    --accent: 210 20% 20%;
-    --accent-foreground: 210 25% 92%;
-
-    --destructive: 0 60% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 210 18% 22%;
-    --input: 210 18% 22%;
-    --ring: 200 50% 58%;
-    --radius: 0.25rem;
-
-    --blocker: 0 60% 50%;
-    --blocker-foreground: 0 0% 100%;
-    --success: 155 50% 42%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 70% 50%;
-    --warning-foreground: 0 0% 0%;
-    --info: 200 50% 58%;
-    --info-foreground: 210 30% 8%;
-
-    --epic: 265 55% 58%;
-    --story: 200 50% 58%;
-    --task: 210 15% 55%;
-    --bug: 0 60% 50%;
-    --operation: 38 70% 50%;
-
-    --sidebar-background: 210 30% 12%;
-    --sidebar-foreground: 210 25% 92%;
-    --sidebar-primary: 200 50% 58%;
-    --sidebar-primary-foreground: 210 30% 8%;
-    --sidebar-accent: 210 20% 20%;
-    --sidebar-accent-foreground: 210 25% 92%;
-    --sidebar-border: 210 18% 22%;
-    --sidebar-ring: 200 50% 58%;
-  }
-
-  /* ===== SUNNY — Warm golden daylight ===== */
-  [data-theme="sunny"] {
-    --background: 40 20% 8%;
-    --foreground: 45 30% 93%;
-
-    --card: 40 18% 12%;
-    --card-foreground: 45 30% 93%;
-
-    --popover: 40 18% 12%;
-    --popover-foreground: 45 30% 93%;
-
-    --primary: 42 90% 52%;
-    --primary-foreground: 40 20% 8%;
-
-    --secondary: 40 14% 18%;
-    --secondary-foreground: 45 30% 93%;
-
-    --muted: 40 12% 22%;
-    --muted-foreground: 40 10% 52%;
-
-    --accent: 40 14% 18%;
-    --accent-foreground: 45 30% 93%;
-
-    --destructive: 0 65% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 40 12% 20%;
-    --input: 40 12% 20%;
-    --ring: 42 90% 52%;
-    --radius: 0.25rem;
-
-    --blocker: 0 65% 50%;
-    --blocker-foreground: 0 0% 100%;
-    --success: 142 65% 42%;
-    --success-foreground: 0 0% 100%;
-    --warning: 28 85% 52%;
-    --warning-foreground: 0 0% 0%;
-    --info: 205 70% 55%;
-    --info-foreground: 0 0% 100%;
-
-    --epic: 271 70% 55%;
-    --story: 205 70% 55%;
-    --task: 40 10% 52%;
-    --bug: 0 65% 50%;
-    --operation: 28 85% 52%;
-
-    --sidebar-background: 40 20% 10%;
-    --sidebar-foreground: 45 30% 93%;
-    --sidebar-primary: 42 90% 52%;
-    --sidebar-primary-foreground: 40 20% 8%;
-    --sidebar-accent: 40 14% 18%;
-    --sidebar-accent-foreground: 45 30% 93%;
-    --sidebar-border: 40 12% 20%;
-    --sidebar-ring: 42 90% 52%;
-  }
-
-  /* ===== WINTER — Deep icy frost ===== */
-  [data-theme="winter"] {
-    --background: 220 30% 6%;
-    --foreground: 215 30% 90%;
-
-    --card: 220 28% 10%;
-    --card-foreground: 215 30% 90%;
-
-    --popover: 220 28% 10%;
-    --popover-foreground: 215 30% 90%;
-
-    --primary: 195 70% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 220 22% 16%;
-    --secondary-foreground: 215 30% 90%;
-
-    --muted: 220 18% 20%;
-    --muted-foreground: 215 15% 48%;
-
-    --accent: 220 22% 16%;
-    --accent-foreground: 215 30% 90%;
-
-    --destructive: 0 60% 48%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 18% 18%;
-    --input: 220 18% 18%;
-    --ring: 195 70% 50%;
-    --radius: 0.25rem;
-
-    --blocker: 0 60% 48%;
-    --blocker-foreground: 0 0% 100%;
-    --success: 160 50% 38%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 65% 48%;
-    --warning-foreground: 0 0% 0%;
-    --info: 195 70% 50%;
-    --info-foreground: 0 0% 100%;
-
-    --epic: 255 55% 55%;
-    --story: 195 70% 50%;
-    --task: 215 15% 48%;
-    --bug: 0 60% 48%;
-    --operation: 38 65% 48%;
-
-    --sidebar-background: 220 30% 8%;
-    --sidebar-foreground: 215 30% 90%;
-    --sidebar-primary: 195 70% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 22% 16%;
-    --sidebar-accent-foreground: 215 30% 90%;
-    --sidebar-border: 220 18% 18%;
-    --sidebar-ring: 195 70% 50%;
-  }
-
-  /* ===== AUTUMN — Warm amber & burnt orange ===== */
-  [data-theme="autumn"] {
-    --background: 20 25% 7%;
-    --foreground: 30 20% 90%;
-
-    --card: 20 22% 11%;
-    --card-foreground: 30 20% 90%;
-
-    --popover: 20 22% 11%;
-    --popover-foreground: 30 20% 90%;
-
-    --primary: 24 80% 50%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 20 16% 16%;
-    --secondary-foreground: 30 20% 90%;
-
-    --muted: 20 14% 20%;
-    --muted-foreground: 25 10% 50%;
-
-    --accent: 20 16% 16%;
-    --accent-foreground: 30 20% 90%;
-
-    --destructive: 0 65% 48%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 20 14% 18%;
-    --input: 20 14% 18%;
-    --ring: 24 80% 50%;
-    --radius: 0.25rem;
-
-    --blocker: 0 65% 48%;
-    --blocker-foreground: 0 0% 100%;
-    --success: 140 55% 38%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 80% 48%;
-    --warning-foreground: 0 0% 0%;
-    --info: 200 60% 50%;
-    --info-foreground: 0 0% 100%;
-
-    --epic: 280 55% 52%;
-    --story: 200 60% 50%;
-    --task: 25 10% 50%;
-    --bug: 0 65% 48%;
-    --operation: 38 80% 48%;
-
-    --sidebar-background: 20 25% 9%;
-    --sidebar-foreground: 30 20% 90%;
-    --sidebar-primary: 24 80% 50%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 20 16% 16%;
-    --sidebar-accent-foreground: 30 20% 90%;
-    --sidebar-border: 20 14% 18%;
-    --sidebar-ring: 24 80% 50%;
-  }
-
-  /* ===== SPRING — Fresh cherry-blossom pink & green ===== */
-  [data-theme="spring"] {
-    --background: 150 18% 7%;
-    --foreground: 140 15% 92%;
-
-    --card: 150 16% 11%;
-    --card-foreground: 140 15% 92%;
-
-    --popover: 150 16% 11%;
-    --popover-foreground: 140 15% 92%;
-
-    --primary: 330 60% 58%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 150 12% 16%;
-    --secondary-foreground: 140 15% 92%;
-
-    --muted: 150 10% 20%;
-    --muted-foreground: 145 8% 50%;
-
-    --accent: 150 12% 16%;
-    --accent-foreground: 140 15% 92%;
-
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 150 10% 18%;
-    --input: 150 10% 18%;
-    --ring: 330 60% 58%;
-    --radius: 0.25rem;
-
-    --blocker: 0 62% 50%;
-    --blocker-foreground: 0 0% 100%;
-    --success: 145 60% 40%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 75% 50%;
-    --warning-foreground: 0 0% 0%;
-    --info: 210 65% 55%;
-    --info-foreground: 0 0% 100%;
-
-    --epic: 275 58% 55%;
-    --story: 210 65% 55%;
-    --task: 145 8% 50%;
-    --bug: 0 62% 50%;
-    --operation: 38 75% 50%;
-
-    --sidebar-background: 150 18% 9%;
-    --sidebar-foreground: 140 15% 92%;
-    --sidebar-primary: 330 60% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 150 12% 16%;
-    --sidebar-accent-foreground: 140 15% 92%;
-    --sidebar-border: 150 10% 18%;
-    --sidebar-ring: 330 60% 58%;
-  }
-
-  /* ===== CHINESE NEW YEAR — Festive red & gold ===== */
-  [data-theme="chinese-new-year"] {
-    --background: 356 46% 7%;
-    --foreground: 44 92% 90%;
-
-    --card: 356 42% 11%;
-    --card-foreground: 44 92% 90%;
-
-    --popover: 356 42% 11%;
-    --popover-foreground: 44 92% 90%;
-
-    --primary: 43 95% 57%;
-    --primary-foreground: 356 42% 8%;
-
-    --secondary: 356 32% 18%;
-    --secondary-foreground: 44 92% 90%;
-
-    --muted: 356 24% 23%;
-    --muted-foreground: 43 32% 66%;
-
-    --accent: 356 30% 18%;
-    --accent-foreground: 42 90% 90%;
-
-    --destructive: 0 70% 52%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 356 26% 22%;
-    --input: 356 26% 22%;
-    --ring: 43 95% 57%;
-    --radius: 0.25rem;
-
-    --blocker: 0 70% 52%;
-    --blocker-foreground: 0 0% 100%;
-    --success: 142 63% 42%;
-    --success-foreground: 0 0% 100%;
-    --warning: 42 92% 54%;
-    --warning-foreground: 0 0% 0%;
-    --info: 210 72% 56%;
-    --info-foreground: 0 0% 100%;
-
-    --epic: 280 65% 56%;
-    --story: 210 72% 56%;
-    --task: 42 30% 62%;
-    --bug: 0 70% 52%;
-    --operation: 42 92% 54%;
-
-    --sidebar-background: 356 42% 10%;
-    --sidebar-foreground: 42 90% 90%;
-    --sidebar-primary: 42 95% 54%;
-    --sidebar-primary-foreground: 356 42% 8%;
-    --sidebar-accent: 356 30% 18%;
-    --sidebar-accent-foreground: 42 90% 90%;
-    --sidebar-border: 356 26% 22%;
-    --sidebar-ring: 43 95% 57%;
+    --sidebar-accent: 222 30% 90%;
+    --sidebar-accent-foreground: 220 28% 18%;
+    --sidebar-border: 222 22% 85%;
+    --sidebar-ring: 227 90% 62%;
   }
 }
 
@@ -464,278 +139,47 @@
     @apply border-border;
   }
 
+  html {
+    color-scheme: dark;
+  }
+  html[data-theme="light"] {
+    color-scheme: light;
+  }
+
   body {
-    @apply bg-background text-foreground font-mono antialiased;
-    font-family: 'JetBrains Mono', monospace;
+    @apply bg-background text-foreground antialiased;
+    font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "cv01", "ss01";
   }
 
-  [data-theme="chinese-new-year"] body {
-    background-image:
-      radial-gradient(circle at 10% 5%, hsl(43 95% 57% / 0.10), transparent 28%),
-      radial-gradient(circle at 92% 8%, hsl(43 95% 57% / 0.09), transparent 24%),
-      radial-gradient(circle at 5% 90%, hsl(0 80% 52% / 0.10), transparent 30%),
-      radial-gradient(circle at 95% 85%, hsl(0 80% 52% / 0.08), transparent 28%),
-      radial-gradient(ellipse at 50% 50%, hsl(0 60% 20% / 0.06), transparent 60%),
-      radial-gradient(circle at 50% 100%, hsl(0 80% 52% / 0.16), transparent 38%);
-    background-attachment: fixed;
+  /* Numerics, ids, and keyboard hints use the mono face and tabular figures. */
+  .font-mono,
+  .tabular {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  h1, h2, h3, h4, .font-display {
+    font-family: "Space Grotesk", "Geist Variable", system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
 
-  ::-webkit-scrollbar-track {
-    @apply bg-background;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-muted rounded;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
-  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-muted rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
 }
 
 @layer utilities {
-  .text-blocker {
-    color: hsl(var(--blocker));
-  }
-
-  .bg-blocker {
-    background-color: hsl(var(--blocker));
-  }
-
-  .text-success {
-    color: hsl(var(--success));
-  }
-
-  .bg-success {
-    background-color: hsl(var(--success));
-  }
-
-  .text-warning {
-    color: hsl(var(--warning));
-  }
-
-  .bg-warning {
-    background-color: hsl(var(--warning));
-  }
-
-  .text-info {
-    color: hsl(var(--info));
-  }
-
-  .bg-info {
-    background-color: hsl(var(--info));
-  }
-
-  .type-epic {
-    color: hsl(var(--epic));
-  }
-
-  .type-story {
-    color: hsl(var(--story));
-  }
-
-  .type-task {
-    color: hsl(var(--task));
-  }
-
-  .type-bug {
-    color: hsl(var(--bug));
-  }
-
-  .type-operation {
-    color: hsl(var(--operation));
-  }
-
-  .glow-red {
-    box-shadow: 0 0 20px hsl(var(--blocker) / 0.3);
-  }
+  .text-success { color: hsl(var(--success)); }
+  .bg-success { background-color: hsl(var(--success)); }
+  .text-warning { color: hsl(var(--warning)); }
+  .bg-warning { background-color: hsl(var(--warning)); }
+  .text-info { color: hsl(var(--info)); }
+  .bg-info { background-color: hsl(var(--info)); }
+  .text-blocker { color: hsl(var(--blocker)); }
+  .bg-blocker { background-color: hsl(var(--blocker)); }
 }
 
-/* ================================================================
-   Weather particle animations
-   ================================================================ */
-
-/* --- Rain --- */
-@keyframes rain-fall {
-  0%   { transform: translateY(-10vh) translateX(0);   opacity: 0; }
-  10%  { opacity: 0.7; }
-  90%  { opacity: 0.5; }
-  100% { transform: translateY(110vh) translateX(-20px); opacity: 0; }
-}
-
-.weather-particles-rain {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  overflow: hidden;
-}
-
-.weather-particles-rain .drop {
-  position: absolute;
-  top: -20px;
-  width: 1.5px;
-  height: 18px;
-  background: linear-gradient(to bottom, transparent, hsl(205 70% 60% / 0.5));
-  border-radius: 0 0 2px 2px;
-  animation: rain-fall linear infinite;
-}
-
-/* --- Snow --- */
-@keyframes snow-fall {
-  0%   { transform: translateY(-10vh) translateX(0) rotate(0deg);   opacity: 0; }
-  10%  { opacity: 0.9; }
-  50%  { transform: translateY(50vh) translateX(30px) rotate(180deg); }
-  90%  { opacity: 0.4; }
-  100% { transform: translateY(110vh) translateX(-10px) rotate(360deg); opacity: 0; }
-}
-
-.weather-particles-snow {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  overflow: hidden;
-}
-
-.weather-particles-snow .flake {
-  position: absolute;
-  top: -10px;
-  width: 6px;
-  height: 6px;
-  background: radial-gradient(circle, hsl(200 30% 95% / 0.9) 0%, hsl(200 30% 95% / 0.2) 70%);
-  border-radius: 50%;
-  animation: snow-fall linear infinite;
-}
-
-/* --- Leaves (Autumn) --- */
-@keyframes leaf-fall {
-  0%   { transform: translateY(-10vh) translateX(0) rotate(0deg) scale(1);     opacity: 0; }
-  10%  { opacity: 0.85; }
-  25%  { transform: translateY(25vh) translateX(40px) rotate(90deg) scale(0.9); }
-  50%  { transform: translateY(50vh) translateX(-20px) rotate(200deg) scale(1); }
-  75%  { transform: translateY(75vh) translateX(30px) rotate(300deg) scale(0.85); }
-  90%  { opacity: 0.3; }
-  100% { transform: translateY(110vh) translateX(10px) rotate(400deg) scale(0.8); opacity: 0; }
-}
-
-.weather-particles-leaves {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  overflow: hidden;
-}
-
-.weather-particles-leaves .leaf {
-  position: absolute;
-  top: -20px;
-  font-size: 14px;
-  animation: leaf-fall linear infinite;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-}
-
-/* --- Petals (Spring) --- */
-@keyframes petal-fall {
-  0%   { transform: translateY(-10vh) translateX(0) rotate(0deg);     opacity: 0; }
-  10%  { opacity: 0.8; }
-  30%  { transform: translateY(30vh) translateX(50px) rotate(120deg); }
-  60%  { transform: translateY(60vh) translateX(-30px) rotate(240deg); }
-  90%  { opacity: 0.3; }
-  100% { transform: translateY(110vh) translateX(20px) rotate(380deg);  opacity: 0; }
-}
-
-.weather-particles-petals {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  overflow: hidden;
-}
-
-.weather-particles-petals .petal {
-  position: absolute;
-  top: -16px;
-  font-size: 12px;
-  animation: petal-fall linear infinite;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-}
-
-/* --- Sun rays (Sunny) --- */
-@keyframes sun-drift {
-  0%   { transform: translateY(-10vh) translateX(0);   opacity: 0; }
-  15%  { opacity: 0.5; }
-  85%  { opacity: 0.25; }
-  100% { transform: translateY(110vh) translateX(10px); opacity: 0; }
-}
-
-.weather-particles-sun-rays {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  overflow: hidden;
-}
-
-.weather-particles-sun-rays .ray {
-  position: absolute;
-  top: -20px;
-  width: 2px;
-  height: 30px;
-  background: linear-gradient(to bottom, hsl(42 90% 60% / 0.4), transparent);
-  border-radius: 2px;
-  animation: sun-drift linear infinite;
-}
-
-/* --- Lanterns (Chinese New Year) --- */
-@keyframes lantern-float {
-  0%   { transform: translateY(0) translateX(0) rotate(-5deg) scale(0.88); opacity: 0; }
-  5%   { opacity: 0.95; }
-  15%  { transform: translateY(-18vh) translateX(18px) rotate(3deg) scale(1); }
-  30%  { transform: translateY(-36vh) translateX(-14px) rotate(-3deg) scale(1.06); }
-  50%  { transform: translateY(-55vh) translateX(20px) rotate(4deg) scale(1.03); }
-  70%  { transform: translateY(-75vh) translateX(-12px) rotate(-2deg) scale(1); opacity: 0.85; }
-  88%  { transform: translateY(-98vh) translateX(10px) rotate(2deg) scale(0.95); opacity: 0.5; }
-  100% { transform: translateY(-120vh) translateX(-6px) rotate(0deg) scale(0.88); opacity: 0; }
-}
-
-.weather-particles-lanterns {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 50;
-  overflow: hidden;
-  contain: layout paint;
-}
-
-.weather-particles-lanterns .lantern {
-  position: absolute;
-  bottom: -30px;
-  animation: lantern-float linear infinite;
-  will-change: transform;
-  backface-visibility: hidden;
-  filter: drop-shadow(0 0 12px hsl(43 95% 57% / 0.35));
-  text-shadow: 0 0 8px hsl(43 95% 57% / 0.25);
-}
-
-/**
- * Fix hidden TabsContent elements becoming visible.
- *
- * Radix UI keeps inactive TabsContent in the DOM with the `hidden` attribute.
- * Tailwind's `.flex` utility (`display: flex`) overrides the browser/preflight
- * `[hidden] { display: none }` because both have (0,1,0) specificity and
- * utilities are generated after the base layer.  This makes inactive panels
- * participate in the flex layout and create visible gaps.
- *
- * Using `!important` here ensures hidden tab panels stay hidden regardless
- * of any Tailwind display utility applied to them.
- */
-[role="tabpanel"][hidden] {
-  display: none !important;
-}
+/* Keep Radix tab panels that are hidden from participating in flex layouts. */
+[role="tabpanel"][hidden] { display: none !important; }
