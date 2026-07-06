@@ -2296,7 +2296,12 @@ repo is pushed):
 2. Update the Mac-app MCP config + any Edge Function env with the new values.
 3. Confirm the **publishable key** is the ONLY Supabase key in the client bundle
    (`grep dist/ -rE "sb_secret_|sbp_"` → empty), and `.env*` stay gitignored.
-The publishable key (`sb_publishable_…`) is safe to ship; the other two are not.
+4. **Rotate the GitHub fine-grained PAT** (`github_pat_…`) that was pasted in chat
+   and stored at `.git/.git-credentials` (repo-local, keychain disabled). Revoke
+   it at github.com/settings/personal-access-tokens and reissue, or remove it once
+   pushing is no longer needed. It grants Contents write to this repo.
+The publishable key (`sb_publishable_…`) is safe to ship; the Supabase secret key,
+the Supabase access token, and the GitHub PAT are not.
 
 ---
 
