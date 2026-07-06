@@ -17,8 +17,8 @@ export const queryKeys = {
     boardId: string,
     filters?: Record<string, unknown>
   ) => ["board", boardId, "tasks", filters ?? {}] as const,
-  daily: (boardId: string, forDate?: string) =>
-    ["board", boardId, "daily", { forDate: forDate ?? null }] as const,
+  daily: (boardId: string, scope?: string) =>
+    ["board", boardId, "daily", { scope: scope ?? null }] as const,
   comments: (boardId: string, parent: { taskId?: string; epicId?: string }) =>
     ["board", boardId, "comments", parent] as const,
   announcements: (boardId: string) =>

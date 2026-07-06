@@ -11,23 +11,20 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 8 Announcements, realtime, polish — done
+- Current phase: Phase 8 plus user feedback round — done
 - Last updated: 2026-07-06
 - Active branch: phase-8-polish (stacked on phase-7-analytics, pushed to origin)
-- Built so far: Phases 1 to 8. Latest: announcements feed with pinning and
-  attribution, live realtime sync per board (one channel, invalidation based
-  reconcile, reconnect refetch), drag to reorder kanban columns persisted by the
-  reorder_statuses RPC, color coded status pills and priority badges across the
-  list view and selects, and a working cmd K command palette (sections, boards,
-  themes, profile, sign out).
+- Built so far: Phases 1 to 8, then a feedback round: list view table columns
+  drag to rearrange (order saved per user), list view rows drag to reorder
+  (fractional position via move_task, disabled while a header sort is active),
+  and Daily grew a shared Team lane with assignees next to the untouched
+  private Personal lane (migrations 0020 and 0021, RLS split proven by SQL).
 - In progress or half done: user dashboard config still pending from phase 3
   (Site URL, redirect list, leaked password protection toggle).
 - Next action: on "go phase 9", build LeetPing backend first. Branch off
-  phase-8-polish. Two backlog items from the user shipped this phase, the
-  remaining backlog (friends high, shared dailies medium, messaging low) is
-  post phase 10.
+  phase-8-polish.
 - Known broken right now: nothing. Full gate is green, 11 unit tests pass.
-- Env and config: migrations 0001 to 0019 applied. Dev server on port 8080.
+- Env and config: migrations 0001 to 0021 applied. Dev server on port 8080.
 - Branch stacking: phases 1 to 8 are stacked branches, none merged to main yet.
 
 ---
@@ -161,6 +158,30 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 8 feedback round — list view drag and team dailies   [2026-07-06]
+- Context: the user clarified that column drag meant the list view table
+  columns (type, title, epic, and so on) plus manual row reordering there, and
+  asked for the shared daily lane to be pulled forward from the backlog with
+  the visibility design left to me.
+- Delivered:
+  - List view header cells drag horizontally to rearrange columns, order stored
+    per user in the persisted uiStore. Clicking a header still sorts.
+  - List view rows drag vertically by a grip to reorder tasks, persisted through
+    move_task with a fresh fractional key. Row drag disables itself while a
+    header sort is active since manual order only makes sense in position order.
+  - Daily now has two lanes with a URL backed toggle. Personal is exactly the
+    old private list. Team is shared with the whole board, each item can be
+    assigned to a member (Anyone by default), editors add, rename, assign,
+    check, reorder, and delete, viewers see everything read only. Migration
+    0020 adds scope and assignee_id with split RLS policies and updates the
+    member removal cleanup (personal rows leave with the member, team rows just
+    lose the assignee). Migration 0021 adds daily_items to realtime.
+  - Three SQL assertions pass: personal hidden from others, team visible to
+    members, viewer cannot write team items.
+- Gates: build, typecheck, lint, tests all green.
+- Decision note: team lane visibility went to all board members with writes for
+  editors, matching the rest of the app's role model.
 
 ### Phase 8 — Announcements, realtime, polish   [2026-07-06]
 - Delivered:
@@ -388,8 +409,9 @@
 - [ ] AI insights kept as opt in (default) vs dropped.
 
 ## FEATURE BACKLOG
-- SHIPPED in phase 8: kanban column drag reorder, and color coded statuses and
-  priorities. Entries below are still open.
+- SHIPPED in phase 8: kanban column drag, color coded statuses and priorities,
+  list view column rearranging, list view row reordering, and the shared team
+  daily lane with assignees. Entries below are still open.
 - [HIGH] Friend system (user request 2026-07-06). Search a user by handle, send a
   friend request, accept or decline, then invite friends to boards from a picker
   instead of copy pasting a token link. Needs a friendships table
@@ -400,7 +422,7 @@
   requests inbox UI, and an invite_friend RPC that adds an accepted friend to a
   board directly with a chosen role, reusing the last owner and role guards.
   The token link flow stays for people who are not on the app yet.
-- [MEDIUM] Shared team dailies with assignees (user request 2026-07-06). Today
+- [SHIPPED 2026-07-06] Shared team dailies with assignees (user request 2026-07-06). Today
   Daily is private per user. Add a second lane: a shared board daily list where
   each item can be assigned to a member, everyone on the board sees the list and
   who each item is for, and members check off their own. Personal lane stays

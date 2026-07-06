@@ -8,10 +8,12 @@ interface UiState {
   theme: Theme;
   sidebarCollapsed: boolean;
   commandOpen: boolean;
+  listColumnOrder: string[];
   setTheme: (t: Theme) => void;
   toggleTheme: () => void;
   toggleSidebar: () => void;
   setCommandOpen: (open: boolean) => void;
+  setListColumnOrder: (order: string[]) => void;
 }
 
 // Reflect the theme onto the html element so the CSS variables switch.
@@ -27,6 +29,7 @@ export const useUiStore = create<UiState>()(
       theme: "dark",
       sidebarCollapsed: false,
       commandOpen: false,
+      listColumnOrder: [],
       setTheme: (theme) => {
         applyTheme(theme);
         set({ theme });
@@ -38,10 +41,11 @@ export const useUiStore = create<UiState>()(
       },
       toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),
       setCommandOpen: (commandOpen) => set({ commandOpen }),
+      setListColumnOrder: (listColumnOrder) => set({ listColumnOrder }),
     }),
     {
       name: "arcflow-ui",
-      partialize: (s) => ({ theme: s.theme, sidebarCollapsed: s.sidebarCollapsed }),
+      partialize: (s) => ({ theme: s.theme, sidebarCollapsed: s.sidebarCollapsed, listColumnOrder: s.listColumnOrder }),
     }
   )
 );

@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase/client";
 // the row filter, the board_id filter here just cuts noise. Our own writes echo
 // back too, which is harmless since invalidation after a mutation is idempotent
 // and realtime events never toast.
-const TABLES = ["tasks", "epics", "sprints", "arcs", "announcements", "comments", "board_statuses", "work_item_types"] as const;
+const TABLES = ["tasks", "epics", "sprints", "arcs", "announcements", "comments", "board_statuses", "work_item_types", "daily_items"] as const;
 
 export function useBoardRealtime(boardId: string | undefined) {
   const qc = useQueryClient();
@@ -42,6 +42,9 @@ export function useBoardRealtime(boardId: string | undefined) {
           break;
         case "work_item_types":
           void qc.invalidateQueries({ queryKey: ["board", boardId, "types"] });
+          break;
+        case "daily_items":
+          void qc.invalidateQueries({ queryKey: ["board", boardId, "daily"] });
           break;
       }
     };

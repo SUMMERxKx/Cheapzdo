@@ -276,34 +276,40 @@ export type Database = {
       }
       daily_items: {
         Row: {
+          assignee_id: string | null
           board_id: string
           created_at: string
           for_date: string
           id: string
           is_done: boolean
           position: string
+          scope: string
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          assignee_id?: string | null
           board_id: string
           created_at?: string
           for_date?: string
           id?: string
           is_done?: boolean
           position?: string
+          scope?: string
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          assignee_id?: string | null
           board_id?: string
           created_at?: string
           for_date?: string
           id?: string
           is_done?: boolean
           position?: string
+          scope?: string
           title?: string
           updated_at?: string
           user_id?: string
