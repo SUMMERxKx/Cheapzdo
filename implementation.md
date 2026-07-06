@@ -2006,7 +2006,13 @@ leetping/comments, reconcile into Query cache (ignore self-echoes, LWW, unsubscr
 on switch, refetch on reconnect); polish pass (consistent motion, shape-matched
 skeletons everywhere, empty states, error boundaries + retry, toasts, ⌘K command
 palette + local hotkeys + `?` cheatsheet, responsive audit incl. Kanban
-snap-scroll, reduced-motion, focus management, microcopy via `clarify`).
+snap-scroll, reduced-motion, focus management, microcopy via `clarify`);
+**drag-to-reorder Kanban columns on the board itself** (user request 2026-07-06 —
+order already editable via Settings → Statuses arrows; this adds direct
+manipulation: a second draggable kind in the Kanban DndContext discriminated by
+`data.type` (column vs task), `horizontalListSortingStrategy` for the column
+row, and an atomic position renumber — either an RPC or the existing temp-slot
+swap chain — persisted on drop, keyboard-drag included).
 **Acceptance (add):** two browsers on one board see changes within ~1s **without
 duplicate toasts/flicker** (echo dedupe); no leaked channels on board switch;
 reconnect refetches; every async surface has a skeleton + empty state; global

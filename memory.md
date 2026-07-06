@@ -311,6 +311,14 @@
 - [ ] LeetPing board scoping and privacy default (default off).
 - [ ] AI insights kept as opt in (default) vs dropped.
 
+## FEATURE BACKLOG
+- Drag to reorder Kanban columns directly on the board (user request 2026-07-06).
+  Column order is already editable through Settings, Statuses, up and down
+  arrows. This adds direct drag on the board: a second draggable kind in the
+  Kanban DndContext (column vs task via data.type), horizontal sorting for the
+  column row, atomic position renumber persisted on drop, keyboard drag too.
+  Scheduled for phase 8 polish, see implementation.md phase 8 build list.
+
 ## KNOWN ISSUES / TECH DEBT
 - [SEV high] Rotate the Supabase secret key, the Supabase access token, and the
   GitHub PAT before launch, see implementation.md section 21. Phase 10.
