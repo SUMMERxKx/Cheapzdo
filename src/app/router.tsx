@@ -54,7 +54,7 @@ export const router = createBrowserRouter([
           { path: "dashboard", element: <ComingSoon name="Dashboard" phase="phase 7" /> },
           { path: "announcements", element: <ComingSoon name="Announcements" phase="phase 8" /> },
           { path: "leetping", element: <ComingSoon name="LeetPing" phase="phase 9" /> },
-          { path: "settings", element: <ComingSoon name="Board settings" phase="phase 4" /> },
+          { path: "settings", element: lazyEl(() => import("@/features/boards/BoardSettingsPage")) },
         ],
       },
     ],

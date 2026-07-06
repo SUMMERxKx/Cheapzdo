@@ -11,27 +11,43 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 3 Auth and onboarding — done (pending user dashboard config
-  and a real signup verify)
+- Current phase: Phase 4 Boards, teams, members, RBAC — done
 - Last updated: 2026-07-06
-- Active branch: phase-3-auth (stacked on phase-2-database, pushed to origin)
+- Active branch: phase-4-rbac (stacked on phase-3-auth, pushed to origin)
 - Built so far: Phase 1 (shell, design, six themes, four spines), Phase 2 (schema,
-  RLS, RPCs, typed client), Phase 3 (email verification auth, session store and
-  listener, guards, auth screens, onboarding wizard with live arc preview,
-  profile page with avatar upload, lazy loaded routes, TypeScript strict on).
-- In progress or half done: the user still needs to set the Supabase dashboard
-  auth URLs (Site URL http://localhost:8080 plus redirect allow list) and run a
-  real signup to verify email delivery.
-- Next action: on "go phase 4", build boards, teams, members, invitations, and
-  RBAC. Branch off phase-3-auth.
+  RLS, RPCs, typed client), Phase 3 (auth, guards, onboarding wizard, profile),
+  Phase 4 (board settings with status and type editors, teams, members panel with
+  copy link invitations and role management, real usePermissions, last owner and
+  unassign guards in migration 0016).
+- In progress or half done: user dashboard config still pending from phase 3
+  (Site URL and redirect list, plus enable leaked password protection).
+- Next action: on "go phase 5", build the Arc Board and Sprint Board (list plus
+  kanban) with sprint lifecycle. Branch off phase-4-rbac.
 - Known broken right now: nothing. Full gate is green.
-- Env and config: migrations 0001 to 0015 applied. .env has VITE_SUPABASE_URL and
-  VITE_SUPABASE_PUBLISHABLE_KEY. Dev server runs on port 8080.
-- Branch stacking: phases 1, 2, 3 are stacked branches, none merged to main yet.
+- Env and config: migrations 0001 to 0016 applied. Dev server on port 8080.
+- Branch stacking: phases 1 to 4 are stacked branches, none merged to main yet.
 
 ---
 
 ## DECISION LOG (newest first)
+
+### ADR-0013 — Copy link invitations now, email delivery in phase 10  [2026-07-06] — Status: Accepted
+- Context: the plan called for an invite-member Edge Function that sends email,
+  but no email provider key exists yet (SMTP and Resend are phase 10 work), so a
+  deployed function would just fail at runtime.
+- Decision: create invitations client side under the owner only RLS policy. The
+  browser generates a 32 byte token, stores only its sha256 hash, and shows the
+  owner a copyable accept link exactly once. accept_invite validates the hash,
+  expiry, and email match server side.
+- Rationale: fully functional and secure today with zero email dependency, the
+  same flow Slack and Notion offer as share links. The raw token never touches
+  the database or leaves the owner's browser except in the link itself.
+- Alternatives: deploy the Edge Function without a mail key, rejected as dead
+  code. Email sending gets added in phase 10 alongside Resend, reusing the same
+  invitations table.
+- Consequences: links cannot be reshown later (only the hash is stored), so the
+  UI says revoke and reinvite to reshare. The invite email match still applies.
+- Phase: 4
 
 ### ADR-0012 — TypeScript strict mode on  [2026-07-06] — Status: Accepted
 - Context: the Lovable template shipped with strict false and strictNullChecks
@@ -142,6 +158,32 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 4 — Boards, teams, members, RBAC   [2026-07-06]
+- Delivered:
+  - Migration 0016: a board always keeps at least one owner (demote and delete of
+    the last owner are blocked, board deletion still cascades), and removing a
+    member unassigns their tasks and epics. All three proven by SQL test.
+  - Data modules: members (roster RPC, my role, role update, remove, team
+    assign), teams (CRUD), invitations (client side hashed token creation with a
+    one time copy link, pending list, revoke), statuses (CRUD plus position swap
+    through a temp slot), work item types (CRUD), boards (get, update, delete).
+  - usePermissions now reads the real membership role through the board_role RPC.
+  - Board settings page at /b/:id/settings with tabs: General (rename and arc
+    defaults, owner only), Members (roster with role select, team assign, remove,
+    invite dialog with the one time link, pending invites with revoke), Teams
+    (create, rename, recolor via creation, delete, member avatars), Statuses
+    (add, rename, recolor, reorder, delete with in use guard, category fixed and
+    labeled), Types (add, rename, icon picker from a curated lucide set, recolor,
+    delete with in use guard), Danger (type the board name to delete, owner only).
+  - Viewers see read only panels, editors can edit statuses and types, owners get
+    members, teams, general, and danger controls.
+- Gates: build, typecheck, lint, test all green. Settings page is its own lazy
+  chunk (67 kB). Advisors: same intentional pattern as phase 2, plus a new
+  dashboard toggle to enable (leaked password protection).
+- Deviations from plan: invitations are copy link instead of emailed, see
+  ADR-0013. Email arrives in phase 10 with Resend.
+- Docs updated: memory.md. CLAUDE.md reviewed, no change needed.
 
 ### Phase 3 — Authentication and onboarding   [2026-07-06]
 - Delivered:

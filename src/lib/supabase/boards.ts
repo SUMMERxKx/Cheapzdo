@@ -18,6 +18,33 @@ export async function listMyBoards(): Promise<Result<Board[]>> {
   return ok(data ?? []);
 }
 
+export async function getBoard(boardId: string): Promise<Result<Board>> {
+  const { data, error } = await supabase
+    .from("boards")
+    .select("*")
+    .eq("id", boardId)
+    .single();
+  if (error) return fail(fromPostgrestError(error));
+  return ok(data);
+}
+
+// Owner only per RLS. Arc size and sprint length here are defaults for future arcs.
+export async function updateBoard(
+  boardId: string,
+  updates: { name?: string; arc_size?: number; sprint_length_days?: number }
+): Promise<Result<null>> {
+  const { error } = await supabase.from("boards").update(updates).eq("id", boardId);
+  if (error) return fail(fromPostgrestError(error));
+  return ok(null);
+}
+
+// Owner only per RLS. Cascades everything on the board, the UI double confirms.
+export async function deleteBoard(boardId: string): Promise<Result<null>> {
+  const { error } = await supabase.from("boards").delete().eq("id", boardId);
+  if (error) return fail(fromPostgrestError(error));
+  return ok(null);
+}
+
 // Create a board through the atomic RPC, which also seeds statuses, types, the
 // first arc, and its sprints, and adds the caller as owner.
 export async function createBoard(
