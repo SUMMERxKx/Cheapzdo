@@ -1,22 +1,47 @@
+import { Suspense, lazy, type ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AuthedLayout } from "./AuthedLayout";
 import { BoardLayout } from "./BoardLayout";
+import { HomeRedirect, RequireAuth, RequireGuest } from "./guards";
 import { ComingSoon } from "@/components/ComingSoon";
+import { FullScreenLoader } from "@/components/FullScreenLoader";
 import NotFound from "@/pages/NotFound";
 
-// Route shells for every screen. Later phases swap ComingSoon for the real
-// feature pages, most of them lazy loaded.
+// Lazy load page components so each route is its own chunk and the initial
+// bundle stays small.
+function lazyEl(factory: () => Promise<{ default: ComponentType }>) {
+  const C = lazy(factory);
+  return (
+    <Suspense fallback={<FullScreenLoader />}>
+      <C />
+    </Suspense>
+  );
+}
+
 export const router = createBrowserRouter([
-  { path: "/login", element: <ComingSoon name="Sign in" phase="phase 3" /> },
-  { path: "/signup", element: <ComingSoon name="Create account" phase="phase 3" /> },
-  { path: "/verify", element: <ComingSoon name="Verify your email" phase="phase 3" /> },
-  { path: "/reset", element: <ComingSoon name="Reset password" phase="phase 3" /> },
+  {
+    element: <RequireGuest />,
+    children: [
+      { path: "/login", element: lazyEl(() => import("@/features/auth/LoginPage")) },
+      { path: "/signup", element: lazyEl(() => import("@/features/auth/SignupPage")) },
+      { path: "/verify", element: lazyEl(() => import("@/features/auth/VerifyEmailPage")) },
+      { path: "/reset", element: lazyEl(() => import("@/features/auth/ResetRequestPage")) },
+    ],
+  },
+  { path: "/update-password", element: lazyEl(() => import("@/features/auth/UpdatePasswordPage")) },
+  { path: "/accept-invite", element: lazyEl(() => import("@/features/auth/AcceptInvitePage")) },
+  {
+    element: <RequireAuth />,
+    children: [
+      { path: "/onboarding", element: lazyEl(() => import("@/features/onboarding/OnboardingWizard")) },
+    ],
+  },
   {
     path: "/",
     element: <AuthedLayout />,
     children: [
-      { index: true, element: <ComingSoon name="Your boards" phase="phase 4" /> },
-      { path: "onboarding", element: <ComingSoon name="Create a board" phase="phase 3" /> },
+      { index: true, element: <HomeRedirect /> },
+      { path: "profile", element: lazyEl(() => import("@/features/profile/ProfilePage")) },
       {
         path: "b/:boardId",
         element: <BoardLayout />,

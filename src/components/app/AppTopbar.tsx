@@ -1,6 +1,7 @@
 import { PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemePicker } from "@/components/ThemePicker";
+import { UserMenu } from "@/features/auth/UserMenu";
 import { useUiStore } from "@/stores/uiStore";
 
 export function AppTopbar() {
@@ -28,6 +29,7 @@ export function AppTopbar() {
           </kbd>
         </button>
         <ThemePicker />
+        <UserMenu />
       </div>
     </header>
   );

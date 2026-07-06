@@ -11,24 +11,38 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 2 Database and RLS — done
+- Current phase: Phase 3 Auth and onboarding — done (pending user dashboard config
+  and a real signup verify)
 - Last updated: 2026-07-06
-- Active branch: phase-2-database (stacked on phase-1-foundation, pushed to origin)
-- Built so far: Phase 1 (shell, design, six themes, four spines) and Phase 2
-  (full schema, RLS, RPCs, typed client, data layer pattern).
-- In progress or half done: none, ready to start Phase 3 (auth and onboarding).
-- Next action: on "go phase 3", build Supabase email verification auth, session
-  layer, route guards, profile edit, and the create board wizard.
+- Active branch: phase-3-auth (stacked on phase-2-database, pushed to origin)
+- Built so far: Phase 1 (shell, design, six themes, four spines), Phase 2 (schema,
+  RLS, RPCs, typed client), Phase 3 (email verification auth, session store and
+  listener, guards, auth screens, onboarding wizard with live arc preview,
+  profile page with avatar upload, lazy loaded routes, TypeScript strict on).
+- In progress or half done: the user still needs to set the Supabase dashboard
+  auth URLs (Site URL http://localhost:8080 plus redirect allow list) and run a
+  real signup to verify email delivery.
+- Next action: on "go phase 4", build boards, teams, members, invitations, and
+  RBAC. Branch off phase-3-auth.
 - Known broken right now: nothing. Full gate is green.
-- Env and config: migrations 0001 to 0015 applied to project qjcpzozqzhsuveuytwlo,
-  16 tables all RLS enabled. Types generated to src/lib/supabase/database.types.ts.
-  Client uses the publishable key. Push works via a repo local credential file.
-- Branch stacking: phase 1 and phase 2 are not merged to main yet. Phase 3 should
-  branch off phase-2-database.
+- Env and config: migrations 0001 to 0015 applied. .env has VITE_SUPABASE_URL and
+  VITE_SUPABASE_PUBLISHABLE_KEY. Dev server runs on port 8080.
+- Branch stacking: phases 1, 2, 3 are stacked branches, none merged to main yet.
 
 ---
 
 ## DECISION LOG (newest first)
+
+### ADR-0012 — TypeScript strict mode on  [2026-07-06] — Status: Accepted
+- Context: the Lovable template shipped with strict false and strictNullChecks
+  false, which silently broke discriminated union narrowing on our Result type.
+- Decision: set strict true in tsconfig.app.json. The whole codebase compiles
+  clean under strict after the phase 1 and 2 rewrites.
+- Rationale: the plan requires strict TypeScript, and Result-based error handling
+  depends on proper narrowing.
+- Consequences: any future code must be strict clean. noUnusedLocals stays off
+  (lint covers that concern).
+- Phase: 3
 
 ### ADR-0011 — Accept the SECURITY DEFINER advisor warnings as intentional  [2026-07-06] — Status: Accepted
 - Context: after remediation the security advisor still reports 11 warnings, all
@@ -128,6 +142,35 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 3 — Authentication and onboarding   [2026-07-06]
+- Delivered:
+  - Auth data module (signUp with verification redirect, signIn, signOut, resend,
+    password reset request and update, acceptInvite RPC wrapper) and zod schemas
+    shared by all auth forms.
+  - Session layer: authStore plus an AuthListener in providers fed by getSession
+    and onAuthStateChange. useAuth hook.
+  - Guards: RequireGuest, RequireAuth, HomeRedirect (no boards goes to onboarding,
+    otherwise first board), and AuthedLayout now guards with a loader so protected
+    content never flashes.
+  - Screens: Login, Signup, VerifyEmail (with resend), ResetRequest,
+    UpdatePassword, AcceptInvite, all on the split AuthCard shell with the
+    animated sprint bars motif. Profile page with display name, handle, and
+    avatar upload to the avatars bucket. UserMenu with sign out in the topbar.
+  - Onboarding wizard: two steps (name, then arc shape) with steppers and the
+    live ArcTimelinePreview that rebuilds as arc size and sprint length change,
+    submitting through the create_board RPC and landing on the new board.
+  - Sidebar now lists the user's real boards from useMyBoards.
+  - All page routes lazy loaded, and supabase-js and forms split into their own
+    vendor chunks. App index chunk 173 kB, largest chunk 206 kB.
+  - TypeScript strict mode enabled (ADR-0012).
+- Gates: build ok, typecheck ok (strict), lint ok, test ok. No schema changes, so
+  advisors unchanged from phase 2.
+- Deviations from plan: the optional "create your first team" wizard step is
+  deferred to phase 4 where teams exist end to end. Documented here on purpose.
+- Follow ups: user must set Supabase auth URL config in the dashboard (Site URL
+  and redirect allow list for localhost 8080) and confirm a real signup email.
+- Docs updated: memory.md. CLAUDE.md reviewed, no change needed.
 
 ### Phase 2 — Database schema, RLS, security foundation   [2026-07-06]
 - Delivered:

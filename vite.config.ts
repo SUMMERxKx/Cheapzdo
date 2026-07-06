@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => ({
           "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities"],
           "vendor-charts": ["recharts"],
           "vendor-query": ["@tanstack/react-query", "@tanstack/react-table"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-forms": ["react-hook-form", "zod", "@hookform/resolvers"],
         },
       },
     },
