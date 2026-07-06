@@ -2377,11 +2377,35 @@ Ordered by the owner's priority. Full sketches in `memory.md` FEATURE BACKLOG.
    requests (`friendships` table: requester/addressee/status, unique pair),
    and an `invite_friend` RPC so inviting a friend to a board is a picker, not
    a copied token link. Token links remain for non-users.
-3. **[LOW] Live messaging** — board/team channels + DMs between friends
+3. **[MEDIUM — ship together with the SMTP/Resend setup] Branded email
+   templates** (requested 2026-07-06) — replace the default plain Supabase
+   emails with professional, on-brand templates so the first thing a new user
+   sees looks like a product, not a database.
+   - **Which emails:** signup confirmation, password reset, email change
+     (Supabase Auth → Authentication → Emails → Templates, HTML with the Go
+     template variables like `{{ .ConfirmationURL }}`), plus the **board invite
+     email** once Resend lands (sent by the future `invite-member` Edge
+     Function per ADR-0013 — same visual system).
+   - **Design:** one shared email shell in the Arcflow language — the "A" logo
+     mark, the iris accent on a light background (dark-mode-friendly colors,
+     never rely on images loading), a single clear CTA button, plain-text
+     fallback line with the raw link, and a quiet footer ("You're receiving
+     this because…"). Email reality: **table-based layout, fully inlined CSS,
+     web-safe font stack** (emails can't load Space Grotesk — use
+     system-ui/Arial with matching weights), max-width ~560px, tested in
+     Gmail, Outlook, and Apple Mail before shipping.
+   - **Where the source lives:** keep the HTML sources in the repo under
+     `emails/` (they're pasted into the Supabase dashboard, but the repo stays
+     the source of truth; the invite template is consumed by the Edge
+     Function directly).
+   - **Deliverability:** goes live with DEPLOYMENT.md step 3 (Resend + domain
+     verification + SPF/DKIM) — a beautiful template in spam is worthless, so
+     these ship as one unit.
+4. **[LOW] Live messaging** — board/team channels + DMs between friends
    (depends on #2), Supabase Realtime delivery, `messages` table with keyset
    history, RLS by membership/friendship. Only after Phase 8 realtime is proven.
 
-(Shared team dailies, previously #2 here, shipped in Phase 8.)
+(Shared team dailies, previously listed here, shipped in Phase 8.)
 
 ---
 

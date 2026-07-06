@@ -519,6 +519,17 @@
   keep the owner only policy, team rows use is_board_member for select and
   can_edit or self assign for writes), UI shows Team and Personal tabs with the
   same checkbox interaction and per person grouping in the team lane.
+- [MEDIUM, ships with the SMTP setup] Branded email templates (user request
+  2026-07-06). Replace the default Supabase auth emails (confirmation, reset,
+  email change) and the future Resend invite email with one professional
+  Arcflow email shell: logo mark, iris accent, one clear CTA button, plain
+  text link fallback, quiet footer. Email constraints apply: table layout,
+  inlined CSS, web safe font stack, about 560px wide, tested in Gmail,
+  Outlook, and Apple Mail. HTML sources live in the repo under emails/ and get
+  pasted into Authentication, Emails, Templates. Worthless without
+  deliverability, so it ships as one unit with DEPLOYMENT.md step 3 (Resend,
+  domain verification, SPF and DKIM). Design detail in implementation.md 20b
+  item 3.
 - [LOW] Live messaging (user request 2026-07-06). Two surfaces: a board or team
   channel, and direct messages between friends (depends on the friend system).
   Realtime delivery over Supabase channels, a messages table with board_id or

@@ -28,7 +28,9 @@ The default Supabase sender is rate limited and lands in spam. Before inviting
 real users: create a Resend account (or any SMTP provider), verify a domain,
 then in Supabase go to Authentication, Emails, SMTP Settings and fill in the
 host, port, user, and password from the provider. Customize the confirmation
-and reset templates under Authentication, Emails, Templates.
+and reset templates under Authentication, Emails, Templates. Use the branded
+email templates from the backlog (implementation.md section 20b item 3) so the
+first email a user gets looks like Arcflow, not a default.
 
 ## 4. Hardening toggles
 
