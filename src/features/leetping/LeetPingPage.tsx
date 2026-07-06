@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
-import { ExternalLink, Github, RefreshCw, Unplug } from "lucide-react";
+import { Github, RefreshCw, Unplug } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -270,15 +270,9 @@ export default function LeetPingPage() {
                   <p className="min-w-0 flex-1 text-sm">
                     <span className="font-medium">{member?.display_name ?? "Someone"}</span>{" "}
                     solved{" "}
-                    <a
-                      href={e.problem_url ?? "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-                    >
+                    <span className="font-medium text-primary">
                       {e.problem_title ?? e.problem_slug}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    </span>
                   </p>
                   {e.difficulty && (
                     <span
