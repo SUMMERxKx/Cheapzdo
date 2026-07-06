@@ -19,6 +19,18 @@ export async function listTasks(boardId: string, sprintId: string | null): Promi
   return ok(data ?? []);
 }
 
+// Every task on the board, for the dashboard aggregates.
+export async function listAllTasks(boardId: string): Promise<Result<Task[]>> {
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("board_id", boardId)
+    .is("archived_at", null)
+    .order("created_at", { ascending: true });
+  if (error) return fail(fromPostgrestError(error));
+  return ok(data ?? []);
+}
+
 export async function createTask(input: {
   boardId: string;
   epicId: string;

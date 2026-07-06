@@ -11,20 +11,23 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 6 Daily board — done
+- Current phase: Phase 7 Leaderboard and Dashboard — done
 - Last updated: 2026-07-06
-- Active branch: phase-6-daily (stacked on phase-5-boards, pushed to origin)
-- Built so far: Phases 1 to 5 plus Phase 6, the private rolling Daily checklist
-  with an animated draw in checkbox, progress ring, inline composer, inline
-  rename, drag reorder of open items, and a done section. Privacy enforced by
-  the daily_all RLS policy proven in phase 2.
+- Active branch: phase-7-analytics (stacked on phase-6-daily, pushed to origin)
+- Built so far: Phases 1 to 7. Latest: leaderboard with a spring rise podium,
+  team vs team by default (team score is the average of member totals, ties on
+  completion, unassigned bucket) with drill down to members and their three
+  pillar bars, scope switch overall or per sprint. Dashboard with count metric
+  tiles, an animated burndown (done day approximated by updated_at), a status
+  donut colored from board_statuses, priority bars, open work by member, and a
+  blocker spotlight. Scoring math and burndown are unit tested.
 - In progress or half done: user dashboard config still pending from phase 3
   (Site URL, redirect list, leaked password protection toggle).
-- Next action: on "go phase 7", build the Leaderboard and Dashboard. Branch off
-  phase-6-daily.
-- Known broken right now: nothing. Full gate is green.
+- Next action: on "go phase 8", build announcements, realtime, and the polish
+  pass including the two backlogged UI items. Branch off phase-7-analytics.
+- Known broken right now: nothing. Full gate is green, 11 unit tests pass.
 - Env and config: migrations 0001 to 0017 applied. Dev server on port 8080.
-- Branch stacking: phases 1 to 6 are stacked branches, none merged to main yet.
+- Branch stacking: phases 1 to 7 are stacked branches, none merged to main yet.
 
 ---
 
@@ -157,6 +160,31 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 7 — Leaderboard and Dashboard   [2026-07-06]
+- Delivered:
+  - leaderboardApi wrapper over the leaderboard RPC (scores computed in the
+    database). features/leaderboard/score.ts aggregates teams (average of member
+    totals, zero assigned members excluded, unassigned bucket, completion tie
+    break) with four unit tests.
+  - LeaderboardPage: team vs team by default when teams exist, spring rise
+    podium (second, first, third), click a team to drill into its members, each
+    member row shows Done, Weight, and Motion pillar bars out of 50, 30, 20,
+    scope select for overall or any sprint, and a how scoring works explainer.
+  - features/dashboard/burndown.ts computes ideal and actual lines per sprint
+    day (done day approximated by updated_at once a task sits in a done status,
+    labeled as an estimate) with three unit tests.
+  - DashboardPage: metric tiles, animated burndown with a dashed ideal line, a
+    bespoke status donut using each status stored color, priority bars with
+    semantic colors, open work by member, and an open blockers panel. Scope
+    select for whole board or one sprint.
+- Gates: build, typecheck, lint green, 11 unit tests pass. LeaderboardPage 8.5 kB
+  and DashboardPage 10.6 kB lazy chunks. No schema changes.
+- Deviations from plan: Overall scope means the whole board rather than only the
+  active arc, since the leaderboard RPC has no arc filter. Acceptable for now,
+  revisit if arcs accumulate. Charts are hand rolled SVG plus framer rather than
+  visx, fewer moving parts for the same visuals.
+- Docs updated: memory.md. CLAUDE.md reviewed, no change needed.
 
 ### Phase 6 — Daily board   [2026-07-06]
 - Delivered:
