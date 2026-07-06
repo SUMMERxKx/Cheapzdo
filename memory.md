@@ -11,24 +11,24 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 9 LeetPing — done
+- Current phase: Phase 10 Hardening and deploy prep — done. ALL TEN PHASES COMPLETE.
 - Last updated: 2026-07-06
-- Active branch: phase-9-leetping (stacked on phase-8-polish, pushed to origin)
-- Built so far: Phases 1 to 9. Latest: the leetping-sync edge function (deployed,
-  ACTIVE, jwt required) reads a member's public LeetCode sync repo through the
-  GitHub API, parses solves from commit messages with a file path fallback, and
-  fans events out to their boards, deduped per commit. Feed page with connect
-  card, share opt in, sync now, member filter, difficulty and language chips,
-  live over realtime. Parser covered by nine unit tests.
-- In progress or half done: user dashboard config still pending from phase 3.
-  Scheduled background sync and GitHub OAuth for private repos are deferred, see
-  ADR-0014.
-- Next action: on "go phase 10", hardening, scale checks, secret rotation, and
-  deploy. Branch off phase-9-leetping.
-- Known broken right now: nothing. Full gate is green, 20 unit tests pass.
-- Env and config: migrations 0001 to 0021 applied, edge function leetping-sync
-  v1 deployed. Dev server on port 8080.
-- Branch stacking: phases 1 to 9 are stacked branches, none merged to main yet.
+- Active branch: phase-10-hardening, merged to main and pushed.
+- Built so far: the whole plan. Hardening round added a one minute sync cooldown
+  to leetping-sync (v2 deployed), a 33 assertion RLS matrix across every table
+  and role (all pass), a 1000 task scale seed proving index scans (kanban query
+  16.5 ms with RLS, leaderboard RPC 7.5 ms), a clean bundle secret sweep (only
+  the publishable key ships), vercel.json with SPA rewrites and security
+  headers, and rewritten README and DEPLOYMENT docs.
+- Remaining for the OWNER (cannot be done from here): rotate the Supabase secret
+  key, the sbp access token, and the GitHub PAT (rotate the PAT last, it is the
+  push credential), connect the repo in Vercel with the two VITE env vars, set
+  prod auth URLs, set up SMTP through Resend, and flip on leaked password
+  protection. Exact steps in DEPLOYMENT.md.
+- Post v1 backlog: friends (high), messaging (low), OAuth for private LeetPing
+  repos, scheduled sync. See FEATURE BACKLOG below and implementation.md 20b.
+- Known broken right now: nothing. Gate green, 20 unit tests pass.
+- Env and config: migrations 0001 to 0022 applied, leetping-sync v2 ACTIVE.
 
 ---
 
@@ -176,6 +176,33 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 10 — Hardening, scale, deploy prep   [2026-07-06]
+- Delivered:
+  - Migration 0022 plus leetping-sync v2: a one minute per user sync cooldown
+    tracked in github_connections.last_synced_at.
+  - Full RLS matrix, 33 assertions across all 16 tables and four role classes
+    (non member, viewer, editor, owner), all pass. Covers cross scope daily
+    privacy, invitation invisibility, write denials per role, and owner powers.
+  - Scale proof: seeded 1000 tasks on a throwaway board, EXPLAIN under the
+    authenticated role shows an Index Scan on tasks_sprint_id_board_id_idx at
+    16.5 ms including the RLS membership filter, leaderboard RPC at 7.5 ms.
+    Seed removed cleanly.
+  - Advisors: zero errors, only the ADR-0011 intentional SECURITY DEFINER
+    warnings plus the leaked password dashboard toggle (owner checklist).
+  - Bundle sweep: dist contains no sb_secret, sbp, github_pat, or service role
+    strings, only the publishable key.
+  - vercel.json (SPA rewrites, nosniff, frame deny, referrer policy, immutable
+    asset caching), README rewritten for Arcflow, DEPLOYMENT.md rewritten with
+    Vercel steps, auth URLs, SMTP via Resend, hardening toggles, the secret
+    rotation list, and a smoke test script. ARCHITECTURE.md current state
+    updated.
+  - Branch stack merged to main and pushed.
+- Handed to the owner: secret rotation (Supabase secret key, sbp token, GitHub
+  PAT last), Vercel project setup with the two VITE env vars, prod auth URLs,
+  SMTP, leaked password protection.
+- Deviations: Sentry left out (needs an owner account and DSN), noted as a
+  future add alongside scheduled LeetPing sync and the post v1 backlog.
 
 ### Phase 9 — LeetPing   [2026-07-06]
 - Delivered:

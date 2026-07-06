@@ -86,6 +86,10 @@ uses keyset pagination, text fractional index positions, indexes on every FK, an
 route code splitting. Accessibility means reduced motion support, visible focus,
 and AA contrast. Observability is the Supabase advisors and logs now, Sentry in phase 10.
 
-## Current state (phase 1)
-The shell, design system, routing, stores, and the four spines exist. All routes
-render ComingSoon placeholders. No database or auth yet, those are phases 2 and 3.
+## Current state (all ten phases complete)
+Feature complete: auth with email verification, onboarding wizard, boards with
+teams, members, roles, and invitations, Arc and Sprint boards with list and
+kanban views, private and team dailies, leaderboard, dashboard, announcements,
+realtime sync, and the LeetPing feed backed by the leetping-sync edge function.
+22 migrations applied, RLS proven by a 33 assertion matrix, hot queries verified
+on indexes at 1000 tasks. Deploys as a static Vercel build, see DEPLOYMENT.md.

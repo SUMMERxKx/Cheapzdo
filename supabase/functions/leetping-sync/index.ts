@@ -40,10 +40,19 @@ Deno.serve(async (req) => {
 
   const { data: conn } = await admin
     .from("github_connections")
-    .select("repo_full_name, share_to_boards")
+    .select("repo_full_name, share_to_boards, last_synced_at")
     .eq("user_id", uid)
     .maybeSingle();
   if (!conn?.repo_full_name) return json({ error: "Connect a GitHub repo first" }, 400);
+
+  // One sync per minute per user keeps the GitHub API happy.
+  if (conn.last_synced_at && Date.now() - new Date(conn.last_synced_at).getTime() < 60_000) {
+    return json({ error: "Synced less than a minute ago. Give it a moment." }, 429);
+  }
+  await admin
+    .from("github_connections")
+    .update({ last_synced_at: new Date().toISOString() })
+    .eq("user_id", uid);
   if (!/^[\w.-]+\/[\w.-]+$/.test(conn.repo_full_name)) {
     return json({ error: "That repo name does not look like owner/name" }, 400);
   }
