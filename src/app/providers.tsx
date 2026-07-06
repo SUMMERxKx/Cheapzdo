@@ -26,13 +26,15 @@ function ThemeSync() {
 
 export function Providers({ children }: { children: ReactNode }) {
   const theme = useUiStore((s) => s.theme);
+  // Sonner only understands light or dark, so map the darker themes to dark.
+  const toastTheme = theme === "dark" || theme === "neon" ? "dark" : "light";
   return (
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider delayDuration={200}>
           <ThemeSync />
           {children}
-          <Toaster position="bottom-right" theme={theme} richColors closeButton />
+          <Toaster position="bottom-right" theme={toastTheme} richColors closeButton />
         </TooltipProvider>
       </QueryClientProvider>
     </AppErrorBoundary>

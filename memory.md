@@ -26,6 +26,19 @@
 
 ## DECISION LOG (newest first)
 
+### ADR-0010 — Six selectable themes, not just dark and light  [2026-07-06] — Status: Accepted
+- Context: the old app had many seasonal themes, the owner wants variety back.
+- Decision: ship six first class themes: dark (default), light, cherry (Cherry
+  Blossom), retro, neon (cyberpunk), winter (Winter Snow). Each is a full token
+  block in index.css with a matching color-scheme, chosen from a topbar picker and
+  persisted in uiStore.
+- Rationale: the CSS variable architecture makes extra themes cheap, and it gives
+  the product personality without weather particles.
+- Alternatives: dark and light only (the earlier plan default), rejected by the owner.
+- Consequences: adding a theme later is one data-theme block, one color-scheme
+  entry, and one row in the picker THEMES list.
+- Phase: 1
+
 ### ADR-0009 — Product name is Arcflow  [2026-07-05] — Status: Accepted
 - Context: the plan left the product name open, repo stays Cheapzdo.
 - Decision: user chose Arcflow as the product and display name.

@@ -1625,11 +1625,22 @@ Semantic hues (single-source; feed chart tokens): `--positive #3FB98C`,
 `--warn #E8A13A`, `--danger #E5484D`, `--info #4CC2E0`, + a 6-stop categorical
 chart ramp (iris→cyan→jade→amber→coral→violet). Priority ramp: danger→warn→iris→
 muted (critical→low). **Light theme** (net-new): `--ink #F6F7FB`, `--surface
-#FFFFFF`, `--stroke #E4E7EF`, `--paper #1B2130`, same `--iris` (accent constant
-across themes for recall). Keep the CSS-variable `[data-theme]` architecture; ship
-**dark (default) + light** as canonical; demote the 8 seasonal themes + weather
-particles behind an opt-in flag. Add the semantic/elevation/chart token layers the
-old file lacked; charts must read tokens, never hardcode hex.
+#FFFFFF`, `--stroke #E4E7EF`, `--paper #1B2130`, same `--iris`. Add the semantic/
+elevation/chart token layers the old file lacked; charts must read tokens, never
+hardcode hex.
+
+**Themes (shipped in Phase 1).** Keep the CSS-variable `[data-theme]`
+architecture. Six first-class themes, each a full token block in `index.css` with
+a matching `color-scheme`, chosen from a topbar theme picker and persisted in the
+Zustand `uiStore`:
+- **dark** (default) — the blue-black iris palette above.
+- **light** — the net-new light palette above.
+- **cherry** (Cherry Blossom) — soft pink light theme, primary `#E85C93`.
+- **retro** — warm arcade cream light theme, primary `#DE4B34`, teal accent.
+- **neon** — cyberpunk dark theme, magenta `#FF33A8` and cyan `#4CC2E0`.
+- **winter** (Winter Snow) — crisp icy light theme, primary `#2A93D8`.
+Weather particles stay out of core. Adding a theme later is one `[data-theme]`
+block, one `color-scheme` entry, and one row in the picker's `THEMES` list.
 
 ### 11.4 Scale, spacing, radius, elevation
 - **Type scale:** xs 11 / sm 13 (UI base) / base 14 / md 16 / lg 20 / xl 26 /

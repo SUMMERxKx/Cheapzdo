@@ -132,6 +132,186 @@
     --sidebar-border: 222 22% 85%;
     --sidebar-ring: 227 90% 62%;
   }
+
+  /* Cherry Blossom, a soft pink light theme. */
+  [data-theme="cherry"] {
+    --background: 345 55% 97%;
+    --foreground: 330 18% 22%;
+    --card: 350 60% 99%;
+    --card-foreground: 330 18% 22%;
+    --popover: 350 60% 99%;
+    --popover-foreground: 330 18% 22%;
+    --primary: 336 68% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 340 40% 92%;
+    --secondary-foreground: 330 18% 22%;
+    --muted: 340 35% 90%;
+    --muted-foreground: 330 10% 45%;
+    --accent: 145 40% 88%;
+    --accent-foreground: 330 18% 22%;
+    --destructive: 358 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 340 30% 88%;
+    --input: 340 30% 88%;
+    --ring: 336 68% 60%;
+    --blocker: 358 70% 55%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 145 50% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 36 85% 50%;
+    --warning-foreground: 0 0% 12%;
+    --info: 320 60% 62%;
+    --info-foreground: 0 0% 100%;
+    --chart-1: 336 68% 60%;
+    --chart-2: 320 55% 65%;
+    --chart-3: 145 45% 50%;
+    --chart-4: 36 80% 58%;
+    --chart-5: 268 50% 65%;
+    --chart-6: 200 65% 55%;
+    --sidebar-background: 345 50% 95%;
+    --sidebar-foreground: 330 18% 24%;
+    --sidebar-primary: 336 68% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 340 40% 90%;
+    --sidebar-accent-foreground: 330 18% 24%;
+    --sidebar-border: 340 30% 86%;
+    --sidebar-ring: 336 68% 60%;
+  }
+
+  /* Retro, a warm arcade cream theme with bold accents. */
+  [data-theme="retro"] {
+    --background: 40 45% 90%;
+    --foreground: 25 25% 18%;
+    --card: 40 50% 94%;
+    --card-foreground: 25 25% 18%;
+    --popover: 40 50% 94%;
+    --popover-foreground: 25 25% 18%;
+    --primary: 8 75% 52%;
+    --primary-foreground: 40 50% 96%;
+    --secondary: 40 35% 84%;
+    --secondary-foreground: 25 25% 18%;
+    --muted: 40 30% 82%;
+    --muted-foreground: 30 15% 40%;
+    --accent: 173 40% 82%;
+    --accent-foreground: 25 25% 18%;
+    --destructive: 0 70% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 38 30% 78%;
+    --input: 38 30% 78%;
+    --ring: 8 75% 52%;
+    --blocker: 0 70% 48%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 150 55% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 36 85% 48%;
+    --warning-foreground: 0 0% 12%;
+    --info: 200 65% 45%;
+    --info-foreground: 0 0% 100%;
+    --chart-1: 8 75% 52%;
+    --chart-2: 173 55% 40%;
+    --chart-3: 44 85% 50%;
+    --chart-4: 210 60% 50%;
+    --chart-5: 340 55% 55%;
+    --chart-6: 265 45% 55%;
+    --sidebar-background: 40 40% 87%;
+    --sidebar-foreground: 25 25% 20%;
+    --sidebar-primary: 8 75% 52%;
+    --sidebar-primary-foreground: 40 50% 96%;
+    --sidebar-accent: 40 35% 82%;
+    --sidebar-accent-foreground: 25 25% 20%;
+    --sidebar-border: 38 30% 76%;
+    --sidebar-ring: 8 75% 52%;
+  }
+
+  /* Neon, a cyberpunk dark theme with magenta and cyan. */
+  [data-theme="neon"] {
+    --background: 258 45% 6%;
+    --foreground: 250 60% 95%;
+    --card: 258 40% 10%;
+    --card-foreground: 250 60% 95%;
+    --popover: 258 40% 10%;
+    --popover-foreground: 250 60% 95%;
+    --primary: 322 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 258 35% 16%;
+    --secondary-foreground: 250 60% 95%;
+    --muted: 258 30% 20%;
+    --muted-foreground: 250 20% 68%;
+    --accent: 258 40% 20%;
+    --accent-foreground: 187 100% 80%;
+    --destructive: 350 90% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 300 40% 24%;
+    --input: 258 30% 22%;
+    --ring: 322 100% 60%;
+    --blocker: 350 90% 60%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 150 80% 50%;
+    --success-foreground: 0 0% 8%;
+    --warning: 45 100% 55%;
+    --warning-foreground: 0 0% 8%;
+    --info: 187 100% 50%;
+    --info-foreground: 0 0% 8%;
+    --chart-1: 322 100% 60%;
+    --chart-2: 187 100% 50%;
+    --chart-3: 150 80% 50%;
+    --chart-4: 45 100% 55%;
+    --chart-5: 265 90% 66%;
+    --chart-6: 210 100% 60%;
+    --sidebar-background: 258 45% 8%;
+    --sidebar-foreground: 250 60% 92%;
+    --sidebar-primary: 322 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 258 40% 18%;
+    --sidebar-accent-foreground: 187 100% 80%;
+    --sidebar-border: 300 40% 22%;
+    --sidebar-ring: 322 100% 60%;
+  }
+
+  /* Winter Snow, a crisp icy light theme. */
+  [data-theme="winter"] {
+    --background: 205 45% 96%;
+    --foreground: 215 35% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 35% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 35% 18%;
+    --primary: 205 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 205 35% 90%;
+    --secondary-foreground: 215 35% 18%;
+    --muted: 205 30% 88%;
+    --muted-foreground: 215 15% 42%;
+    --accent: 200 40% 90%;
+    --accent-foreground: 215 35% 18%;
+    --destructive: 358 70% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 205 30% 85%;
+    --input: 205 30% 85%;
+    --ring: 205 70% 50%;
+    --blocker: 358 70% 52%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 165 55% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 36 85% 48%;
+    --warning-foreground: 0 0% 12%;
+    --info: 205 70% 50%;
+    --info-foreground: 0 0% 100%;
+    --chart-1: 205 70% 50%;
+    --chart-2: 190 65% 48%;
+    --chart-3: 165 55% 45%;
+    --chart-4: 220 60% 58%;
+    --chart-5: 260 50% 62%;
+    --chart-6: 340 55% 58%;
+    --sidebar-background: 205 45% 93%;
+    --sidebar-foreground: 215 35% 20%;
+    --sidebar-primary: 205 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 205 35% 88%;
+    --sidebar-accent-foreground: 215 35% 20%;
+    --sidebar-border: 205 30% 83%;
+    --sidebar-ring: 205 70% 50%;
+  }
 }
 
 @layer base {
@@ -142,8 +322,14 @@
   html {
     color-scheme: dark;
   }
-  html[data-theme="light"] {
+  html[data-theme="light"],
+  html[data-theme="cherry"],
+  html[data-theme="retro"],
+  html[data-theme="winter"] {
     color-scheme: light;
+  }
+  html[data-theme="neon"] {
+    color-scheme: dark;
   }
 
   body {

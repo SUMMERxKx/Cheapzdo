@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 // Ephemeral UI state only. Never put server data here, that lives in TanStack Query.
-export type Theme = "dark" | "light";
+export type Theme = "dark" | "light" | "cherry" | "retro" | "neon" | "winter";
 
 interface UiState {
   theme: Theme;
