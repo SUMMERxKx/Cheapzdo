@@ -11,25 +11,43 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 8 plus user feedback round — done
+- Current phase: Phase 9 LeetPing — done
 - Last updated: 2026-07-06
-- Active branch: phase-8-polish (stacked on phase-7-analytics, pushed to origin)
-- Built so far: Phases 1 to 8, then a feedback round: list view table columns
-  drag to rearrange (order saved per user), list view rows drag to reorder
-  (fractional position via move_task, disabled while a header sort is active),
-  and Daily grew a shared Team lane with assignees next to the untouched
-  private Personal lane (migrations 0020 and 0021, RLS split proven by SQL).
-- In progress or half done: user dashboard config still pending from phase 3
-  (Site URL, redirect list, leaked password protection toggle).
-- Next action: on "go phase 9", build LeetPing backend first. Branch off
-  phase-8-polish.
-- Known broken right now: nothing. Full gate is green, 11 unit tests pass.
-- Env and config: migrations 0001 to 0021 applied. Dev server on port 8080.
-- Branch stacking: phases 1 to 8 are stacked branches, none merged to main yet.
+- Active branch: phase-9-leetping (stacked on phase-8-polish, pushed to origin)
+- Built so far: Phases 1 to 9. Latest: the leetping-sync edge function (deployed,
+  ACTIVE, jwt required) reads a member's public LeetCode sync repo through the
+  GitHub API, parses solves from commit messages with a file path fallback, and
+  fans events out to their boards, deduped per commit. Feed page with connect
+  card, share opt in, sync now, member filter, difficulty and language chips,
+  live over realtime. Parser covered by nine unit tests.
+- In progress or half done: user dashboard config still pending from phase 3.
+  Scheduled background sync and GitHub OAuth for private repos are deferred, see
+  ADR-0014.
+- Next action: on "go phase 10", hardening, scale checks, secret rotation, and
+  deploy. Branch off phase-9-leetping.
+- Known broken right now: nothing. Full gate is green, 20 unit tests pass.
+- Env and config: migrations 0001 to 0021 applied, edge function leetping-sync
+  v1 deployed. Dev server on port 8080.
+- Branch stacking: phases 1 to 9 are stacked branches, none merged to main yet.
 
 ---
 
 ## DECISION LOG (newest first)
+
+### ADR-0014 — LeetPing v1 reads public repos by name, OAuth deferred  [2026-07-06] — Status: Accepted
+- Context: the plan called for GitHub OAuth with tokens in Vault, but an OAuth
+  app with a client id and secret can only be created by the owner, and none
+  exists. LeetCode sync tools like LeetHub create public repos by default.
+- Decision: v1 connects by GitHub username plus repo name. The edge function
+  reads commits through the public GitHub API with the service role handling
+  database writes. An optional GITHUB_TOKEN function secret raises rate limits.
+  The token_secret_id column and Vault path stay reserved for the OAuth upgrade.
+- Rationale: fully functional today for the actual use case with zero setup,
+  same pragmatism as ADR-0013. Private repo support arrives with OAuth later.
+- Consequences: private sync repos are not readable in v1 and the function says
+  so. Scheduled background sync (pg_cron plus pg_net) is deferred to phase 10
+  alongside rate limiting, sync is manual for now.
+- Phase: 9
 
 ### ADR-0013 — Copy link invitations now, email delivery in phase 10  [2026-07-06] — Status: Accepted
 - Context: the plan called for an invite-member Edge Function that sends email,
@@ -158,6 +176,35 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Phase 9 — LeetPing   [2026-07-06]
+- Delivered:
+  - supabase/functions/leetping-sync: verifies the caller's jwt, loads their
+    github_connections row, pulls up to 30 recent commits from the public
+    GitHub API (optional GITHUB_TOKEN secret for higher limits), skips already
+    ingested shas, parses solves from commit messages with a budgeted file path
+    fallback (8 detail fetches per run), honors the share_to_boards opt in, and
+    upserts events to every board the caller belongs to, deduped on
+    (board_id, user_id, commit_sha). Clear error messages for missing repo,
+    private or renamed repo, and rate limits.
+  - parse.ts is a dependency free module shared verbatim between the Deno
+    function and vitest, covering leetcode.com urls, numbered directory names,
+    verb prefixes, bracket styles, lone slugs, LeetHub runtime messages
+    (returns null so the path fallback runs), LeetHub directory layouts,
+    difficulty folders, flat single file repos, and language from extension.
+    Nine tests.
+  - leetping data module (connection get, save, delete, feed list, syncNow via
+    functions.invoke with readable error unwrapping).
+  - LeetPingPage: connect card (username, owner/name repo, share opt in),
+    connection summary with share toggle and disconnect, sync now with spinner,
+    feed of "Name solved Problem" rows with difficulty tone chips, language,
+    relative time, and a member filter. leetping_events joined the realtime
+    invalidation list so feeds update live.
+- Gates: build, typecheck, lint green, 20 unit tests pass. LeetPingPage is a
+  9.2 kB lazy chunk. Edge function deployed ACTIVE with verify_jwt.
+- Deviations from plan: see ADR-0014 (public repo by name instead of OAuth,
+  manual sync instead of scheduled for now).
+- Docs updated: memory.md. CLAUDE.md reviewed, no change needed.
 
 ### Phase 8 feedback round — list view drag and team dailies   [2026-07-06]
 - Context: the user clarified that column drag meant the list view table

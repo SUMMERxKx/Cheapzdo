@@ -3,7 +3,6 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AuthedLayout } from "./AuthedLayout";
 import { BoardLayout } from "./BoardLayout";
 import { HomeRedirect, RequireAuth, RequireGuest } from "./guards";
-import { ComingSoon } from "@/components/ComingSoon";
 import { FullScreenLoader } from "@/components/FullScreenLoader";
 import NotFound from "@/pages/NotFound";
 
@@ -53,7 +52,7 @@ export const router = createBrowserRouter([
           { path: "leaderboard", element: lazyEl(() => import("@/features/leaderboard/LeaderboardPage")) },
           { path: "dashboard", element: lazyEl(() => import("@/features/dashboard/DashboardPage")) },
           { path: "announcements", element: lazyEl(() => import("@/features/announcements/AnnouncementsPage")) },
-          { path: "leetping", element: <ComingSoon name="LeetPing" phase="phase 9" /> },
+          { path: "leetping", element: lazyEl(() => import("@/features/leetping/LeetPingPage")) },
           { path: "settings", element: lazyEl(() => import("@/features/boards/BoardSettingsPage")) },
         ],
       },
