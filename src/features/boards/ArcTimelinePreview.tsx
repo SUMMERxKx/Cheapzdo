@@ -23,7 +23,7 @@ export function ArcTimelinePreview({
   }));
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="min-w-0 rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <span className="font-display text-sm font-semibold">Arc 1</span>
         <span className="font-mono text-xs text-muted-foreground">

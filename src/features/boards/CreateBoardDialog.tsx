@@ -145,7 +145,7 @@ export default function CreateBoardDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
+        <DialogHeader className="min-w-0">
           <DialogTitle className="font-display text-xl">
             {isFirstBoard ? "Create your first board" : "Create a board"}
           </DialogTitle>
@@ -155,7 +155,7 @@ export default function CreateBoardDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 pt-1">
+        <div className="min-w-0 space-y-5 pt-1">
           <div className="space-y-1.5">
             <Label htmlFor="new-board-name">Board name</Label>
             <Input

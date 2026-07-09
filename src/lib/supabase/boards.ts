@@ -45,6 +45,14 @@ export async function deleteBoard(boardId: string): Promise<Result<null>> {
   return ok(null);
 }
 
+// PostgREST can briefly drop a function from its schema cache right after a
+// migration, or when a paused free tier project is waking up. That surfaces as a
+// PGRST202 "could not find the function" error. It means the call never reached
+// the database, so no board was created and retrying once is safe.
+function isSchemaCacheMiss(error: { code?: string; message?: string }): boolean {
+  return error.code === "PGRST202" || /schema cache/i.test(error.message ?? "");
+}
+
 // Create a board through the atomic RPC, which also seeds statuses, types, the
 // first arc, and its sprints, and adds the caller as owner.
 export async function createBoard(
@@ -54,13 +62,18 @@ export async function createBoard(
   if (!parsed.success) {
     return fail({ message: parsed.error.issues[0]?.message ?? "Invalid input" });
   }
-  const { data, error } = await supabase.rpc("create_board", {
+  const args = {
     p_name: parsed.data.name,
     p_arc_size: parsed.data.arcSize,
     p_sprint_length: parsed.data.sprintLengthDays,
     // Only send a start when the user picked one, otherwise the RPC uses today.
     ...(parsed.data.startDate ? { p_start: parsed.data.startDate } : {}),
-  });
+  };
+  let { data, error } = await supabase.rpc("create_board", args);
+  if (error && isSchemaCacheMiss(error)) {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    ({ data, error } = await supabase.rpc("create_board", args));
+  }
   if (error) return fail(fromPostgrestError(error));
   return ok(data as string);
 }
