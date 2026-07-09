@@ -11,13 +11,14 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Post v1 features. Owner picked the order: 1 onboarding (DONE),
-  2 friends, 3 branded email, 4 messaging, 5 admin console.
+- Current phase: Post v1 features. Owner order: 1 onboarding (DONE, merged),
+  2 friends (DONE, on branch), 3 branded email, 4 messaging, 5 admin console.
 - Last updated: 2026-07-06
-- Active branch: feat-onboarding (onboarding work, gate green, pushed, NOT yet
-  merged to main, waiting on the owner to verify). main has the phase 10 stack
-  plus the create_board cache fix and the favicon rebrand.
-- Next up when the owner says go: friend system (item 2). See FEATURE BACKLOG.
+- Active branch: feat-friends (friend system, gate green, pushed, NOT yet merged
+  to main, waiting on the owner to verify). main has everything through the
+  onboarding feature.
+- Next up when the owner says go: branded email templates (item 3), which ships
+  together with the SMTP/Resend setup. See FEATURE BACKLOG.
 - Built so far: the whole plan. Hardening round added a one minute sync cooldown
   to leetping-sync (v2 deployed), a 33 assertion RLS matrix across every table
   and role (all pass), a 1000 task scale seed proving index scans (kanban query
@@ -40,14 +41,38 @@
   admin console to last, it is no longer next. See FEATURE BACKLOG below and
   implementation.md 20b.
 - Known broken right now: nothing. Gate green, 20 unit tests pass.
-- Env and config: migrations 0001 to 0024 applied, leetping-sync v2 ACTIVE.
-  0023 added the create_board start date, 0024 revoked its anon execute. If
+- Env and config: migrations 0001 to 0026 applied, leetping-sync v2 ACTIVE.
+  0023 added the create_board start date, 0024 revoked its anon execute, 0025
+  added friendships plus the friend rpcs, 0026 added the friend list rpcs. If
   create_board (or any RPC) ever 404s with a schema-cache error again, the one
   line fix is NOTIFY pgrst, 'reload schema'.
 
 ---
 
 ## DECISION LOG (newest first)
+
+### ADR-0016 — Friend system: one row per pair, writes via SECURITY DEFINER rpcs  [2026-07-06] — Status: Accepted
+- Context: friends need user search (but the profiles select policy is self or
+  shares-a-board only, so strangers are invisible), request and accept flows,
+  and a way to drop a friend into a board without a copied link.
+- Decision: a single friendships table holds one row per unordered pair (unique
+  index on least/greatest of the two ids) with status pending, accepted, or
+  blocked. RLS is select only, limited to the two people in the row. Every write
+  is a SECURITY DEFINER rpc that checks auth.uid(): send_friend_request (which
+  auto-accepts if the other side already asked), respond_friend_request,
+  remove_friend, block_user, unblock_user, plus invite_friend for board adds.
+  Reads that need the other person's profile go through search_users,
+  list_friends, and list_friend_requests, which return only safe public fields,
+  so the profiles policy did not have to be widened. handle is now not null.
+- Rationale: the pair model makes duplicates and reverse duplicates impossible,
+  the rpc-only writes keep the transition rules in one auditable place and match
+  the rest of the app, and definer read rpcs avoid loosening profile visibility
+  for everyone. Proven by a 20 assertion self-cleaning SQL test.
+- Consequences: blocking is one directional flag on the shared pair row, the
+  blocker is recorded as requester_id. invite_friend is owner only and requires
+  an accepted friendship. Realtime for live request notifications was left out
+  for now, the UI refetches on open (staleTime 30s).
+- Phase: post v1, item 2
 
 ### ADR-0015 — No forced onboarding, board creation gains a start date  [2026-07-06] — Status: Accepted
 - Context: a brand new user with no boards was bounced straight into a full
@@ -213,6 +238,31 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Post v1, item 2 — Friend system   [2026-07-06]  (branch feat-friends)
+- Delivered:
+  - Migration 0025: friendships table (one row per unordered pair, status enum),
+    select only RLS, and the write rpcs search_users, send_friend_request (with
+    reverse auto-accept), respond_friend_request, remove_friend, block_user,
+    unblock_user, invite_friend. Migration 0026: list_friends and
+    list_friend_requests read rpcs. handle set not null. anon revoked on all.
+  - Data layer src/lib/supabase/friends.ts, hooks src/features/friends/useFriends.ts.
+  - Friends page (src/features/friends/FriendsPage.tsx): debounced search with
+    per-result add/accept/pending/friends state, a requests inbox (incoming
+    accept or decline, outgoing cancel), and the friends list with remove and
+    block. Nav entry added to the app sidebar, route /friends.
+  - Board integration: InviteFriendDialog in the members panel (owner only) adds
+    an accepted friend straight to the board with a chosen role, filtering out
+    people already on the board.
+  - database.types.ts hand-extended (friendships table, 9 rpcs, friendship_status
+    enum) preserving the move_task nullable fix.
+- Verified: 20 assertion self-cleaning SQL test covering search, request,
+  reverse auto-accept, RLS isolation from third parties, accept, remove, block
+  (search hiding plus request refusal), unblock, and invite_friend (adds member,
+  owner only, requires friend), all pass and cleaned up. Advisors show only the
+  intentional definer warnings. Gate green, 20 unit tests pass. FriendsPage is
+  its own lazy chunk.
+- Not merged to main yet, waiting on the owner's verify pass.
 
 ### Post v1, item 1 — Onboarding without a forced board   [2026-07-06]  (branch feat-onboarding)
 - Delivered:
@@ -573,7 +623,7 @@
   Impersonation deliberately excluded from v1. Build order A1 read only, A2
   management actions, A3 rollup and plan limit controls. Full design in
   implementation.md section 20b item 1. Ranked above the friend system.
-- [HIGH] Friend system (user request 2026-07-06). Search a user by handle, send a
+- [SHIPPED 2026-07-06] Friend system (user request 2026-07-06). Search a user by handle, send a
   friend request, accept or decline, then invite friends to boards from a picker
   instead of copy pasting a token link. Needs a friendships table
   (requester_id, addressee_id, status pending or accepted or declined or

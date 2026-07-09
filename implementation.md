@@ -2412,7 +2412,7 @@ biggest-value feature, then friends (item 3).
    confirmations) → A3 scale layer (rollup table + charts + plan-limit
    controls + support-role tier).
 
-3. **[HIGH] Friend system** (expanded 2026-07-06) — add the people you work
+3. **[SHIPPED 2026-07-06] Friend system** (built on branch feat-friends) — add the people you work
    with as friends so inviting them to a board is a picker, not a copied link.
 
    **Prerequisite, handles:** `profiles.handle` already exists but is nullable,
