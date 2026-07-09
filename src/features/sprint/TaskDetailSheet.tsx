@@ -23,6 +23,7 @@ import { useAllEpics, useComments, useSprints } from "./useBoardWork";
 import { deleteTask, updateTask, type Priority, type Task } from "@/lib/supabase/tasks";
 import { addComment, deleteComment } from "@/lib/supabase/comments";
 import { MemberChip, PRIORITY_LABEL } from "@/components/itemAtoms";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { queryKeys } from "@/lib/supabase/queryKeys";
 
 const UNSET = "none";
@@ -50,6 +51,7 @@ export function TaskDetailSheet({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [draft, setDraft] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (task) {
@@ -71,8 +73,7 @@ export function TaskDetailSheet({
     refresh();
   };
 
-  const remove = async () => {
-    if (!window.confirm("Delete this task? There is no undo.")) return;
+  const doDelete = async () => {
     const res = await deleteTask(task.id);
     if (!res.ok) {
       toast.error(res.error.message);
@@ -105,6 +106,7 @@ export function TaskDetailSheet({
   const memberOf = (id: string | null) => (roster.data ?? []).find((m) => m.user_id === id);
 
   return (
+    <>
     <Sheet open={!!task} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="flex w-full flex-col sm:max-w-md">
         <SheetHeader>
@@ -314,7 +316,7 @@ export function TaskDetailSheet({
             </div>
           )}
           {canEdit && (
-            <Button variant="outline" size="sm" className="text-destructive" onClick={remove}>
+            <Button variant="outline" size="sm" className="text-destructive" onClick={() => setConfirmOpen(true)}>
               <Trash2 className="mr-2 h-4 w-4" />
               Delete task
             </Button>
@@ -322,5 +324,15 @@ export function TaskDetailSheet({
         </div>
       </SheetContent>
     </Sheet>
+    <ConfirmDialog
+      open={confirmOpen}
+      onOpenChange={setConfirmOpen}
+      title="Delete task"
+      description="This permanently deletes the task and its comments. There is no undo."
+      confirmText="Delete task"
+      variant="destructive"
+      onConfirm={doDelete}
+    />
+    </>
   );
 }
