@@ -25,10 +25,19 @@
   push credential), connect the repo in Vercel with the two VITE env vars, set
   prod auth URLs, set up SMTP through Resend, and flip on leaked password
   protection. Exact steps in DEPLOYMENT.md.
-- Post v1 backlog: friends (high), messaging (low), OAuth for private LeetPing
-  repos, scheduled sync. See FEATURE BACKLOG below and implementation.md 20b.
+- Post v1 fixes applied on main (2026-07-06): (1) create_board was failing with
+  a PostgREST "could not find function in the schema cache" error, the function
+  and grants were fine so it was a stale schema cache, fixed with NOTIFY pgrst
+  reload schema and verified through the REST layer. (2) Rebranded the favicon
+  and index.html metadata from Cheapzdo to Arcflow.
+- Post v1 backlog, recommended order: 1 onboarding without a forced board (small,
+  do first), 2 admin console (highest value), 3 friends, 4 branded emails (with
+  SMTP), 5 messaging. Plus OAuth for private LeetPing repos and scheduled sync.
+  See FEATURE BACKLOG below and implementation.md 20b.
 - Known broken right now: nothing. Gate green, 20 unit tests pass.
-- Env and config: migrations 0001 to 0022 applied, leetping-sync v2 ACTIVE.
+- Env and config: migrations 0001 to 0022 applied, leetping-sync v2 ACTIVE. If
+  create_board (or any RPC) ever 404s with a schema-cache error again, the one
+  line fix is NOTIFY pgrst, 'reload schema'.
 
 ---
 
@@ -486,6 +495,18 @@
 - SHIPPED in phase 8: kanban column drag, color coded statuses and priorities,
   list view column rearranging, list view row reordering, and the shared team
   daily lane with assignees. Entries below are still open.
+- [DO FIRST, small] Onboarding without a forced board (user request 2026-07-06).
+  Today HomeRedirect in src/app/guards.tsx sends a board-less user straight to
+  the full screen /onboarding wizard, which forces board creation as their
+  first act. Change it so board-less users land on a calm Home screen inside the
+  app chrome with a "create your first board" call to action, nothing forced.
+  Turn the wizard into a create-board dialog reused by the sidebar new-board
+  action. Add an optional start date to board creation so the first sprint can
+  start later (create_arc already takes p_start, create_board does not, so a
+  migration extends create_board with p_start default current_date and passes it
+  through), default a brand-new user's first sprint to tomorrow so they are not
+  rushed. No RLS changes. Full design in implementation.md 20b item 1. Ranked
+  first because it is small and fixes a live first-run pain point.
 - [HIGHEST] Admin console (user request 2026-07-06). A superadmin account plus
   an /admin screen that tracks and manages the whole app from inside the app:
   how many users, boards, teams, tasks, signups over time, plus direct actions

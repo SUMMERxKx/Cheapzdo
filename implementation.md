@@ -2309,9 +2309,49 @@ for security — RLS is the gate; the client only hides things for UX.
 
 ## §20b Post-v1 feature backlog (user-requested, build after Phase 10)
 
-Ordered by the owner's priority. Full sketches in `memory.md` FEATURE BACKLOG.
+Ordered by recommended build sequence. Full sketches in `memory.md` FEATURE
+BACKLOG. Recommendation: do item 1 (onboarding) first since it is small and
+fixes a live first-run pain point, then the admin console (item 2) as the
+biggest-value feature, then friends (item 3).
 
-1. **[HIGHEST] Admin console** (requested 2026-07-06) — a superadmin account and
+1. **[DO FIRST, small] Onboarding without a forced board** (requested
+   2026-07-06) — today a signed-in user with no boards is bounced straight to
+   the full-screen `/onboarding` wizard (`HomeRedirect` in
+   `src/app/guards.tsx` sends `list.length === 0` to `/onboarding`). That
+   forces board creation as the very first act and makes people feel they are
+   mid-task or making a mistake. Change it to a calm landing.
+
+   **Behaviour:**
+   - Board-less users land on a new **Home** screen inside the normal app
+     chrome (under `AuthedLayout`), not the wizard. A friendly empty state: a
+     short greeting, one line on what a board is (an arc of sprints for a
+     team), a primary "Create your first board" button, and a secondary
+     "accept an invite" hint. Nothing forced, they can look around first.
+   - Users with boards keep landing on their board (today's behaviour).
+     **Open question:** when they have several boards, jump to the first or
+     show a boards list — recommend jump-to-first for one, a small list for
+     many.
+   - Turn the onboarding wizard into a **create-board dialog** launched from
+     the CTA and reused by the sidebar "new board" action, so creating a board
+     is an action, not a gate. Keep the arc-size and sprint-length inputs.
+
+   **Start the first sprint when they choose (no rush):**
+   - Add an optional start date to board creation. `create_arc` already takes
+     `p_start date`, but `create_board` does not, so a new migration extends it
+     to `create_board(p_name, p_arc_size, p_sprint_length, p_start date default
+     current_date)` and passes it through to the seeded arc and sprints.
+     Backward compatible (defaults to today).
+   - The dialog offers gentle presets: start today, start tomorrow, start
+     Monday, or a date picker. For a brand-new user default the first sprint to
+     **tomorrow** so day one is not already half gone. A default, not a hard
+     rule.
+
+   **Scope:** one migration (create_board start-date passthrough) plus types
+   regen, one new Home screen, a guard/router change (HomeRedirect stops
+   forcing the wizard), and refactoring the wizard into a dialog. No RLS or
+   security changes. Small to medium, one sitting.
+
+2. **[HIGHEST] Admin console** (requested 2026-07-06) — a superadmin account and
    an `/admin` screen that manages and tracks the whole app from inside the app
    (no more poking the Supabase dashboard). Designed for 100k users from day one.
 
@@ -2372,12 +2412,52 @@ Ordered by the owner's priority. Full sketches in `memory.md` FEATURE BACKLOG.
    confirmations) → A3 scale layer (rollup table + charts + plan-limit
    controls + support-role tier).
 
-2. **[HIGH] Friend system** — search users by handle (via a SECURITY DEFINER
-   `search_users` RPC, since profile SELECT is shared-board-only), friend
-   requests (`friendships` table: requester/addressee/status, unique pair),
-   and an `invite_friend` RPC so inviting a friend to a board is a picker, not
-   a copied token link. Token links remain for non-users.
-3. **[MEDIUM — ship together with the SMTP/Resend setup] Branded email
+3. **[HIGH] Friend system** (expanded 2026-07-06) — add the people you work
+   with as friends so inviting them to a board is a picker, not a copied link.
+
+   **Prerequisite, handles:** `profiles.handle` already exists but is nullable,
+   so not everyone has one. Friend search needs stable public handles, so first
+   make sure every user has a unique handle (backfill existing rows from
+   display_name or the email local part, and set one at signup). Small
+   migration plus a signup tweak.
+
+   **Data model:** `friendships` (id, requester_id, addressee_id, status enum
+   pending/accepted/blocked, created_at, responded_at). Block duplicate and
+   mirror-image rows with a unique index on the ordered pair
+   `least(requester,addressee), greatest(requester,addressee)`. Index both user
+   columns.
+
+   **RLS:** a row is visible only to its two users. Only the addressee can move
+   pending to accepted or decline. Either side can delete an accepted
+   friendship (unfriend). The requester can cancel a pending one. Blocking
+   hides the other user and stops new requests. WITH CHECK on every mutation,
+   same rigour as the board tables.
+
+   **Discovery:** `search_users(q text)` SECURITY DEFINER RPC (profiles are
+   shared-board-only readable, so a definer RPC is required) returning only
+   safe public fields (id, handle, display_name, avatar_url) for handle or name
+   matches, case-insensitive, capped near 20, excluding self and anyone already
+   a friend or blocked.
+
+   **Actions:** send request, accept, decline, cancel, unfriend, block, as
+   RLS-guarded writes or small RPCs. Optional realtime on a per-user channel so
+   incoming requests appear live, otherwise refetch on open.
+
+   **Board integration:** `invite_friend(p_board, p_friend, p_role)` SECURITY
+   DEFINER RPC (owner only) that drops an existing friend straight into a board
+   with no copy-link token. Token-link invites (ADR-0013) stay for people who
+   are not users yet.
+
+   **UI:** a Friends screen (search, incoming and outgoing requests, friends
+   list) and an "add a friend" picker inside the board members panel. Nav entry
+   guarded like the rest.
+
+   **Scope:** medium. Handle backfill migration, `friendships` table and RLS,
+   `search_users` and `invite_friend` RPCs, a Friends feature folder, and the
+   members-panel picker. Depends only on the handle prerequisite. Live messaging
+   (item 5) depends on this.
+
+4. **[MEDIUM — ship together with the SMTP/Resend setup] Branded email
    templates** (requested 2026-07-06) — replace the default plain Supabase
    emails with professional, on-brand templates so the first thing a new user
    sees looks like a product, not a database.
@@ -2401,8 +2481,8 @@ Ordered by the owner's priority. Full sketches in `memory.md` FEATURE BACKLOG.
    - **Deliverability:** goes live with DEPLOYMENT.md step 3 (Resend + domain
      verification + SPF/DKIM) — a beautiful template in spam is worthless, so
      these ship as one unit.
-4. **[LOW] Live messaging** — board/team channels + DMs between friends
-   (depends on #2), Supabase Realtime delivery, `messages` table with keyset
+5. **[LOW] Live messaging** — board/team channels + DMs between friends
+   (depends on #3), Supabase Realtime delivery, `messages` table with keyset
    history, RLS by membership/friendship. Only after Phase 8 realtime is proven.
 
 (Shared team dailies, previously listed here, shipped in Phase 8.)
