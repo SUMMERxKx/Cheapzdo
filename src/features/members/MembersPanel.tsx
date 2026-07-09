@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/EmptyState";
 import { useAuth } from "@/features/auth/useAuth";
+import { InviteFriendDialog } from "./InviteFriendDialog";
 import { usePermissions } from "./usePermissions";
 import { usePendingInvitations, useRoster, useTeams } from "@/features/boards/useBoardData";
 import {
@@ -146,7 +147,12 @@ export function MembersPanel({ boardId }: { boardId: string }) {
           </span>
         </h3>
         {isOwner && (
-          <Dialog open={inviteOpen} onOpenChange={closeInvite}>
+          <div className="flex items-center gap-2">
+            <InviteFriendDialog
+              boardId={boardId}
+              memberIds={(roster.data ?? []).map((m) => m.user_id)}
+            />
+            <Dialog open={inviteOpen} onOpenChange={closeInvite}>
             <DialogTrigger asChild>
               <Button size="sm">
                 <UserPlus className="mr-2 h-4 w-4" />
@@ -220,7 +226,8 @@ export function MembersPanel({ boardId }: { boardId: string }) {
                 </div>
               )}
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         )}
       </div>
 

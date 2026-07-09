@@ -367,6 +367,48 @@ export type Database = {
         }
         Relationships: []
       }
+      friendships: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          status: Database["public"]["Enums"]["friendship_status"]
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["friendship_status"]
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["friendship_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friendships_addressee_id_fkey"
+            columns: ["addressee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friendships_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       github_connections: {
         Row: {
           connected_at: string
@@ -710,6 +752,54 @@ export type Database = {
           user_id: string
         }[]
       }
+      block_user: { Args: { p_other: string }; Returns: undefined }
+      invite_friend: {
+        Args: {
+          p_board: string
+          p_friend: string
+          p_role: Database["public"]["Enums"]["board_role"]
+        }
+        Returns: undefined
+      }
+      list_friend_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          created_at: string
+          direction: string
+          display_name: string
+          handle: string
+          request_id: string
+          user_id: string
+        }[]
+      }
+      list_friends: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          display_name: string
+          handle: string
+          since: string
+          user_id: string
+        }[]
+      }
+      remove_friend: { Args: { p_other: string }; Returns: undefined }
+      respond_friend_request: {
+        Args: { p_accept: boolean; p_request: string }
+        Returns: undefined
+      }
+      search_users: {
+        Args: { p_q: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          handle: string
+          id: string
+          relationship: string
+        }[]
+      }
+      send_friend_request: { Args: { p_addressee: string }; Returns: string }
+      unblock_user: { Args: { p_other: string }; Returns: undefined }
       can_edit: { Args: { b: string }; Returns: boolean }
       create_board: {
         Args: {
@@ -754,6 +844,7 @@ export type Database = {
     }
     Enums: {
       board_role: "owner" | "editor" | "viewer"
+      friendship_status: "pending" | "accepted" | "blocked"
       invite_status: "pending" | "accepted" | "revoked" | "expired"
       item_priority: "critical" | "high" | "medium" | "low"
       status_category: "todo" | "in_progress" | "done"
@@ -779,6 +870,7 @@ export const Constants = {
   public: {
     Enums: {
       board_role: ["owner", "editor", "viewer"],
+      friendship_status: ["pending", "accepted", "blocked"],
       invite_status: ["pending", "accepted", "revoked", "expired"],
       item_priority: ["critical", "high", "medium", "low"],
       status_category: ["todo", "in_progress", "done"],

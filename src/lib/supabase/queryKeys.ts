@@ -26,4 +26,8 @@ export const queryKeys = {
   leaderboard: (boardId: string, sprintId?: string | null) =>
     ["board", boardId, "leaderboard", { sprintId: sprintId ?? null }] as const,
   leetping: (boardId: string) => ["board", boardId, "leetping"] as const,
+  // Friends are app level, not board scoped.
+  friends: () => ["friends"] as const,
+  friendRequests: () => ["friends", "requests"] as const,
+  userSearch: (q: string) => ["users", "search", q] as const,
 } as const;

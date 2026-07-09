@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutGrid, Plus } from "lucide-react";
+import { LayoutGrid, Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyBoards } from "@/features/boards/useMyBoards";
 import { useUiStore } from "@/stores/uiStore";
@@ -21,6 +21,21 @@ export function AppSidebar() {
           Arcflow
         </span>
       </div>
+
+      <nav className="px-2 pt-1">
+        <NavLink
+          to="/friends"
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              isActive && "bg-sidebar-accent text-sidebar-foreground"
+            )
+          }
+        >
+          <Users className="h-4 w-4 shrink-0" />
+          <span>Friends</span>
+        </NavLink>
+      </nav>
 
       <div className="px-3 pb-1 pt-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
         Boards

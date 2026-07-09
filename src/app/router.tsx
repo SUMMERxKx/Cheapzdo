@@ -34,6 +34,7 @@ export const router = createBrowserRouter([
     element: <AuthedLayout />,
     children: [
       { index: true, element: <HomeRedirect /> },
+      { path: "friends", element: lazyEl(() => import("@/features/friends/FriendsPage")) },
       { path: "profile", element: lazyEl(() => import("@/features/profile/ProfilePage")) },
       {
         path: "b/:boardId",
