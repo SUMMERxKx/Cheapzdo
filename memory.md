@@ -12,13 +12,17 @@
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
 - Current phase: Post v1 features. Owner order: 1 onboarding (DONE, merged),
-  2 friends (DONE, on branch), 3 branded email, 4 messaging, 5 admin console.
+  2 friends (DONE, merged), 3 branded email (templates DONE on branch, owner
+  does SMTP), 4 messaging, 5 admin console.
 - Last updated: 2026-07-06
-- Active branch: feat-friends (friend system, gate green, pushed, NOT yet merged
-  to main, waiting on the owner to verify). main has everything through the
-  onboarding feature.
-- Next up when the owner says go: branded email templates (item 3), which ships
-  together with the SMTP/Resend setup. See FEATURE BACKLOG.
+- Active branch: feat-email (branded email templates in emails/, pushed, NOT yet
+  merged to main). main has everything through the friend system.
+- Branded email is a code-plus-setup item: the templates are done, but going
+  live needs the OWNER to set up Resend, verify a domain (SPF/DKIM), turn on
+  custom SMTP, and paste the templates into the dashboard. Steps in
+  emails/README.md and DEPLOYMENT.md step 3.
+- Next up when the owner says go: live messaging (item 4). Depends on friends,
+  which is done. See FEATURE BACKLOG.
 - Built so far: the whole plan. Hardening round added a one minute sync cooldown
   to leetping-sync (v2 deployed), a 33 assertion RLS matrix across every table
   and role (all pass), a 1000 task scale seed proving index scans (kanban query
@@ -50,6 +54,28 @@
 ---
 
 ## DECISION LOG (newest first)
+
+### ADR-0017 — Branded email templates live in the repo, pasted into the dashboard  [2026-07-06] — Status: Accepted
+- Context: the default Supabase auth emails are plain and unbranded, the first
+  thing a new user sees. We want on-brand mail without a build step or a mail
+  service dependency in the app.
+- Decision: keep the HTML templates in the repo under emails/ as the source of
+  truth (confirm-signup, reset-password, change-email, plus a board-invite for
+  the future Resend flow). Each is a full standalone document, table based, with
+  fully inlined CSS and a web safe font stack, light with a dark mode hint, one
+  bulletproof button, a plain text link fallback, and the Arcflow iris accent.
+  The owner pastes them into Authentication, Emails, Templates and wires custom
+  SMTP through Resend. There is no MCP or API path to set auth templates, so
+  this stays a dashboard step.
+- Rationale: emails cannot load the app's font or external images, so a self
+  contained inlined document is the only thing that renders consistently across
+  Gmail, Outlook, and Apple Mail. Repo as source of truth means they are
+  reviewable and versioned even though they are applied by hand.
+- Consequences: going live needs owner action (Resend account, domain plus
+  SPF/DKIM, custom SMTP, paste). board-invite is not wired, it waits on the
+  future invite-member Edge Function. If a template changes, mirror the shell
+  across all files by hand.
+- Phase: post v1, item 3
 
 ### ADR-0016 — Friend system: one row per pair, writes via SECURITY DEFINER rpcs  [2026-07-06] — Status: Accepted
 - Context: friends need user search (but the profiles select policy is self or
@@ -238,6 +264,22 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Post v1, item 3 — Branded email templates   [2026-07-06]  (branch feat-email)
+- Delivered: emails/ folder with confirm-signup.html, reset-password.html,
+  change-email.html (Supabase auth templates, {{ .ConfirmationURL }}), and
+  board-invite.html (custom placeholders, for the future Resend invite Edge
+  Function, not wired yet). One shared Arcflow shell, table based, inlined CSS,
+  web safe fonts, 560px, light with a dark mode hint, bulletproof button, plain
+  text link fallback. emails/README.md maps each file to its dashboard template
+  with subjects and a test checklist. DEPLOYMENT.md step 3 now points at the
+  folder.
+- Verified: structural check on all four (balanced tables, single body, required
+  variables present, no color typos). No app code changed, so no migration or
+  gate needed.
+- Owner action to go live (cannot be done from here): Resend account, verify a
+  domain with SPF and DKIM, turn on custom SMTP in Supabase, paste the templates
+  into Authentication, Emails, Templates. Steps in emails/README.md.
 
 ### Post v1, item 2 — Friend system   [2026-07-06]  (branch feat-friends)
 - Delivered:
@@ -642,7 +684,7 @@
   keep the owner only policy, team rows use is_board_member for select and
   can_edit or self assign for writes), UI shows Team and Personal tabs with the
   same checkbox interaction and per person grouping in the team lane.
-- [MEDIUM, ships with the SMTP setup] Branded email templates (user request
+- [TEMPLATES SHIPPED 2026-07-06, owner does SMTP] Branded email templates (user request
   2026-07-06). Replace the default Supabase auth emails (confirmation, reset,
   email change) and the future Resend invite email with one professional
   Arcflow email shell: logo mark, iris accent, one clear CTA button, plain

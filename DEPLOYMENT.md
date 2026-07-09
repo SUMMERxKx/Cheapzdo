@@ -25,12 +25,13 @@ Dashboard, Authentication, URL Configuration:
 ## 3. Production email (SMTP)
 
 The default Supabase sender is rate limited and lands in spam. Before inviting
-real users: create a Resend account (or any SMTP provider), verify a domain,
-then in Supabase go to Authentication, Emails, SMTP Settings and fill in the
-host, port, user, and password from the provider. Customize the confirmation
-and reset templates under Authentication, Emails, Templates. Use the branded
-email templates from the backlog (implementation.md section 20b item 3) so the
-first email a user gets looks like Arcflow, not a default.
+real users: create a Resend account (or any SMTP provider), verify a domain
+including its SPF and DKIM records, then in Supabase go to Authentication,
+Emails, SMTP Settings and fill in the host, port, user, and password from the
+provider. Then paste the branded templates from the `emails/` folder into
+Authentication, Emails, Templates so the first email a user gets looks like
+Arcflow, not a default. The exact file to template mapping, subjects, and a test
+checklist are in `emails/README.md`.
 
 ## 4. Hardening toggles
 

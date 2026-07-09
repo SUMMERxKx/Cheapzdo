@@ -2457,8 +2457,8 @@ biggest-value feature, then friends (item 3).
    members-panel picker. Depends only on the handle prerequisite. Live messaging
    (item 5) depends on this.
 
-4. **[MEDIUM — ship together with the SMTP/Resend setup] Branded email
-   templates** (requested 2026-07-06) — replace the default plain Supabase
+4. **[TEMPLATES SHIPPED 2026-07-06, owner does SMTP] Branded email
+   templates** (built on branch feat-email, in the `emails/` folder) — replace the default plain Supabase
    emails with professional, on-brand templates so the first thing a new user
    sees looks like a product, not a database.
    - **Which emails:** signup confirmation, password reset, email change
