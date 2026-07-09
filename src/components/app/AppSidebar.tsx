@@ -2,12 +2,14 @@ import { NavLink } from "react-router-dom";
 import { LayoutGrid, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyBoards } from "@/features/boards/useMyBoards";
+import { useUiStore } from "@/stores/uiStore";
 
 // App level navigation: the user's boards plus a way to create another. Board
 // section navigation lives in BoardLayout.
 export function AppSidebar() {
   const boards = useMyBoards();
   const list = boards.data ?? [];
+  const setCreateBoardOpen = useUiStore((s) => s.setCreateBoardOpen);
 
   return (
     <aside className="hidden w-56 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
@@ -42,13 +44,14 @@ export function AppSidebar() {
         {list.length === 0 && !boards.isLoading && (
           <p className="px-3 py-2 text-xs text-muted-foreground">No boards yet.</p>
         )}
-        <NavLink
-          to="/onboarding"
-          className="mt-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-primary transition-colors hover:bg-sidebar-accent"
+        <button
+          type="button"
+          onClick={() => setCreateBoardOpen(true)}
+          className="mt-1 flex items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-primary transition-colors hover:bg-sidebar-accent"
         >
           <Plus className="h-4 w-4" />
           New board
-        </NavLink>
+        </button>
       </nav>
     </aside>
   );

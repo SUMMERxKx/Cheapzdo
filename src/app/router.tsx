@@ -2,7 +2,7 @@ import { Suspense, lazy, type ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AuthedLayout } from "./AuthedLayout";
 import { BoardLayout } from "./BoardLayout";
-import { HomeRedirect, RequireAuth, RequireGuest } from "./guards";
+import { HomeRedirect, RequireGuest } from "./guards";
 import { FullScreenLoader } from "@/components/FullScreenLoader";
 import NotFound from "@/pages/NotFound";
 
@@ -29,12 +29,6 @@ export const router = createBrowserRouter([
   },
   { path: "/update-password", element: lazyEl(() => import("@/features/auth/UpdatePasswordPage")) },
   { path: "/accept-invite", element: lazyEl(() => import("@/features/auth/AcceptInvitePage")) },
-  {
-    element: <RequireAuth />,
-    children: [
-      { path: "/onboarding", element: lazyEl(() => import("@/features/onboarding/OnboardingWizard")) },
-    ],
-  },
   {
     path: "/",
     element: <AuthedLayout />,

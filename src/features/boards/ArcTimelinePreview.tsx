@@ -3,21 +3,23 @@ import { addDays, format } from "date-fns";
 import { spring, useMotion } from "@/lib/design/motion";
 
 // Live preview of the arc the user is configuring. Each sprint segment shows its
-// computed date range and springs in or out as the arc size changes. This is the
-// signature moment of onboarding.
+// computed date range and springs in or out as the arc size changes. Honors the
+// chosen start date so the preview matches when the first sprint will begin.
 export function ArcTimelinePreview({
   arcSize,
   sprintLengthDays,
+  startDate,
 }: {
   arcSize: number;
   sprintLengthDays: number;
+  startDate?: Date;
 }) {
   const { reduced } = useMotion();
-  const today = new Date();
+  const start = startDate ?? new Date();
   const sprints = Array.from({ length: Math.max(0, arcSize) }, (_, i) => ({
     i,
-    start: addDays(today, i * sprintLengthDays),
-    end: addDays(today, (i + 1) * sprintLengthDays - 1),
+    start: addDays(start, i * sprintLengthDays),
+    end: addDays(start, (i + 1) * sprintLengthDays - 1),
   }));
 
   return (

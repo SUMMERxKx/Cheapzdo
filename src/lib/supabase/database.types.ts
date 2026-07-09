@@ -712,7 +712,12 @@ export type Database = {
       }
       can_edit: { Args: { b: string }; Returns: boolean }
       create_board: {
-        Args: { p_arc_size: number; p_name: string; p_sprint_length: number }
+        Args: {
+          p_arc_size: number
+          p_name: string
+          p_sprint_length: number
+          p_start?: string
+        }
         Returns: string
       }
       is_board_member: { Args: { b: string }; Returns: boolean }

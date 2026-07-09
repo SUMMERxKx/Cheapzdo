@@ -8,11 +8,13 @@ interface UiState {
   theme: Theme;
   sidebarCollapsed: boolean;
   commandOpen: boolean;
+  createBoardOpen: boolean;
   listColumnOrder: string[];
   setTheme: (t: Theme) => void;
   toggleTheme: () => void;
   toggleSidebar: () => void;
   setCommandOpen: (open: boolean) => void;
+  setCreateBoardOpen: (open: boolean) => void;
   setListColumnOrder: (order: string[]) => void;
 }
 
@@ -29,6 +31,7 @@ export const useUiStore = create<UiState>()(
       theme: "dark",
       sidebarCollapsed: false,
       commandOpen: false,
+      createBoardOpen: false,
       listColumnOrder: [],
       setTheme: (theme) => {
         applyTheme(theme);
@@ -41,6 +44,7 @@ export const useUiStore = create<UiState>()(
       },
       toggleSidebar: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),
       setCommandOpen: (commandOpen) => set({ commandOpen }),
+      setCreateBoardOpen: (createBoardOpen) => set({ createBoardOpen }),
       setListColumnOrder: (listColumnOrder) => set({ listColumnOrder }),
     }),
     {

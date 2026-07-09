@@ -3,6 +3,8 @@ import { createBoard } from "@/lib/supabase/boards";
 import { queryKeys } from "@/lib/supabase/queryKeys";
 import type { CreateBoardInput } from "@/lib/supabase/schemas/board";
 
+// Creates a board through the atomic RPC and refreshes the board list so the
+// sidebar and home screen pick it up. Used by the create board dialog.
 export function useCreateBoard() {
   const qc = useQueryClient();
   return useMutation({

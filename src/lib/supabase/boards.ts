@@ -58,6 +58,8 @@ export async function createBoard(
     p_name: parsed.data.name,
     p_arc_size: parsed.data.arcSize,
     p_sprint_length: parsed.data.sprintLengthDays,
+    // Only send a start when the user picked one, otherwise the RPC uses today.
+    ...(parsed.data.startDate ? { p_start: parsed.data.startDate } : {}),
   });
   if (error) return fail(fromPostgrestError(error));
   return ok(data as string);

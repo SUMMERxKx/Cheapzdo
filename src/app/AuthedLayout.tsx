@@ -1,9 +1,14 @@
+import { Suspense, lazy } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { AppTopbar } from "@/components/app/AppTopbar";
 import { CommandPalette } from "@/components/app/CommandPalette";
 import { FullScreenLoader } from "@/components/FullScreenLoader";
 import { useAuth } from "@/features/auth/useAuth";
+
+// Board creation lives behind a store flag and can be opened from the home
+// screen or the sidebar, so it is mounted once here for the whole shell.
+const CreateBoardDialog = lazy(() => import("@/features/boards/CreateBoardDialog"));
 
 // The signed in shell: guards auth, then frames the sidebar, topbar, and routed
 // content. RLS is the real gate, this guard is for UX so we never flash content.
@@ -22,6 +27,9 @@ export function AuthedLayout() {
         </main>
       </div>
       <CommandPalette />
+      <Suspense fallback={null}>
+        <CreateBoardDialog />
+      </Suspense>
     </div>
   );
 }
