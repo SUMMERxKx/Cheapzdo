@@ -48,7 +48,7 @@
 - Env and config: migrations 0001 to 0026 applied, leetping-sync v2 ACTIVE.
   0023 added the create_board start date, 0024 revoked its anon execute, 0025
   added friendships plus the friend rpcs, 0026 added the friend list rpcs, 0027
-  added the schema cache self heal rpc.
+  added the schema cache self heal rpc, 0028 added the delete_board rpc.
 - Schema cache note: the PGRST202 "could not find function in the schema cache"
   error hit create_board three times. The platform auto reload event triggers
   (pgrst_ddl_watch, pgrst_drop_watch) exist and are enabled, so the cause is
@@ -67,6 +67,26 @@
 ---
 
 ## DECISION LOG (newest first)
+
+### ADR-0018 — Board deletion goes through an owner-only ordered-delete rpc  [2026-07-06] — Status: Accepted
+- Context: deleting a board that had any content failed. tasks and epics carry ON
+  DELETE RESTRICT foreign keys to epics, statuses, and types (kept that way so
+  you cannot delete an in-use status, type, or a populated epic during normal
+  editing). A plain delete from boards only cascades cleanly on an empty board,
+  so the first real board a user builds up could never be deleted.
+- Decision: delete boards through a SECURITY DEFINER delete_board(p_board) rpc
+  that checks is_board_owner then removes the restricted children in order,
+  tasks, then epics, then the board, letting the board cascade the rest. The
+  client deleteBoard now calls this rpc instead of a direct table delete.
+- Rationale: keeps the RESTRICT rules that protect normal editing while making a
+  full board delete reliable and atomic. Same definer-rpc pattern as create_board
+  and the friend actions. Proven by a 9 assertion self-cleaning test that deletes
+  a board holding an epic and a task and confirms non-owners are refused.
+- Consequences: board deletion is owner only (was already the intent via RLS).
+  If new child tables with RESTRICT foreign keys are added later, add them to the
+  ordered delete.
+- Phase: post v1 fix
+
 
 ### ADR-0017 — Branded email templates live in the repo, pasted into the dashboard  [2026-07-06] — Status: Accepted
 - Context: the default Supabase auth emails are plain and unbranded, the first

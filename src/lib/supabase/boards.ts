@@ -40,7 +40,10 @@ export async function updateBoard(
 
 // Owner only per RLS. Cascades everything on the board, the UI double confirms.
 export async function deleteBoard(boardId: string): Promise<Result<null>> {
-  const { error } = await supabase.from("boards").delete().eq("id", boardId);
+  // Goes through an owner-only RPC that clears the ON DELETE RESTRICT children
+  // (tasks then epics) before dropping the board, otherwise a board with any
+  // content cannot be deleted. A plain delete only works on an empty board.
+  const { error } = await supabase.rpc("delete_board", { p_board: boardId });
   if (error) return fail(fromPostgrestError(error));
   return ok(null);
 }

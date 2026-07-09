@@ -814,6 +814,7 @@ export type Database = {
         }
         Returns: string
       }
+      delete_board: { Args: { p_board: string }; Returns: undefined }
       is_board_member: { Args: { b: string }; Returns: boolean }
       is_board_owner: { Args: { b: string }; Returns: boolean }
       leaderboard: {
