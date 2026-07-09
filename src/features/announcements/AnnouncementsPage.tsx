@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
@@ -44,6 +45,7 @@ export default function AnnouncementsPage() {
   const qc = useQueryClient();
 
   const [title, setTitle] = useState("");
+  const [toDelete, setToDelete] = useState<string | null>(null);
   const [body, setBody] = useState("");
   const [posting, setPosting] = useState(false);
 
@@ -77,9 +79,10 @@ export default function AnnouncementsPage() {
     refresh();
   };
 
-  const remove = async (id: string) => {
-    if (!window.confirm("Delete this announcement?")) return;
-    const res = await deleteAnnouncement(id);
+  const remove = (id: string) => setToDelete(id);
+  const doDelete = async () => {
+    if (!toDelete) return;
+    const res = await deleteAnnouncement(toDelete);
     if (!res.ok) toast.error(res.error.message);
     refresh();
   };
@@ -198,6 +201,15 @@ export default function AnnouncementsPage() {
           </AnimatePresence>
         </div>
       )}
+      <ConfirmDialog
+        open={!!toDelete}
+        onOpenChange={(o) => !o && setToDelete(null)}
+        title="Delete announcement"
+        description="This permanently deletes the announcement."
+        confirmText="Delete"
+        variant="destructive"
+        onConfirm={doDelete}
+      />
     </div>
   );
 }

@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EmptyState } from "@/components/EmptyState";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useAuth } from "@/features/auth/useAuth";
 import { InviteFriendDialog } from "./InviteFriendDialog";
 import { usePermissions } from "./usePermissions";
@@ -56,6 +57,7 @@ export function MembersPanel({ boardId }: { boardId: string }) {
   const qc = useQueryClient();
 
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [toKick, setToKick] = useState<{ userId: string; name: string } | null>(null);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<InviteRole>("editor");
   const [inviteTeam, setInviteTeam] = useState<string>(NO_TEAM);
@@ -107,14 +109,15 @@ export function MembersPanel({ boardId }: { boardId: string }) {
     refresh();
   };
 
-  const kick = async (userId: string, name: string) => {
-    if (!window.confirm(`Remove ${name} from this board? Their tasks stay but get unassigned.`)) return;
-    const res = await removeMember(boardId, userId);
+  const kick = (userId: string, name: string) => setToKick({ userId, name });
+  const doKick = async () => {
+    if (!toKick) return;
+    const res = await removeMember(boardId, toKick.userId);
     if (!res.ok) {
       toast.error(res.error.message);
       return;
     }
-    toast.success(`${name} was removed`);
+    toast.success(`${toKick.name} was removed`);
     refresh();
   };
 
@@ -330,6 +333,15 @@ export function MembersPanel({ boardId }: { boardId: string }) {
           </p>
         </div>
       )}
+      <ConfirmDialog
+        open={!!toKick}
+        onOpenChange={(o) => !o && setToKick(null)}
+        title="Remove member"
+        description={`Remove ${toKick?.name ?? "this member"} from the board? Their tasks stay but get unassigned.`}
+        confirmText="Remove"
+        variant="destructive"
+        onConfirm={doKick}
+      />
     </div>
   );
 }

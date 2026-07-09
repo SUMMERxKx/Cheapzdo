@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Trash2, Users } from "lucide-react";
@@ -18,6 +19,7 @@ export function TeamsPanel({ boardId }: { boardId: string }) {
   const qc = useQueryClient();
 
   const [newName, setNewName] = useState("");
+  const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(null);
   const [newColor, setNewColor] = useState(SWATCHES[0]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -47,9 +49,10 @@ export function TeamsPanel({ boardId }: { boardId: string }) {
     refresh();
   };
 
-  const remove = async (id: string, name: string) => {
-    if (!window.confirm(`Delete team ${name}? Its members stay on the board without a team.`)) return;
-    const res = await deleteTeam(id);
+  const remove = (id: string, name: string) => setToDelete({ id, name });
+  const doDelete = async () => {
+    if (!toDelete) return;
+    const res = await deleteTeam(toDelete.id);
     if (!res.ok) {
       toast.error(res.error.message);
       return;
@@ -176,6 +179,15 @@ export function TeamsPanel({ boardId }: { boardId: string }) {
           }
         />
       )}
+      <ConfirmDialog
+        open={!!toDelete}
+        onOpenChange={(o) => !o && setToDelete(null)}
+        title="Delete team"
+        description={`Delete team ${toDelete?.name ?? ""}? Its members stay on the board without a team.`}
+        confirmText="Delete team"
+        variant="destructive"
+        onConfirm={doDelete}
+      />
     </div>
   );
 }

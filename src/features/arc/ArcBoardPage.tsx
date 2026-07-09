@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -44,6 +45,7 @@ export default function ArcBoardPage() {
   const types = useTypes(boardId);
   const roster = useRoster(boardId);
   const [openEpic, setOpenEpic] = useState<Epic | null>(null);
+  const [confirmNewArc, setConfirmNewArc] = useState(false);
   const [starting, setStarting] = useState(false);
 
   const rollupOf = useMemo(() => {
@@ -57,8 +59,8 @@ export default function ArcBoardPage() {
   const list = epics.data ?? [];
   const lastPosition = list.length ? list[list.length - 1].position : null;
 
-  const newArc = async () => {
-    if (!window.confirm("Start the next arc? The current arc is kept as history and a fresh set of sprints is created.")) return;
+  const newArc = () => setConfirmNewArc(true);
+  const doNewArc = async () => {
     setStarting(true);
     const res = await startNewArc({ boardId });
     setStarting(false);
@@ -169,6 +171,14 @@ export default function ArcBoardPage() {
       )}
 
       <EpicDetailSheet boardId={boardId} epic={openEpic} onClose={() => setOpenEpic(null)} />
+      <ConfirmDialog
+        open={confirmNewArc}
+        onOpenChange={setConfirmNewArc}
+        title="Start the next arc"
+        description="The current arc is kept as history and a fresh set of sprints is created."
+        confirmText="Start next arc"
+        onConfirm={doNewArc}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
@@ -72,6 +73,7 @@ export default function LeetPingPage() {
   const qc = useQueryClient();
 
   const [username, setUsername] = useState("");
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [repo, setRepo] = useState("");
   const [share, setShare] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -114,9 +116,12 @@ export default function LeetPingPage() {
     void qc.invalidateQueries({ queryKey: ["me", "githubConnection"] });
   };
 
-  const disconnect = async () => {
+  const disconnect = () => {
     if (!user) return;
-    if (!window.confirm("Disconnect GitHub? Past events stay on your boards.")) return;
+    setConfirmDisconnect(true);
+  };
+  const doDisconnect = async () => {
+    if (!user) return;
     const res = await deleteConnection(user.id);
     if (!res.ok) {
       toast.error(res.error.message);
@@ -298,6 +303,15 @@ export default function LeetPingPage() {
           </AnimatePresence>
         </div>
       )}
+      <ConfirmDialog
+        open={confirmDisconnect}
+        onOpenChange={setConfirmDisconnect}
+        title="Disconnect GitHub"
+        description="Past events stay on your boards. You can reconnect anytime."
+        confirmText="Disconnect"
+        variant="destructive"
+        onConfirm={doDisconnect}
+      />
     </div>
   );
 }
