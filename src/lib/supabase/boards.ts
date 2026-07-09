@@ -45,12 +45,23 @@ export async function deleteBoard(boardId: string): Promise<Result<null>> {
   return ok(null);
 }
 
-// PostgREST can briefly drop a function from its schema cache right after a
-// migration, or when a paused free tier project is waking up. That surfaces as a
-// PGRST202 "could not find the function" error. It means the call never reached
-// the database, so no board was created and retrying once is safe.
+// PostgREST sometimes misses the reload notification after a migration and
+// keeps serving a stale schema cache, which surfaces as a PGRST202 "could not
+// find the function" error. The call never reached the database, so nothing was
+// created and retrying is safe. A stale cache never heals on its own though, so
+// waiting alone is useless: ask the server to reload (the rate limited
+// reload_postgrest_cache rpc), give it a moment, then retry once.
 function isSchemaCacheMiss(error: { code?: string; message?: string }): boolean {
   return error.code === "PGRST202" || /schema cache/i.test(error.message ?? "");
+}
+
+async function healSchemaCache(): Promise<void> {
+  try {
+    await supabase.rpc("reload_postgrest_cache", {});
+  } catch {
+    // Best effort. The retry below still runs either way.
+  }
+  await new Promise((resolve) => setTimeout(resolve, 1200));
 }
 
 // Create a board through the atomic RPC, which also seeds statuses, types, the
@@ -71,7 +82,7 @@ export async function createBoard(
   };
   let { data, error } = await supabase.rpc("create_board", args);
   if (error && isSchemaCacheMiss(error)) {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await healSchemaCache();
     ({ data, error } = await supabase.rpc("create_board", args));
   }
   if (error) return fail(fromPostgrestError(error));

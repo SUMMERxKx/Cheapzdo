@@ -47,15 +47,22 @@
 - Known broken right now: nothing. Gate green, 20 unit tests pass.
 - Env and config: migrations 0001 to 0026 applied, leetping-sync v2 ACTIVE.
   0023 added the create_board start date, 0024 revoked its anon execute, 0025
-  added friendships plus the friend rpcs, 0026 added the friend list rpcs.
+  added friendships plus the friend rpcs, 0026 added the friend list rpcs, 0027
+  added the schema cache self heal rpc.
 - Schema cache note: the PGRST202 "could not find function in the schema cache"
-  error recurred on create_board (free tier drops the cache after migrations or
-  a pause/wake). Immediate fix is still NOTIFY pgrst, 'reload schema'. Durable
-  mitigation now in code: createBoard retries once after 1.5s on a PGRST202,
-  which is safe because that error means the call never ran. Same pattern can be
-  applied to other rpcs if they hit it. The real cure is Supabase Pro (no
-  pausing). Also fixed the create board dialog horizontal overflow with min-w-0
-  (shadcn DialogContent is a css grid, its items would not shrink).
+  error hit create_board three times. The platform auto reload event triggers
+  (pgrst_ddl_watch, pgrst_drop_watch) exist and are enabled, so the cause is
+  PostgREST occasionally missing the reload notification on this free tier
+  instance. A stale cache never heals on its own, so waiting or blind retries do
+  not help. Durable fix (migration 0027): a rate limited SECURITY DEFINER rpc
+  reload_postgrest_cache() (one notify per 15s, tracked in the policy-less
+  pgrst_reload_log table) that the client calls when it sees a PGRST202, then
+  retries once after 1.2s. Wired into createBoard, the isSchemaCacheMiss and
+  healSchemaCache helpers in boards.ts can be reused by any other rpc that hits
+  it. Manual fallbacks: NOTIFY pgrst, 'reload schema' via SQL, or dashboard
+  Project Settings, General, Restart project. Also fixed the create board dialog
+  horizontal overflow with min-w-0 (shadcn DialogContent is a css grid, its
+  items would not shrink).
 
 ---
 

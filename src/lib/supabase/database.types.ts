@@ -783,6 +783,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      reload_postgrest_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       remove_friend: { Args: { p_other: string }; Returns: undefined }
       respond_friend_request: {
         Args: { p_accept: boolean; p_request: string }
