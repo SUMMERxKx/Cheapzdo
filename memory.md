@@ -15,8 +15,8 @@
   2 friends (DONE, merged), 3 branded email (templates DONE on branch, owner
   does SMTP), 4 messaging, 5 admin console.
 - Last updated: 2026-07-06
-- Active branch: feat-email (branded email templates in emails/, pushed, NOT yet
-  merged to main). main has everything through the friend system.
+- Active branch: main. Onboarding, friends, and email templates are all merged
+  and pushed. No feature branch open right now.
 - Branded email is a code-plus-setup item: the templates are done, but going
   live needs the OWNER to set up Resend, verify a domain (SPF/DKIM), turn on
   custom SMTP, and paste the templates into the dashboard. Steps in
