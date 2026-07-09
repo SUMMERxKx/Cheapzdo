@@ -2314,8 +2314,8 @@ BACKLOG. Recommendation: do item 1 (onboarding) first since it is small and
 fixes a live first-run pain point, then the admin console (item 2) as the
 biggest-value feature, then friends (item 3).
 
-1. **[DO FIRST, small] Onboarding without a forced board** (requested
-   2026-07-06) — today a signed-in user with no boards is bounced straight to
+1. **[SHIPPED 2026-07-06] Onboarding without a forced board** (requested
+   2026-07-06, built on branch feat-onboarding) — today a signed-in user with no boards is bounced straight to
    the full-screen `/onboarding` wizard (`HomeRedirect` in
    `src/app/guards.tsx` sends `list.length === 0` to `/onboarding`). That
    forces board creation as the very first act and makes people feel they are

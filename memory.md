@@ -11,9 +11,13 @@
 ---
 
 ## STATE OF THE WORLD — resume here  (overwrite this block each update)
-- Current phase: Phase 10 Hardening and deploy prep — done. ALL TEN PHASES COMPLETE.
+- Current phase: Post v1 features. Owner picked the order: 1 onboarding (DONE),
+  2 friends, 3 branded email, 4 messaging, 5 admin console.
 - Last updated: 2026-07-06
-- Active branch: phase-10-hardening, merged to main and pushed.
+- Active branch: feat-onboarding (onboarding work, gate green, pushed, NOT yet
+  merged to main, waiting on the owner to verify). main has the phase 10 stack
+  plus the create_board cache fix and the favicon rebrand.
+- Next up when the owner says go: friend system (item 2). See FEATURE BACKLOG.
 - Built so far: the whole plan. Hardening round added a one minute sync cooldown
   to leetping-sync (v2 deployed), a 33 assertion RLS matrix across every table
   and role (all pass), a 1000 task scale seed proving index scans (kanban query
@@ -30,18 +34,42 @@
   and grants were fine so it was a stale schema cache, fixed with NOTIFY pgrst
   reload schema and verified through the REST layer. (2) Rebranded the favicon
   and index.html metadata from Cheapzdo to Arcflow.
-- Post v1 backlog, recommended order: 1 onboarding without a forced board (small,
-  do first), 2 admin console (highest value), 3 friends, 4 branded emails (with
-  SMTP), 5 messaging. Plus OAuth for private LeetPing repos and scheduled sync.
-  See FEATURE BACKLOG below and implementation.md 20b.
+- Post v1 backlog, owner's chosen order (2026-07-06): 1 onboarding DONE, then
+  2 friends, 3 branded emails (with SMTP), 4 messaging, 5 admin console. Plus
+  OAuth for private LeetPing repos and scheduled sync. Note the owner moved the
+  admin console to last, it is no longer next. See FEATURE BACKLOG below and
+  implementation.md 20b.
 - Known broken right now: nothing. Gate green, 20 unit tests pass.
-- Env and config: migrations 0001 to 0022 applied, leetping-sync v2 ACTIVE. If
+- Env and config: migrations 0001 to 0024 applied, leetping-sync v2 ACTIVE.
+  0023 added the create_board start date, 0024 revoked its anon execute. If
   create_board (or any RPC) ever 404s with a schema-cache error again, the one
   line fix is NOTIFY pgrst, 'reload schema'.
 
 ---
 
 ## DECISION LOG (newest first)
+
+### ADR-0015 — No forced onboarding, board creation gains a start date  [2026-07-06] — Status: Accepted
+- Context: a brand new user with no boards was bounced straight into a full
+  screen onboarding wizard that forced board creation as their first act. The
+  owner felt this rushes people and makes them think they are making a mistake.
+- Decision: board-less users land on a calm Home screen inside the app chrome
+  with a "create your first board" call to action. The wizard becomes a create
+  board dialog (CreateBoardDialog) opened from that call to action and from the
+  sidebar new-board button, driven by a uiStore flag. Board creation also gains
+  an optional first sprint start date: migration 0023 extends create_board with
+  p_start date default current_date and passes it through to the seeded arc and
+  sprints, and the dialog offers Today, Tomorrow, Next Monday, or a custom date.
+  A brand new user defaults to Tomorrow so day one is not already half gone.
+- Rationale: removes first-run friction, matches how real products let people
+  look around before committing, and lets a team line the first sprint up with
+  a real start day instead of always today.
+- Consequences: the /onboarding route and RequireAuth guard are gone (dead code
+  removed). create_board is now a four arg overload, the old three arg version
+  was dropped so PostgREST has one unambiguous signature. Recreating the
+  function re-granted execute to anon via Supabase default privileges, migration
+  0024 revoked it to match every other RPC.
+- Phase: post v1, item 1
 
 ### ADR-0014 — LeetPing v1 reads public repos by name, OAuth deferred  [2026-07-06] — Status: Accepted
 - Context: the plan called for GitHub OAuth with tokens in Vault, but an OAuth
@@ -185,6 +213,30 @@
 ---
 
 ## PHASE COMPLETION LOG (newest first)
+
+### Post v1, item 1 — Onboarding without a forced board   [2026-07-06]  (branch feat-onboarding)
+- Delivered:
+  - Migration 0023: create_board gains p_start date default current_date, drops
+    the old three arg version, passes the start through to the arc and sprints,
+    with a sane date window guard. Migration 0024 revokes anon execute (default
+    privileges had re-granted it on recreate).
+  - New Home screen (src/features/home/HomePage.tsx): welcome plus a create your
+    first board call to action, rendered inside the app chrome. HomeRedirect now
+    shows it for board-less users instead of forcing /onboarding.
+  - New CreateBoardDialog (src/features/boards/): name, arc shape steppers, a
+    start date picker (Today, Tomorrow, Next Monday, custom), and the live arc
+    timeline preview which now honors the chosen start. Opened from the Home
+    call to action and the sidebar new-board button via a uiStore flag, mounted
+    once in AuthedLayout, lazy loaded into its own chunk.
+  - Removed the forced onboarding wizard, the /onboarding route, and the
+    RequireAuth guard. Moved useCreateBoard and ArcTimelinePreview into
+    features/boards.
+  - database.types, the zod schema, and boards.ts updated for the optional
+    startDate.
+- Verified: advisors unchanged (only the ADR-0011 intentional warnings plus the
+  leaked password toggle), schema cache reloaded, create_board resolves through
+  REST. Gate green, build and typecheck clean, 20 tests pass.
+- Not merged to main yet, waiting on the owner's verify pass.
 
 ### Phase 10 — Hardening, scale, deploy prep   [2026-07-06]
 - Delivered:
@@ -495,7 +547,7 @@
 - SHIPPED in phase 8: kanban column drag, color coded statuses and priorities,
   list view column rearranging, list view row reordering, and the shared team
   daily lane with assignees. Entries below are still open.
-- [DO FIRST, small] Onboarding without a forced board (user request 2026-07-06).
+- [SHIPPED 2026-07-06] Onboarding without a forced board (user request 2026-07-06).
   Today HomeRedirect in src/app/guards.tsx sends a board-less user straight to
   the full screen /onboarding wizard, which forces board creation as their
   first act. Change it so board-less users land on a calm Home screen inside the
