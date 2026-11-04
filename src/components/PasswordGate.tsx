@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,15 +17,24 @@ export function PasswordGate() {
   const [password, setPassword] = useState('');
   const [failCount, setFailCount] = useState(0);
   const [error, setError] = useState(false);
+  const [serviceError, setServiceError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitting = useRef(false);
   const [showCreep, setShowCreep] = useState(false);
   const [creepIndex, setCreepIndex] = useState(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = authenticate(password);
-    if (!success) {
-      const newCount = failCount + 1;
+    if (submitting.current || !password) return;
+    submitting.current = true;
+    setIsSubmitting(true);
+    setError(false);
+    setServiceError('');
+    try {
+      const success = await authenticate(password);
       setPassword('');
+      if (success) return;
+      const newCount = failCount + 1;
       if (newCount >= 3) {
         setShowCreep(true);
         setCreepIndex(prev => (prev + 1) % CREEP_MESSAGES.length);
@@ -35,6 +44,11 @@ export function PasswordGate() {
         setFailCount(newCount);
         setError(true);
       }
+    } catch {
+      setServiceError('Cannot open the board right now. Please try again shortly.');
+    } finally {
+      submitting.current = false;
+      setIsSubmitting(false);
     }
   };
 
@@ -80,17 +94,14 @@ export function PasswordGate() {
               type="password"
               placeholder="Enter password..."
               value={password}
+              disabled={isSubmitting}
               onChange={e => {
                 setPassword(e.target.value);
                 setError(false);
+                setServiceError('');
               }}
               className="text-center text-lg tracking-widest"
               autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSubmit(e);
-                }
-              }}
             />
           </div>
 
@@ -106,8 +117,10 @@ export function PasswordGate() {
             </div>
           )}
 
-          <Button type="submit" className="w-full" size="lg">
-            Enter
+          {serviceError && <p role="alert" className="text-center text-sm text-destructive">{serviceError}</p>}
+
+          <Button type="submit" className="w-full" size="lg" disabled={isSubmitting || !password}>
+            {isSubmitting ? 'Checking...' : 'Enter'}
           </Button>
         </form>
       </div>

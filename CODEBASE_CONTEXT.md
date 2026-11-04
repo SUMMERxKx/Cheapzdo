@@ -220,10 +220,14 @@ Flow:
 1. `Index.tsx` checks `isLoading` and `isAuthenticated`
 2. If unauthenticated, render `PasswordGate`
 3. `PasswordGate` calls `authenticate(password)` from context
-4. Context compares against env password:
-   - `VITE_BOARD_PASSWORD` fallback `BOARD_PASSWORD`
+4. Context posts the password to `/api/board-login`
+   - Server compares against the private `BOARD_PASSWORD` variable
 5. On success, sets in-memory `isAuthenticated=true`
 6. Logout sets `isAuthenticated=false`
+
+Board data is loaded and seeded only after the password check succeeds.
+The Vite dev/preview server provides the same endpoint locally. On Vercel,
+`api/board-login.ts` provides it as a Node.js function.
 
 Session/token model:
 - No JWT/cookie/session persistence layer
@@ -320,15 +324,12 @@ Used variables:
 - Used in `lib/supabase.ts`
 - Public anon key for client-side Supabase access
 
-3. `VITE_BOARD_PASSWORD`
-- Used in `AppContext` auth check
-- Primary password gate value
+3. `BOARD_PASSWORD`
+- Read only by the password endpoint on the server
+- Store as Secret in Vercel without a public framework prefix
+- Missing or blank values disable entry
 
-4. `BOARD_PASSWORD` (fallback)
-- Also checked in `AppContext`
-- Fallback source if `VITE_BOARD_PASSWORD` missing
-
-5. `VITE_OPENROUTER_API_KEY`
+4. `VITE_OPENROUTER_API_KEY`
 - Used in `lib/ai.ts` for OpenRouter API authentication
 - If not set, AI features (task generation, insights) are disabled or hidden — no other features affected
 - Never logged or persisted

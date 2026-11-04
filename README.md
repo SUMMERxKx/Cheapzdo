@@ -19,8 +19,13 @@ npm install
 ```
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_BOARD_PASSWORD=your_password
+BOARD_PASSWORD=your_password
 ```
+
+The board password is checked by `/api/board-login` on the server. Keep
+`BOARD_PASSWORD` private and use the Secret type in Vercel. The Supabase URL and
+public key use Config. The local Vite server also provides the login endpoint.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for hosting instructions.
 
 4. (Optional) AI features — add an [OpenRouter](https://openrouter.ai) API key to enable AI task generation and board insights:
 ```

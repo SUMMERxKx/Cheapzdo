@@ -21,7 +21,7 @@ interface AppContextType extends AppState {
   getPreviousSprint: () => Sprint | null;
   navigateToNextSprint: () => void;
   navigateToPreviousSprint: () => void;
-  authenticate: (password: string) => boolean;
+  authenticate: (password: string) => Promise<boolean>;
   logout: () => void;
   getChildItems: (parentId: string) => WorkItem[];
   getPersonById: (id: string) => Person | undefined;
@@ -41,8 +41,6 @@ interface AppContextType extends AppState {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
-
-const PASSWORD = import.meta.env.VITE_BOARD_PASSWORD || import.meta.env.BOARD_PASSWORD || '';
 
 const getSprintDates = (startDate?: number) => {
   const start = startDate || Date.now();
@@ -394,14 +392,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     announcements: [],
       isAuthenticated: false,
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load data from Supabase on mount
+  // Wait for the server password check before loading or seeding the board.
   useEffect(() => {
+    if (!state.isAuthenticated) return;
+    let cancelled = false;
     const loadData = async () => {
       setIsLoading(true);
       await initializeDatabase();
       const data = await loadDataFromSupabase();
+      if (cancelled) return;
       setState(prev => ({
         ...prev,
         workItems: data.workItems || defaultWorkItems,
@@ -416,7 +417,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     };
     loadData();
-  }, []);
+    return () => { cancelled = true; };
+  }, [state.isAuthenticated]);
 
   // Save work item to Supabase
   const saveWorkItemToSupabase = async (item: WorkItem) => {
@@ -793,12 +795,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const authenticate = (password: string): boolean => {
-    if (password === PASSWORD) {
-      setState(prev => ({ ...prev, isAuthenticated: true }));
-      return true;
+  const authenticate = async (password: string): Promise<boolean> => {
+    const response = await fetch('/api/board-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+      cache: 'no-store',
+    });
+    if (response.status === 401) return false;
+    if (!response.ok) {
+      throw new Error('The board is temporarily unavailable. Please try again later.');
     }
-    return false;
+    const result: unknown = await response.json();
+    if (!result || typeof result !== 'object' || !('ok' in result) || result.ok !== true) {
+      throw new Error('The board is temporarily unavailable. Please try again later.');
+    }
+    setIsLoading(true);
+    setState(prev => ({ ...prev, isAuthenticated: true }));
+    return true;
   };
 
   const logout = () => {
