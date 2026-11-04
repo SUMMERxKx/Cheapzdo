@@ -67,89 +67,6 @@ const defaultSprints: Sprint[] = [
   },
 ];
 
-const defaultWorkItems: WorkItem[] = [
-  {
-    id: 'wi-1',
-    title: 'Study for final exams',
-    type: 'Study',
-    state: 'Active',
-    assigneeId: '1',
-    priority: 'High',
-    tags: ['exam'],
-    createdAt: Date.now(),
-    description: '',
-    comments: [],
-    order: 0,
-  },
-  {
-    id: 'wi-2',
-    title: 'Complete math homework',
-    type: 'Study',
-    state: 'New',
-    assigneeId: '2',
-    priority: 'High',
-    tags: ['homework'],
-    parentId: 'wi-1',
-    createdAt: Date.now(),
-    description: '',
-    comments: [],
-  },
-  {
-    id: 'wi-3',
-    title: 'Gym session blocked - no equipment',
-    type: 'Gym',
-    state: 'Active',
-    assigneeId: '3',
-    priority: 'Critical',
-    tags: ['Blocker', 'equipment'],
-    parentId: 'wi-1',
-    createdAt: Date.now(),
-    description: '',
-    comments: [],
-  },
-  {
-    id: 'wi-4',
-    title: 'Basketball game',
-    type: 'Sports',
-    state: 'Active',
-    assigneeId: '4',
-    priority: 'High',
-    tags: ['game'],
-    sprintId: 'sprint-1',
-    createdAt: Date.now(),
-    description: '',
-    comments: [],
-    order: 1,
-  },
-  {
-    id: 'wi-5',
-    title: 'Morning run',
-    type: 'Running',
-    state: 'Active',
-    assigneeId: '5',
-    priority: 'Medium',
-    tags: ['morning'],
-    sprintId: 'sprint-1',
-    createdAt: Date.now(),
-    description: '',
-    comments: [],
-    order: 2,
-  },
-  {
-    id: 'wi-6',
-    title: 'Movie night',
-    type: 'Entertainment',
-    state: 'New',
-    assigneeId: '6',
-    priority: 'Low',
-    tags: ['weekend'],
-    createdAt: Date.now(),
-    description: '',
-    comments: [],
-    order: 3,
-  },
-];
-
 // Load all data from Supabase
 const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
   try {
@@ -354,27 +271,6 @@ const initializeDatabase = async () => {
       }));
       await supabase.from('sprints').insert(sprintToInsert);
     }
-
-    // Check if work_items table is empty
-    const { data: workItemsData } = await supabase.from('work_items').select('id').limit(1);
-    if (!workItemsData || workItemsData.length === 0) {
-      // Insert default work items
-      const workItemsToInsert = defaultWorkItems.map(item => ({
-        id: item.id,
-        title: item.title,
-        type: item.type,
-        state: item.state,
-        assignee_id: item.assigneeId || null,
-        priority: item.priority,
-        tags: item.tags,
-        parent_id: item.parentId || null,
-        sprint_id: item.sprintId || null,
-        description: item.description || null,
-        created_at: item.createdAt,
-        order: item.order ?? null,
-      }));
-      await supabase.from('work_items').insert(workItemsToInsert);
-    }
   } catch (error) {
     console.error('Error initializing database:', error);
   }
@@ -405,7 +301,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setState(prev => ({
         ...prev,
-        workItems: data.workItems || defaultWorkItems,
+        workItems: data.workItems || [],
         people: data.people || defaultPeople,
         sprints: data.sprints || defaultSprints,
         activeSprint: data.activeSprint || 'sprint-1',
