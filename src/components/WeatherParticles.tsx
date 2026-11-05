@@ -20,6 +20,7 @@ interface ParticleConfig {
 const LEAF_CHARS = ['🍂', '🍁', '🍃'];
 const PETAL_CHARS = ['🌸', '💮'];
 const LANTERN_CHARS = ['🏮', '🏮', '🏮', '🧧', '✨'];
+const DIYA_CHARS = ['🪔', '🪔', '🪔', '✨', '🌼'];
 
 function getConfig(particles: ThemeDefinition['particles']): ParticleConfig | null {
   switch (particles) {
@@ -102,6 +103,20 @@ function getConfig(particles: ThemeDefinition['particles']): ParticleConfig | nu
         }),
         buildContent: (i) => LANTERN_CHARS[Math.floor(seededRandom(i * 17) * LANTERN_CHARS.length)],
       };
+    case 'diyas':
+      return {
+        count: 10,
+        className: 'weather-particles-diyas',
+        childClass: 'diya',
+        buildStyle: (i) => ({
+          left: `${seededRandom(i * 7) * 100}%`,
+          animationDuration: `${20 + seededRandom(i * 3) * 8}s`,
+          animationDelay: `${seededRandom(i * 11) * 12}s`,
+          fontSize: `${16 + seededRandom(i * 5) * 8}px`,
+          opacity: 0.6 + seededRandom(i * 13) * 0.35,
+        }),
+        buildContent: (i) => DIYA_CHARS[Math.floor(seededRandom(i * 17) * DIYA_CHARS.length)],
+      };
     default:
       return null;
   }
@@ -111,8 +126,9 @@ function getConfig(particles: ThemeDefinition['particles']): ParticleConfig | nu
  * WeatherParticles
  *
  * Renders animated weather particles (rain drops, snowflakes, leaves, petals,
- * sun rays) based on the current theme. The particles are purely decorative,
- * positioned fixed over the viewport with pointer-events disabled.
+ * sun rays, lanterns, diyas) based on the current theme. The particles are
+ * purely decorative, positioned fixed over the viewport with pointer-events
+ * disabled.
  */
 export function WeatherParticles() {
   const { currentTheme } = useTheme();

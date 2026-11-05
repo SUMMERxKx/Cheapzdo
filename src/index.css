@@ -457,6 +457,62 @@
     --sidebar-border: 356 26% 22%;
     --sidebar-ring: 43 95% 57%;
   }
+
+  /* ===== DIWALI — Indigo night, saffron & gold ===== */
+  [data-theme="diwali"] {
+    --background: 250 40% 8%;
+    --foreground: 40 85% 91%;
+
+    --card: 252 34% 12%;
+    --card-foreground: 40 85% 91%;
+
+    --popover: 252 34% 12%;
+    --popover-foreground: 40 85% 91%;
+
+    --primary: 32 96% 56%;
+    --primary-foreground: 250 40% 8%;
+
+    --secondary: 255 26% 18%;
+    --secondary-foreground: 40 85% 91%;
+
+    --muted: 255 20% 23%;
+    --muted-foreground: 38 35% 68%;
+
+    --accent: 335 30% 20%;
+    --accent-foreground: 42 90% 90%;
+
+    --destructive: 0 72% 54%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 255 22% 22%;
+    --input: 255 22% 22%;
+    --ring: 32 96% 56%;
+    --radius: 0.25rem;
+
+    --blocker: 0 72% 54%;
+    --blocker-foreground: 0 0% 100%;
+    --success: 142 60% 42%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 95% 55%;
+    --warning-foreground: 0 0% 0%;
+    --info: 205 75% 58%;
+    --info-foreground: 0 0% 100%;
+
+    --epic: 290 60% 62%;
+    --story: 205 75% 58%;
+    --task: 38 30% 62%;
+    --bug: 0 72% 54%;
+    --operation: 45 95% 55%;
+
+    --sidebar-background: 250 40% 10%;
+    --sidebar-foreground: 42 90% 90%;
+    --sidebar-primary: 38 95% 54%;
+    --sidebar-primary-foreground: 250 40% 8%;
+    --sidebar-accent: 335 30% 20%;
+    --sidebar-accent-foreground: 42 90% 90%;
+    --sidebar-border: 255 22% 22%;
+    --sidebar-ring: 32 96% 56%;
+  }
 }
 
 @layer base {
@@ -477,6 +533,16 @@
       radial-gradient(circle at 95% 85%, hsl(0 80% 52% / 0.08), transparent 28%),
       radial-gradient(ellipse at 50% 50%, hsl(0 60% 20% / 0.06), transparent 60%),
       radial-gradient(circle at 50% 100%, hsl(0 80% 52% / 0.16), transparent 38%);
+    background-attachment: fixed;
+  }
+
+  [data-theme="diwali"] body {
+    background-image:
+      radial-gradient(circle at 10% 5%, hsl(32 96% 56% / 0.10), transparent 28%),
+      radial-gradient(circle at 92% 8%, hsl(45 95% 55% / 0.08), transparent 24%),
+      radial-gradient(circle at 5% 90%, hsl(340 70% 40% / 0.14), transparent 30%),
+      radial-gradient(circle at 95% 85%, hsl(38 96% 56% / 0.08), transparent 28%),
+      radial-gradient(circle at 50% 100%, hsl(28 95% 52% / 0.14), transparent 38%);
     background-attachment: fixed;
   }
 
@@ -722,6 +788,60 @@
   backface-visibility: hidden;
   filter: drop-shadow(0 0 12px hsl(43 95% 57% / 0.35));
   text-shadow: 0 0 8px hsl(43 95% 57% / 0.25);
+}
+
+/* --- Diyas (Diwali) --- */
+@keyframes diya-float {
+  0%   { transform: translateY(0) translateX(0) scale(0.9);       opacity: 0; }
+  8%   { opacity: 0.95; }
+  35%  { transform: translateY(-35vh) translateX(12px) scale(1); }
+  65%  { transform: translateY(-70vh) translateX(-10px) scale(0.97); opacity: 0.75; }
+  100% { transform: translateY(-115vh) translateX(6px) scale(0.85); opacity: 0; }
+}
+
+@keyframes diya-flicker {
+  0%   { opacity: 0.55; transform: scale(0.9); }
+  100% { opacity: 1;    transform: scale(1.1); }
+}
+
+.weather-particles-diyas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+.weather-particles-diyas .diya {
+  position: absolute;
+  bottom: -30px;
+  animation: diya-float linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Soft flame glow; its own animation so the inline float duration doesn't slow it */
+.weather-particles-diyas .diya::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(38 96% 58% / 0.35) 0%, transparent 65%);
+  animation: diya-flicker 1.4s ease-in-out infinite alternate;
+  z-index: -1;
+}
+
+/* Reduced motion: the diyas rest along the bottom edge instead of floating */
+@media (prefers-reduced-motion: reduce) {
+  .weather-particles-diyas .diya {
+    bottom: 8px;
+    animation: none;
+  }
+
+  .weather-particles-diyas .diya::after {
+    animation: none;
+  }
 }
 
 /**

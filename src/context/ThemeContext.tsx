@@ -8,18 +8,20 @@ export type ThemeId =
   | 'winter'
   | 'autumn'
   | 'spring'
-  | 'chinese-new-year';
+  | 'chinese-new-year'
+  | 'diwali';
 
 export interface ThemeDefinition {
   id: ThemeId;
   name: string;
   emoji: string;
   description: string;
-  particles?: 'rain' | 'snow' | 'leaves' | 'petals' | 'sun-rays' | 'lanterns';
+  particles?: 'rain' | 'snow' | 'leaves' | 'petals' | 'sun-rays' | 'lanterns' | 'diyas';
 }
 
 export const themes: ThemeDefinition[] = [
   { id: 'chinese-new-year', name: 'Chinese New Year', emoji: '🧧', description: 'Festive red and gold', particles: 'lanterns' },
+  { id: 'diwali',   name: 'Diwali',   emoji: '🪔', description: 'Saffron diyas and gold', particles: 'diyas' },
   { id: 'default',  name: 'Default',  emoji: '🔴', description: 'Dark crimson' },
   { id: 'rain',     name: 'Rainy',    emoji: '🌧️', description: 'Moody downpour',   particles: 'rain' },
   { id: 'snow',     name: 'Snowy',    emoji: '🌨️', description: 'Gentle snowfall',  particles: 'snow' },
