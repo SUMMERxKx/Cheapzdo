@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { X, Plus } from 'lucide-react';
+import { WorkItemTypeLabel } from './WorkItemTypeManager';
 import { format } from 'date-fns';
 
 interface TaskCardModalProps {
@@ -20,7 +21,7 @@ interface TaskCardModalProps {
 }
 
 export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalProps) {
-  const { updateWorkItem, addComment, people, sprints, getPersonById } = useApp();
+  const { updateWorkItem, addComment, people, sprints, getPersonById, workItemTypes } = useApp();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<WorkItemType>('Other');
@@ -133,12 +134,9 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Study">Study</SelectItem>
-                    <SelectItem value="Gym">Gym</SelectItem>
-                    <SelectItem value="Sports">Sports</SelectItem>
-                    <SelectItem value="Running">Running</SelectItem>
-                    <SelectItem value="Entertainment">Entertainment</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {workItemTypes.map(t => (
+                      <SelectItem key={t.name} value={t.name}><WorkItemTypeLabel name={t.name} /></SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

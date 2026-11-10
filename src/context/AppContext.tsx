@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { WorkItem, Person, Sprint, AppState, WorkItemType, WorkItemState, Priority, Comment, Board, BoardNote, Announcement, AIGeneratedTask, AIInsights } from '@/types';
+import { WorkItem, Person, Sprint, AppState, WorkItemType, WorkItemState, Priority, Comment, Board, BoardNote, Announcement, WorkItemTypeDefinition, AIGeneratedTask, AIInsights } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { DEFAULT_WORK_ITEM_TYPES, FALLBACK_TYPE } from '@/lib/workItemTypes';
 import { queryAI, isAIConfigured } from '@/lib/ai';
 
 interface AppContextType extends AppState {
@@ -34,6 +35,9 @@ interface AppContextType extends AppState {
   addAnnouncement: (title: string, description: string) => void;
   updateAnnouncement: (id: string, updates: Partial<Announcement>) => void;
   deleteAnnouncement: (id: string) => void;
+  addWorkItemType: (type: Omit<WorkItemTypeDefinition, 'createdAt'>) => Promise<boolean>;
+  updateWorkItemType: (name: string, updates: Partial<Pick<WorkItemTypeDefinition, 'icon' | 'color'>>) => void;
+  deleteWorkItemType: (name: string) => Promise<boolean>;
   isLoading: boolean;
   isAIEnabled: boolean;
   generateAITask: (inputText: string) => Promise<AIGeneratedTask>;
@@ -193,6 +197,16 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
       console.error('Error loading announcements:', announcementsError);
     }
 
+    // Load work item types (falls back to the built-in types if the table is missing or empty)
+    const { data: typesData, error: typesError } = await supabase
+      .from('work_item_types')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (typesError) {
+      console.error('Error loading work item types:', typesError);
+    }
+
     // Convert boards data
     const boards = (boardsData || []).map(b => ({
       id: b.id,
@@ -220,6 +234,14 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
       createdAt: typeof a.created_at === 'number' ? a.created_at : new Date(a.created_at).getTime(),
     }));
 
+    // Convert work item types data
+    const workItemTypes = (typesData || []).map(t => ({
+      name: t.name,
+      icon: t.icon,
+      color: t.color,
+      createdAt: t.created_at,
+    }));
+
     // Find active board
     const activeBoard = boards.length > 0 ? boards[0].id : null;
 
@@ -232,6 +254,7 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
       boardNotes,
       activeBoard,
       announcements,
+      workItemTypes: workItemTypes.length > 0 ? workItemTypes : DEFAULT_WORK_ITEM_TYPES,
     };
   } catch (error) {
     console.error('Error loading data from Supabase:', error);
@@ -286,6 +309,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     boardNotes: [],
     activeBoard: null,
     announcements: [],
+    workItemTypes: DEFAULT_WORK_ITEM_TYPES,
       isAuthenticated: false,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -309,6 +333,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         boardNotes: data.boardNotes || [],
         activeBoard: data.activeBoard || null,
         announcements: data.announcements || [],
+        workItemTypes: data.workItemTypes || DEFAULT_WORK_ITEM_TYPES,
       }));
       setIsLoading(false);
     };
@@ -928,11 +953,69 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const saveWorkItemTypeToSupabase = async (type: WorkItemTypeDefinition): Promise<boolean> => {
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return true;
+
+    const { error } = await supabase
+      .from('work_item_types')
+      .upsert({
+        name: type.name,
+        icon: type.icon,
+        color: type.color,
+        created_at: type.createdAt,
+      });
+
+    if (error) {
+      console.error('Error saving work item type:', error);
+      return false;
+    }
+    return true;
+  };
+
+  const addWorkItemType = async (type: Omit<WorkItemTypeDefinition, 'createdAt'>) => {
+    const name = type.name.trim();
+    const exists = state.workItemTypes.some(t => t.name.toLowerCase() === name.toLowerCase());
+    if (!name || exists) return false;
+
+    const newType: WorkItemTypeDefinition = { ...type, name, createdAt: Date.now() };
+    if (!(await saveWorkItemTypeToSupabase(newType))) return false;
+
+    setState(prev => ({ ...prev, workItemTypes: [...prev.workItemTypes, newType] }));
+    return true;
+  };
+
+  const updateWorkItemType = (name: string, updates: Partial<Pick<WorkItemTypeDefinition, 'icon' | 'color'>>) => {
+    setState(prev => {
+      const updatedTypes = prev.workItemTypes.map(t => (t.name === name ? { ...t, ...updates } : t));
+      const updatedType = updatedTypes.find(t => t.name === name);
+      if (updatedType) {
+        saveWorkItemTypeToSupabase(updatedType);
+      }
+      return { ...prev, workItemTypes: updatedTypes };
+    });
+  };
+
+  // Types still used by a work item are kept so no task ends up without a type
+  const deleteWorkItemType = async (name: string) => {
+    if (name === FALLBACK_TYPE || state.workItems.some(item => item.type === name)) return false;
+
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      const { error } = await supabase.from('work_item_types').delete().eq('name', name);
+      if (error) {
+        console.error('Error deleting work item type:', error);
+        return false;
+      }
+    }
+
+    setState(prev => ({ ...prev, workItemTypes: prev.workItemTypes.filter(t => t.name !== name) }));
+    return true;
+  };
+
   // ─── AI Feature Layer ────────────────────────────────────────────────
 
   const aiEnabled = isAIConfigured();
 
-  const VALID_TYPES: WorkItemType[] = ['Study', 'Gym', 'Sports', 'Running', 'Entertainment', 'Other'];
+  const VALID_TYPES: WorkItemType[] = state.workItemTypes.map(t => t.name);
   const VALID_STATES: WorkItemState[] = ['New', 'Active', 'Done'];
   const VALID_PRIORITIES: Priority[] = ['Critical', 'High', 'Medium', 'Low'];
 
@@ -986,7 +1069,7 @@ No markdown. No commentary outside the JSON. Keep it concise and actionable.`;
   };
 
   const validateAITask = (raw: any): AIGeneratedTask => {
-    const type = VALID_TYPES.includes(raw.type) ? raw.type : 'Other';
+    const type = VALID_TYPES.includes(raw.type) ? raw.type : FALLBACK_TYPE;
     const stateVal = VALID_STATES.includes(raw.state) ? raw.state : 'New';
     const priority = VALID_PRIORITIES.includes(raw.priority) ? raw.priority : 'Medium';
 
@@ -1105,6 +1188,9 @@ No markdown. No commentary outside the JSON. Keep it concise and actionable.`;
         addAnnouncement,
         updateAnnouncement,
         deleteAnnouncement,
+        addWorkItemType,
+        updateWorkItemType,
+        deleteWorkItemType,
         isLoading,
         isAIEnabled: aiEnabled,
         generateAITask,

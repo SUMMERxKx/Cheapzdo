@@ -13,10 +13,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronRight, ChevronDown, MoreVertical, Plus, AlertTriangle, BookOpen, Dumbbell, Gamepad2, Footprints, Film, Sparkles, Copy, Trash2, ArrowRight } from 'lucide-react';
+import { ChevronRight, ChevronDown, MoreVertical, Plus, AlertTriangle, Copy, Trash2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AddChildItemDialog } from './AddChildItemDialog';
 import { ConfirmDialog } from './ConfirmDialog';
+import { getTypeIcon, getTypeColorClass } from '@/lib/workItemTypes';
 
 interface WorkItemRowProps {
   item: WorkItem;
@@ -33,30 +34,6 @@ interface WorkItemRowProps {
   onDrop?: (e: React.DragEvent, itemId: string) => void;
   onDragEnd?: () => void;
 }
-
-/**
- * Icon mappings for different work item types
- */
-const typeIcons: Record<string, React.ElementType> = {
-  'Study': BookOpen,
-  'Gym': Dumbbell,
-  'Sports': Gamepad2,
-  'Running': Footprints,
-  'Entertainment': Film,
-  'Other': Sparkles,
-};
-
-/**
- * Color mappings for work item types
- */
-const typeColors: Record<string, string> = {
-  'Study': 'text-blue-500',
-  'Gym': 'text-purple-500',
-  'Sports': 'text-green-500',
-  'Running': 'text-orange-500',
-  'Entertainment': 'text-pink-500',
-  'Other': 'text-yellow-500',
-};
 
 /**
  * Color mappings for work item states
@@ -108,7 +85,7 @@ export function WorkItemRow({
   onDrop,
   onDragEnd,
 }: WorkItemRowProps) {
-  const { deleteWorkItem, copyWorkItem, getChildItems, getPersonById, sprints, updateWorkItem } = useApp();
+  const { deleteWorkItem, copyWorkItem, getChildItems, getPersonById, sprints, updateWorkItem, workItemTypes } = useApp();
   const [expanded, setExpanded] = useState(false);
   const [isAddChildOpen, setIsAddChildOpen] = useState(false);
   const [isAddBlockerOpen, setIsAddBlockerOpen] = useState(false);
@@ -119,7 +96,9 @@ export function WorkItemRow({
   // All task types can have children, but only main tasks (not children) can have children
   const canHaveChildren = !item.parentId;
   const isBlocker = item.tags.includes('Blocker');
-  const Icon = typeIcons[item.type] || Sparkles;
+  const typeDef = workItemTypes.find(t => t.name === item.type);
+  const Icon = getTypeIcon(typeDef?.icon);
+  const typeColor = getTypeColorClass(typeDef?.color);
   const assignee = item.assigneeId ? getPersonById(item.assigneeId) : null;
 
   const handleRowClick = (e: React.MouseEvent) => {
@@ -263,7 +242,7 @@ export function WorkItemRow({
         {/* Title with icon */}
         <td className="py-2 px-3" style={{ paddingLeft: `${depth * 24 + 12}px` }}>
           <div className="flex items-center gap-2">
-            <Icon className={cn('w-4 h-4 flex-shrink-0', typeColors[item.type])} />
+            <Icon className={cn('w-4 h-4 flex-shrink-0', typeColor)} />
             {isBlocker && <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />}
             <span className={cn('text-sm', isBlocker && 'text-destructive font-medium')}>
               {item.title}
@@ -273,7 +252,7 @@ export function WorkItemRow({
 
         {/* Type */}
         <td className="py-2 px-3 w-28">
-          <span className={cn('text-xs', typeColors[item.type])}>{item.type}</span>
+          <span className={cn('text-xs', typeColor)}>{item.type}</span>
         </td>
 
         {/* Assigned */}

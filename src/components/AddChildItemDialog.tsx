@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { WorkItem, WorkItemType, Priority } from '@/types';
+import { WorkItemTypeLabel } from './WorkItemTypeManager';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,7 @@ interface AddChildItemDialogProps {
 }
 
 export function AddChildItemDialog({ open, onOpenChange, parentItem, isBlocker = false }: AddChildItemDialogProps) {
-  const { addWorkItem, people, sprints } = useApp();
+  const { addWorkItem, people, sprints, workItemTypes } = useApp();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<WorkItemType>('Other');
@@ -119,12 +120,9 @@ export function AddChildItemDialog({ open, onOpenChange, parentItem, isBlocker =
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Study">Study</SelectItem>
-                  <SelectItem value="Gym">Gym</SelectItem>
-                  <SelectItem value="Sports">Sports</SelectItem>
-                  <SelectItem value="Running">Running</SelectItem>
-                  <SelectItem value="Entertainment">Entertainment</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  {workItemTypes.map(t => (
+                    <SelectItem key={t.name} value={t.name}><WorkItemTypeLabel name={t.name} /></SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

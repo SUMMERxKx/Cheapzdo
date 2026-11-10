@@ -1,4 +1,5 @@
-export type WorkItemType = 'Study' | 'Gym' | 'Sports' | 'Running' | 'Entertainment' | 'Other';
+// Type names come from the work_item_types table, so any name is allowed.
+export type WorkItemType = string;
 export type WorkItemState = 'New' | 'Active' | 'Done';
 export type Priority = 'Critical' | 'High' | 'Medium' | 'Low';
 
@@ -29,6 +30,13 @@ export interface WorkItem {
   description?: string;
   comments: Comment[];
   order?: number;
+}
+
+export interface WorkItemTypeDefinition {
+  name: string;
+  icon: string;
+  color: string;
+  createdAt: number;
 }
 
 export interface Sprint {
@@ -72,6 +80,7 @@ export interface AppState {
   boardNotes: BoardNote[];
   activeBoard: string | null;
   announcements: Announcement[];
+  workItemTypes: WorkItemTypeDefinition[];
   isAuthenticated: boolean;
 }
 

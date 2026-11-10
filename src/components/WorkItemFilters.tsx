@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { AlertTriangle, X } from 'lucide-react';
+import { WorkItemTypeLabel, WorkItemTypeManager } from './WorkItemTypeManager';
 
 interface FiltersState {
   search: string;
@@ -25,7 +26,7 @@ interface WorkItemFiltersProps {
  * 
  * Provides filtering controls for work items:
  * - Search: Text search in task titles
- * - Type: Filter by task type (Study, Gym, Sports, etc.)
+ * - Type: Filter by task type (Study, Gym, Sports, etc.), with a Types button to manage them
  * - State: Filter by state (New, Active, Done) - hidden on Daily board
  * - Assignee: Filter by assigned person or unassigned
  * - Priority: Filter by priority level - hidden on Daily board
@@ -35,7 +36,7 @@ interface WorkItemFiltersProps {
  * to match the simplified Daily board view.
  */
 export function WorkItemFilters({ filters, onFiltersChange, hideStatePriorityTags = false }: WorkItemFiltersProps) {
-  const { people } = useApp();
+  const { people, workItemTypes } = useApp();
 
   const updateFilter = <K extends keyof FiltersState>(key: K, value: FiltersState[K]) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -75,14 +76,13 @@ export function WorkItemFilters({ filters, onFiltersChange, hideStatePriorityTag
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Types</SelectItem>
-          <SelectItem value="Study">Study</SelectItem>
-          <SelectItem value="Gym">Gym</SelectItem>
-          <SelectItem value="Sports">Sports</SelectItem>
-          <SelectItem value="Running">Running</SelectItem>
-          <SelectItem value="Entertainment">Entertainment</SelectItem>
-          <SelectItem value="Other">Other</SelectItem>
+          {workItemTypes.map(t => (
+            <SelectItem key={t.name} value={t.name}><WorkItemTypeLabel name={t.name} /></SelectItem>
+          ))}
         </SelectContent>
       </Select>
+
+      <WorkItemTypeManager />
 
       {!hideStatePriorityTags && (
         <Select value={filters.state} onValueChange={(value) => updateFilter('state', value as WorkItemState | 'all')}>

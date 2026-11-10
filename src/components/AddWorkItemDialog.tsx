@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
+import { FALLBACK_TYPE } from '@/lib/workItemTypes';
+import { WorkItemTypeLabel } from './WorkItemTypeManager';
 import { toast } from 'sonner';
 
 interface AddWorkItemDialogProps {
@@ -29,7 +31,7 @@ interface AddWorkItemDialogProps {
  * - When parentId is provided: Only allows "Other" type (for child tasks)
  */
 export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideSprint = false, isDailyBoard = false, isArcBoard = false }: AddWorkItemDialogProps) {
-  const { addWorkItem, people, sprints } = useApp();
+  const { addWorkItem, people, sprints, workItemTypes } = useApp();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [type, setType] = useState<WorkItemType>(parentId ? 'Other' : 'Other');
@@ -100,8 +102,8 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
   };
 
   const availableTypes: WorkItemType[] = parentId
-    ? ['Other']
-    : ['Study', 'Gym', 'Sports', 'Running', 'Entertainment', 'Other'];
+    ? [FALLBACK_TYPE]
+    : workItemTypes.map(t => t.name);
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -152,7 +154,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
                 </SelectTrigger>
                 <SelectContent>
                   {availableTypes.map(t => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}><WorkItemTypeLabel name={t} /></SelectItem>
                   ))}
                 </SelectContent>
               </Select>

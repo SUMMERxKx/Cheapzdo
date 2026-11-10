@@ -50,16 +50,26 @@ CREATE TABLE IF NOT EXISTS work_items (
   "order" INTEGER
 );
 
--- Add the new type constraint
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
-                 WHERE constraint_name = 'work_items_type_check' 
-                 AND table_name = 'work_items') THEN
-    ALTER TABLE work_items ADD CONSTRAINT work_items_type_check 
-      CHECK (type IN ('Study', 'Gym', 'Sports', 'Running', 'Entertainment', 'Other'));
-  END IF;
-END $$;
+-- Types are managed in work_item_types, so work_items.type has no fixed list
+ALTER TABLE work_items DROP CONSTRAINT IF EXISTS work_items_type_check;
+
+-- Work item types table (name is what work_items.type stores)
+CREATE TABLE IF NOT EXISTS work_item_types (
+  name TEXT PRIMARY KEY,
+  icon TEXT NOT NULL,
+  color TEXT NOT NULL,
+  created_at BIGINT NOT NULL
+);
+
+-- Built-in types
+INSERT INTO work_item_types (name, icon, color, created_at) VALUES
+  ('Study', 'book-open', 'blue', 1),
+  ('Gym', 'dumbbell', 'purple', 2),
+  ('Sports', 'gamepad', 'green', 3),
+  ('Running', 'footprints', 'orange', 4),
+  ('Entertainment', 'film', 'pink', 5),
+  ('Other', 'sparkles', 'yellow', 6)
+ON CONFLICT (name) DO NOTHING;
 
 -- Comments table
 CREATE TABLE IF NOT EXISTS comments (
@@ -115,6 +125,7 @@ ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE boards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE board_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE work_item_types ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if they exist (to allow re-running this script)
 DROP POLICY IF EXISTS "Allow all operations on people" ON people;
@@ -124,6 +135,7 @@ DROP POLICY IF EXISTS "Allow all operations on comments" ON comments;
 DROP POLICY IF EXISTS "Allow all operations on boards" ON boards;
 DROP POLICY IF EXISTS "Allow all operations on board_notes" ON board_notes;
 DROP POLICY IF EXISTS "Allow all operations on announcements" ON announcements;
+DROP POLICY IF EXISTS "Allow all operations on work_item_types" ON work_item_types;
 
 -- Create policies to allow all operations (simple setup)
 CREATE POLICY "Allow all operations on people" ON people
@@ -145,4 +157,7 @@ CREATE POLICY "Allow all operations on board_notes" ON board_notes
   FOR ALL USING (true) WITH CHECK (true);
 
 CREATE POLICY "Allow all operations on announcements" ON announcements
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow all operations on work_item_types" ON work_item_types
   FOR ALL USING (true) WITH CHECK (true);
