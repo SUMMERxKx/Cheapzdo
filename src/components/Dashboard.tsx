@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Users, Zap, AlertTriangle, Layers, Plus, X } from 'lucide-react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { AIInsightsPanel } from './ai/AIInsightsPanel';
+import { WorkItemTypeManager, WorkItemTypeLabel } from './WorkItemTypeManager';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function Dashboard() {
-  const { workItems, people, sprints, getPersonById, addPerson, deletePerson } = useApp();
+  const { workItems, people, sprints, getPersonById, addPerson, deletePerson, workItemTypes } = useApp();
   const [newPersonName, setNewPersonName] = useState('');
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
   const [isDeletePersonConfirmOpen, setIsDeletePersonConfirmOpen] = useState(false);
@@ -350,6 +351,21 @@ export function Dashboard() {
 
       {/* AI Insights */}
       <AIInsightsPanel />
+
+      {/* Work Item Types */}
+      <Card className="p-4 bg-card border-border">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-muted-foreground">WORK ITEM TYPES</h3>
+          <WorkItemTypeManager />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {workItemTypes.map((type) => (
+            <div key={type.name} className="p-3 border border-border rounded-md text-sm">
+              <WorkItemTypeLabel name={type.name} />
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* Delete Person Confirmation Dialog */}
       <ConfirmDialog

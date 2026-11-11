@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { AlertTriangle, X } from 'lucide-react';
-import { WorkItemTypeLabel, WorkItemTypeManager } from './WorkItemTypeManager';
+import { WorkItemTypeLabel } from './WorkItemTypeManager';
 
 interface FiltersState {
   search: string;
@@ -26,7 +26,7 @@ interface WorkItemFiltersProps {
  * 
  * Provides filtering controls for work items:
  * - Search: Text search in task titles
- * - Type: Filter by task type (Study, Gym, Sports, etc.), with a Types button to manage them
+ * - Type: Filter by task type (Study, Gym, Sports, etc.)
  * - State: Filter by state (New, Active, Done) - hidden on Daily board
  * - Assignee: Filter by assigned person or unassigned
  * - Priority: Filter by priority level - hidden on Daily board
@@ -81,8 +81,6 @@ export function WorkItemFilters({ filters, onFiltersChange, hideStatePriorityTag
           ))}
         </SelectContent>
       </Select>
-
-      <WorkItemTypeManager />
 
       {!hideStatePriorityTags && (
         <Select value={filters.state} onValueChange={(value) => updateFilter('state', value as WorkItemState | 'all')}>

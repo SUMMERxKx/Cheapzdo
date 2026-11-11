@@ -113,9 +113,9 @@ export function WorkItemTypeManager() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground hover:text-foreground">
-          <Shapes className="w-4 h-4" />
-          Types
+        <Button variant="outline" size="sm">
+          <Shapes className="w-4 h-4 mr-2" />
+          Manage Types
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-card border-border max-w-md">
