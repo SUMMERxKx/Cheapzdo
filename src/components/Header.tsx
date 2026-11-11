@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Target, Pencil, Check } from 'lucide-react';
+import { LogOut, Target, Pencil, Check, Maximize, Minimize } from 'lucide-react';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { useFullscreen } from '@/hooks/use-fullscreen';
 
 const SUBTITLE_KEY = 'cheapzdo-header-subtitle';
 const DEFAULT_SUBTITLE = '🐴 Year of the Horse 🧧';
 
 export function Header() {
   const { logout } = useApp();
+  const fullscreen = useFullscreen();
   const [subtitle, setSubtitle] = useState(() => {
     return localStorage.getItem(SUBTITLE_KEY) || DEFAULT_SUBTITLE;
   });
@@ -91,6 +93,18 @@ export function Header() {
 
       <div className="flex items-center gap-2">
         <ThemeSwitcher />
+        {fullscreen.isSupported && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fullscreen.toggle}
+            className="text-muted-foreground hover:text-foreground h-8 w-8 p-0"
+            title={fullscreen.isFullscreen ? 'Exit full screen' : 'Full screen'}
+            aria-label={fullscreen.isFullscreen ? 'Exit full screen' : 'Full screen'}
+          >
+            {fullscreen.isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </Button>
+        )}
         <Button variant="ghost" size="sm" onClick={logout} className="text-muted-foreground hover:text-foreground">
           <LogOut className="w-4 h-4 mr-2" />
           Logout
