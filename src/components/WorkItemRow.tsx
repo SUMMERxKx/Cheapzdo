@@ -21,6 +21,8 @@ import { getTypeIcon, getTypeColorClass } from '@/lib/workItemTypes';
 
 interface WorkItemRowProps {
   item: WorkItem;
+  selected?: boolean
+  onToggleSelected?: () => void
   depth?: number; // Nesting depth for child items (for indentation)
   index?: number; // Row number for display
   onRowClick: (item: WorkItem) => void;
@@ -71,7 +73,9 @@ const priorityColors: Record<Priority, string> = {
  * to match the simplified Daily board view.
  */
 export function WorkItemRow({ 
-  item, 
+  item,
+  selected,
+  onToggleSelected,
   depth = 0,
   index,
   onRowClick, 
@@ -174,6 +178,7 @@ export function WorkItemRow({
         {/* Number, plus button and expand arrow */}
         <td className="py-2 px-3 w-20">
           <div className="flex items-center gap-1">
+            {onToggleSelected && <input aria-label={`Select ${item.title}`} type="checkbox" checked={selected} onClick={e => e.stopPropagation()} onChange={onToggleSelected} />}
             {index !== undefined && (
               <span className="text-xs text-muted-foreground w-6 text-right">{index}</span>
             )}

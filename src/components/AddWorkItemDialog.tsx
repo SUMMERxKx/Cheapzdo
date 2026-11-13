@@ -17,7 +17,6 @@ interface AddWorkItemDialogProps {
   parentType?: WorkItemType;
   hideSprint?: boolean; // Hide sprint selector in dialog
   isDailyBoard?: boolean; // If true, automatically adds "Daily" tag and excludes sprintId
-  isArcBoard?: boolean; // If true, automatically adds "Arc" tag and hides sprint selector
 }
 
 /**
@@ -30,12 +29,13 @@ interface AddWorkItemDialogProps {
  * - When hideSprint=true: Hides the sprint selector field
  * - When parentId is provided: Only allows "Other" type (for child tasks)
  */
-export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideSprint = false, isDailyBoard = false, isArcBoard = false }: AddWorkItemDialogProps) {
+export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideSprint = false, isDailyBoard = false }: AddWorkItemDialogProps) {
   const { addWorkItem, people, sprints, workItemTypes } = useApp();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [type, setType] = useState<WorkItemType>(parentId ? 'Other' : 'Other');
   const [priority, setPriority] = useState<Priority>('Medium');
+  const [pingOnAssign, setPingOnAssign] = useState(false)
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [sprintId, setSprintId] = useState<string>(defaultSprintId || '');
   const [tags, setTags] = useState('');
@@ -58,17 +58,12 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
         taskTags.push('Daily');
       }
 
-      // Arc board tasks: automatically add "Arc" tag to keep them separate from Sprint tasks
-      if (isArcBoard && !taskTags.includes('Arc')) {
-        taskTags.push('Arc');
-      }
       
       // Determine sprintId:
       // - Daily board: always undefined (no sprint assignment)
-      // - Arc board: always undefined (arc items are not sprint-scoped)
       // - hideSprint: undefined (sprint selector hidden)
       // - Otherwise: use selected sprintId or defaultSprintId
-      const finalSprintId = isDailyBoard || isArcBoard
+      const finalSprintId = isDailyBoard
         ? undefined 
         : (hideSprint ? undefined : (sprintId || undefined));
       
@@ -78,6 +73,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
         state: 'New',
         priority,
         assigneeId: assigneeId || undefined,
+        pingOnAssign: pingOnAssign && !!people.find(p => p.id === assigneeId)?.email,
         sprintId: finalSprintId,
         parentId,
         tags: taskTags,
@@ -89,6 +85,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
     setTitle('');
     setTags('');
       setAssigneeId('');
+      setPingOnAssign(false)
       setSprintId(defaultSprintId || '');
       setType(parentId ? 'Other' : 'Other');
       setPriority('Medium');
@@ -112,6 +109,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
       setTitle('');
       setTags('');
       setAssigneeId('');
+      setPingOnAssign(false)
       setSprintId(defaultSprintId || '');
       setType(parentId ? 'Other' : 'Other');
       setPriority('Medium');
@@ -134,6 +132,12 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {people.find(p => p.id === assigneeId)?.email && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={pingOnAssign} onChange={e => setPingOnAssign(e.target.checked)} />
+              Ping on assign
+            </label>
+          )}
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -195,7 +199,7 @@ export function AddWorkItemDialog({ defaultSprintId, parentId, parentType, hideS
               </Select>
             </div>
 
-            {!parentId && !hideSprint && !isDailyBoard && !isArcBoard && (
+            {!parentId && !hideSprint && !isDailyBoard && (
               <div className="space-y-2">
                 <Label>Sprint</Label>
                 <Select 

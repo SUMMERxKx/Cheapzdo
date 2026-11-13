@@ -12,12 +12,11 @@ import { Sparkles, Loader2, Check, RotateCcw, Pencil, X } from 'lucide-react';
 interface AITaskCreatorProps {
   defaultSprintId?: string;
   isDailyBoard?: boolean;
-  isArcBoard?: boolean;
 }
 
 type Phase = 'input' | 'loading' | 'preview';
 
-export function AITaskCreator({ defaultSprintId, isDailyBoard = false, isArcBoard = false }: AITaskCreatorProps) {
+export function AITaskCreator({ defaultSprintId, isDailyBoard = false }: AITaskCreatorProps) {
   const {
     generateAITask,
     addWorkItem,
@@ -52,9 +51,7 @@ export function AITaskCreator({ defaultSprintId, isDailyBoard = false, isArcBoar
     try {
       const extraContext = isDailyBoard
         ? '\n(This is for the Daily board — add a "Daily" tag automatically.)'
-        : isArcBoard
-          ? '\n(This is for the Arc board — add an "Arc" tag automatically.)'
-          : '';
+        : '';
       const task = await generateAITask(inputText.trim() + extraContext);
 
       if (isDailyBoard) {
@@ -62,10 +59,6 @@ export function AITaskCreator({ defaultSprintId, isDailyBoard = false, isArcBoar
         task.sprintId = undefined;
       }
 
-      if (isArcBoard) {
-        if (!task.tags.includes('Arc')) task.tags.push('Arc');
-        task.sprintId = undefined;
-      }
 
       setGenerated(task);
       setPhase('preview');
@@ -80,7 +73,7 @@ export function AITaskCreator({ defaultSprintId, isDailyBoard = false, isArcBoar
   const handleAccept = () => {
     if (!generated) return;
 
-    const sprintId = isDailyBoard || isArcBoard
+    const sprintId = isDailyBoard
       ? undefined
       : (generated.sprintId || defaultSprintId || activeSprint || undefined);
 
@@ -207,7 +200,7 @@ export function AITaskCreator({ defaultSprintId, isDailyBoard = false, isArcBoar
                     <span className="text-muted-foreground">Assignee:</span>{' '}
                     <span className="font-medium">{getPersonName(generated.assigneeId)}</span>
                   </div>
-                  {!isDailyBoard && !isArcBoard && (
+                  {!isDailyBoard && (
                     <div>
                       <span className="text-muted-foreground">Sprint:</span>{' '}
                       <span className="font-medium">{getSprintName(generated.sprintId)}</span>

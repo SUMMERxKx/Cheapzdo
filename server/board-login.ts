@@ -1,3 +1,4 @@
+import { sessionCookie } from './board-session.ts'
 import { createHash, timingSafeEqual } from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -18,6 +19,11 @@ export async function handleBoardLogin(
   response: ServerResponse,
   boardPassword: string | undefined = process.env.BOARD_PASSWORD,
 ) {
+  if (request.method === 'DELETE') {
+    response.setHeader('Set-Cookie', 'board_session=; HttpOnly; SameSite=Strict; Path=/api; Max-Age=0')
+    return respond(response, 200, { ok: true })
+  }
+
   if (request.method !== 'POST') {
     response.setHeader('Allow', 'POST');
     return respond(response, 405, { error: 'Method not allowed.' });
@@ -68,6 +74,7 @@ export async function handleBoardLogin(
       return respond(response, 401, { ok: false });
     }
 
+    response.setHeader('Set-Cookie', sessionCookie(boardPassword, request.headers['x-forwarded-proto'] === 'https' || process.env.VERCEL === '1'))
     return respond(response, 200, { ok: true });
   } catch {
     return respond(response, 400, { error: 'Invalid request.' });
