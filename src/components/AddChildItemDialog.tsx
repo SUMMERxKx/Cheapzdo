@@ -24,6 +24,7 @@ export function AddChildItemDialog({ open, onOpenChange, parentItem, isBlocker =
   const [type, setType] = useState<WorkItemType>('Other');
   const [state, setState] = useState<'New' | 'Active' | 'Done'>('New');
   const [priority, setPriority] = useState<Priority>('Medium');
+  const [pingOnAssign, setPingOnAssign] = useState(false)
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [sprintId, setSprintId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,6 +38,7 @@ export function AddChildItemDialog({ open, onOpenChange, parentItem, isBlocker =
       setState('New');
       setPriority('Medium');
       setAssigneeId('');
+      setPingOnAssign(false)
       setSprintId(parentItem.sprintId || '');
     }
   }, [open, parentItem.sprintId]);
@@ -58,6 +60,7 @@ export function AddChildItemDialog({ open, onOpenChange, parentItem, isBlocker =
         state,
         priority,
         assigneeId: assigneeId || undefined,
+        pingOnAssign: pingOnAssign && !!people.find(p => p.id === assigneeId)?.email,
         sprintId: sprintId || undefined,
         parentId: parentItem.id,
         tags,
@@ -73,6 +76,7 @@ export function AddChildItemDialog({ open, onOpenChange, parentItem, isBlocker =
       setState('New');
       setPriority('Medium');
       setAssigneeId('');
+      setPingOnAssign(false)
       setSprintId(parentItem.sprintId || '');
       onOpenChange(false);
     } catch (error) {
@@ -90,6 +94,12 @@ export function AddChildItemDialog({ open, onOpenChange, parentItem, isBlocker =
           <DialogTitle>{isBlocker ? 'Add Blocker' : 'Add Child Task'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {people.find(p => p.id === assigneeId)?.email && (
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={pingOnAssign} onChange={e => setPingOnAssign(e.target.checked)} />
+              Ping on assign
+            </label>
+          )}
           <div>
             <Label htmlFor="title">Title *</Label>
             <Input

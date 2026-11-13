@@ -7,10 +7,9 @@ import { Header } from './Header';
 import { SprintNavigation } from './SprintNavigation';
 import { Announcements } from './Announcements';
 import { DailyContent } from './Daily';
-import { Leaderboard } from './Leaderboard';
-import { LayoutDashboard, Zap, Megaphone, CalendarDays, Trophy, Layers } from 'lucide-react';
+import { LayoutDashboard, Zap, Megaphone, CalendarDays } from 'lucide-react';
 
-type TabValue = 'dashboard' | 'sprint' | 'arc' | 'announcements' | 'daily' | 'leaderboard';
+type TabValue = 'dashboard' | 'sprint' | 'announcements' | 'daily';
 
 /**
  * MainBoard Component
@@ -20,27 +19,25 @@ type TabValue = 'dashboard' | 'sprint' | 'arc' | 'announcements' | 'daily' | 'le
  * - Dashboard: Analytics and team overview (+ AI Insights)
  * - Sprint Board: Sprint-based task management (+ AI Task Creator)
  * - Daily: Daily task management (+ AI Task Creator)
- * - Leaderboard: Team performance rankings
  * 
  * Task Separation:
  * - Sprint tasks: Have sprintId and do NOT have "Daily" tag
  * - Daily tasks: Have "Daily" tag (regardless of sprintId)
  */
 export function MainBoard() {
-  const { workItems, activeSprint } = useApp();
+  const { workItems, activeSprint, emailNote, migrationNote } = useApp();
   const [activeTab, setActiveTab] = useState<TabValue>('dashboard');
 
-  // Filter Sprint tasks: items in active sprint, excluding Daily and Arc board items
+  // Filter Sprint tasks: items in active sprint, excluding Daily items
   const sprintTasks = activeSprint 
-    ? workItems.filter(item => item.sprintId === activeSprint && !item.tags.includes('Daily') && !item.tags.includes('Arc'))
+    ? workItems.filter(item => item.sprintId === activeSprint && !item.tags.includes('Daily'))
     : [];
 
-  // Arc Board: items explicitly tagged "Arc" — fully separate from Sprint board
-  const arcTasks = workItems.filter(item => item.tags.includes('Arc') && !item.tags.includes('Daily'));
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
+      {(emailNote || migrationNote) && <p role="status" className="px-4 py-2 text-xs text-muted-foreground">{[emailNote, migrationNote].filter(Boolean).join('. ')}</p>}
       
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="flex-1 flex flex-col">
         <div className="border-b border-border bg-card">
@@ -68,26 +65,11 @@ export function MainBoard() {
               <span className="ml-1 text-xs text-muted-foreground">({sprintTasks.filter(i => !i.parentId).length})</span>
             </TabsTrigger>
             <TabsTrigger
-              value="arc"
-              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
-            >
-              <Layers className="w-4 h-4" />
-              Arc Board
-              <span className="ml-1 text-xs text-muted-foreground">({arcTasks.filter(i => !i.parentId).length})</span>
-            </TabsTrigger>
-            <TabsTrigger
               value="daily"
               className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
             >
               <CalendarDays className="w-4 h-4" />
               Daily
-            </TabsTrigger>
-            <TabsTrigger
-              value="leaderboard"
-              className="data-[state=active]:bg-secondary data-[state=active]:text-foreground gap-2"
-            >
-              <Trophy className="w-4 h-4" />
-              Leaderboard
             </TabsTrigger>
           </TabsList>
         </div>
@@ -113,27 +95,12 @@ export function MainBoard() {
           </div>
         </TabsContent>
 
-        {/* Arc Board: Separate PI-style planning board with its own items (tagged "Arc") */}
-        <TabsContent value="arc" className="flex-1 m-0 !mt-0 p-0 flex flex-col overflow-hidden min-h-0">
-          <div className="flex-1 overflow-hidden min-h-0">
-            <WorkItemList
-              items={arcTasks}
-              title="ARC BOARD"
-              hideSprintColumn={true}
-              isArcBoard={true}
-            />
-          </div>
-        </TabsContent>
 
         {/* Daily Board: Simplified daily task management */}
         <TabsContent value="daily" className="flex-1 m-0 !mt-0 p-0 flex flex-col overflow-hidden min-h-0">
           <DailyContent />
         </TabsContent>
 
-        {/* Leaderboard: Team performance rankings */}
-        <TabsContent value="leaderboard" className="flex-1 mt-0 overflow-auto">
-          <Leaderboard />
-        </TabsContent>
 
       </Tabs>
     </div>

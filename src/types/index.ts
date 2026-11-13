@@ -7,6 +7,7 @@ export interface Person {
   id: string;
   name: string;
   handle?: string;
+  email?: string;
 }
 
 export interface Comment {
@@ -30,6 +31,8 @@ export interface WorkItem {
   description?: string;
   comments: Comment[];
   order?: number;
+  pingOnAssign?: boolean;
+  groupId?: string;
 }
 
 export interface WorkItemTypeDefinition {
@@ -71,7 +74,13 @@ export interface Announcement {
   createdAt: number;
 }
 
+export interface TaskGroup {
+  id: string
+  name: string
+}
+
 export interface AppState {
+  taskGroups: TaskGroup[];
   workItems: WorkItem[];
   people: Person[];
   sprints: Sprint[];

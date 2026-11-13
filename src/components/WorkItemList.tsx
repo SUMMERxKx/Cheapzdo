@@ -1,4 +1,7 @@
 import { useState, useMemo } from 'react';
+import { TaskGroupRow } from './TaskGroupRow'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
 import { WorkItem, WorkItemType, WorkItemState, Priority } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { WorkItemRow } from './WorkItemRow';
@@ -24,7 +27,6 @@ interface WorkItemListProps {
   hideSprintInDialog?: boolean; // Hide sprint selector in add dialog
   hideStatePriorityTags?: boolean; // Hide State, Priority, and Tags columns (used for Daily board)
   isDailyBoard?: boolean; // If true, tasks added will get "Daily" tag automatically
-  isArcBoard?: boolean; // If true, tasks added will get "Arc" tag automatically
 }
 
 /**
@@ -41,8 +43,14 @@ interface WorkItemListProps {
  * - Supports hiding columns for simplified views (Daily board)
  * - Automatic task tagging for Daily board separation
  */
-export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false, hideSprintInDialog = false, hideStatePriorityTags = false, isDailyBoard = false, isArcBoard = false }: WorkItemListProps) {
-  const { reorderWorkItems } = useApp();
+export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn = false, hideSprintInDialog = false, hideStatePriorityTags = false, isDailyBoard = false }: WorkItemListProps) {
+  const { reorderWorkItems, workItems, taskGroups, createTaskGroup, updateWorkItem } = useApp();
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [groupName, setGroupName] = useState('')
+  const selected = selectedIds.filter(id => items.some(item => item.id === id))
+  const boardGroups = taskGroups.filter(g => items.some(item => item.groupId === g.id))
+  const toggleSelected = (id: string) => setSelectedIds(prev => prev.includes(id) ? prev.filter(value => value !== id) : [...prev, id])
+
   const [filters, setFilters] = useState<FiltersState>({
     search: '',
     type: 'all',
@@ -193,11 +201,32 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-lg font-bold tracking-wide">{title}</h2>
         <div className="flex items-center gap-2">
-          <AITaskCreator defaultSprintId={defaultSprintId} isDailyBoard={isDailyBoard} isArcBoard={isArcBoard} />
-          <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} isDailyBoard={isDailyBoard} isArcBoard={isArcBoard} />
+          <AITaskCreator defaultSprintId={defaultSprintId} isDailyBoard={isDailyBoard} />
+          <AddWorkItemDialog defaultSprintId={defaultSprintId} hideSprint={hideSprintInDialog} isDailyBoard={isDailyBoard} />
         </div>
       </div>
 
+      <div className="flex items-center gap-2 px-4 py-2 flex-wrap border-b border-border">
+        <span className="text-xs text-muted-foreground">{selected.length} selected</span>
+        <Input aria-label="Group name" placeholder="Group name" className="w-44 h-8" value={groupName} onChange={e => setGroupName(e.target.value)} maxLength={100} />
+        <Button size="sm" variant="outline" disabled={selected.length < 2 || !groupName.trim()} onClick={() => {
+          createTaskGroup(groupName, selected)
+          setSelectedIds([])
+          setGroupName('')
+        }}>Group selected</Button>
+        {selected.length > 0 && <>
+          <select aria-label="Move selected tasks to group" className="bg-card border border-border rounded p-1 text-sm" value="" onChange={e => {
+            if (!e.target.value) return
+            selected.forEach(id => updateWorkItem(id, { groupId: e.target.value === '__none__' ? undefined : e.target.value }))
+            setSelectedIds([])
+          }}>
+            <option value="">Move to group...</option>
+            <option value="__none__">Remove from group</option>
+            {boardGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+          <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Clear selection</Button>
+        </>}
+      </div>
       <WorkItemFilters filters={filters} onFiltersChange={setFilters} hideStatePriorityTags={hideStatePriorityTags} />
 
       <div className="flex-1 overflow-auto">
@@ -219,23 +248,26 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
             </tr>
           </thead>
           <tbody>
-            {filteredItems.map((item, index) => (
-              <WorkItemRow 
-                key={item.id} 
-                item={item}
-                index={index + 1}
-                onRowClick={handleRowClick}
-                hideSprintColumn={hideSprintColumn}
-                hideStatePriorityTags={hideStatePriorityTags}
-                isDragging={draggedItemId === item.id}
-                isDragOver={dragOverItemId === item.id}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
-              />
-            ))}
+            {(() => {
+              const renderTask = (item: WorkItem) => <WorkItemRow key={item.id} item={item}
+                index={topLevelItems.findIndex(value => value.id === item.id) + 1}
+                selected={selected.includes(item.id)} onToggleSelected={() => toggleSelected(item.id)}
+                onRowClick={handleRowClick} hideSprintColumn={hideSprintColumn} hideStatePriorityTags={hideStatePriorityTags}
+                isDragging={draggedItemId === item.id} isDragOver={dragOverItemId === item.id}
+                onDragStart={handleDragStart} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} onDragEnd={handleDragEnd} />
+              const seen = new Set<string>()
+              return filteredItems.map(item => {
+                const group = taskGroups.find(g => g.id === item.groupId)
+                if (!group) return renderTask(item)
+                if (seen.has(group.id)) return null
+                seen.add(group.id)
+                const all = topLevelItems.filter(task => task.groupId === group.id)
+                const visible = filteredItems.filter(task => task.groupId === group.id)
+                return <TaskGroupRow key={group.id} group={group} items={all} visibleCount={visible.length} columnCount={columnCount}>
+                  {visible.map(renderTask)}
+                </TaskGroupRow>
+              })
+            })()}
             {filteredItems.length === 0 && (
               <tr>
                 <td colSpan={columnCount} className="py-8 text-center text-muted-foreground">
@@ -248,7 +280,7 @@ export function WorkItemList({ items, title, defaultSprintId, hideSprintColumn =
       </div>
 
       <TaskCardModal 
-        workItem={selectedWorkItem} 
+        workItem={workItems.find(item => item.id === selectedWorkItem?.id) || null}
         open={isModalOpen} 
         onOpenChange={handleModalClose} 
       />

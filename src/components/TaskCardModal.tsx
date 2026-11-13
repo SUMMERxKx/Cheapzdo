@@ -27,6 +27,7 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
   const [type, setType] = useState<WorkItemType>('Other');
   const [state, setState] = useState<WorkItemState>('New');
   const [priority, setPriority] = useState<Priority>('Medium');
+  const [pingOnAssign, setPingOnAssign] = useState(false)
   const [assigneeId, setAssigneeId] = useState<string>('');
   const [sprintId, setSprintId] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
@@ -42,6 +43,7 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
       setState(workItem.state);
       setPriority(workItem.priority);
       setAssigneeId(workItem.assigneeId || '');
+      setPingOnAssign(!!workItem.pingOnAssign)
       setSprintId(workItem.sprintId || '');
       setTags([...workItem.tags]);
       setTagInput('');
@@ -61,6 +63,7 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
       type,
       state,
       priority,
+      pingOnAssign,
       assigneeId: assigneeId || undefined,
       sprintId: sprintId || undefined,
       tags,
@@ -111,6 +114,15 @@ export function TaskCardModal({ workItem, open, onOpenChange }: TaskCardModalPro
         {workItem && (
           <ScrollArea className="max-h-[calc(90vh-200px)] pr-4">
             <div className="space-y-6">
+            {people.find(p => p.id === assigneeId)?.email && (
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={pingOnAssign} onChange={e => {
+                  setPingOnAssign(e.target.checked)
+                  updateWorkItem(workItem.id, { pingOnAssign: e.target.checked })
+                }} />
+                Ping on assign
+              </label>
+            )}
             {/* Title */}
             <div className="space-y-2">
               <Label htmlFor="modal-title">Title</Label>

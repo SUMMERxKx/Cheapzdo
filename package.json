@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "test:password": "node --experimental-strip-types --test server/board-login.test.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test server/*.test.ts"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "^5.2.8",

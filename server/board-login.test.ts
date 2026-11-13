@@ -32,6 +32,7 @@ test('accepts the correct password without returning it or caching the response'
   await withServer(PASSWORD, async url => {
     const response = await login(url, PASSWORD);
     assert.equal(response.status, 200);
+    assert.match(response.headers.get('set-cookie') || '', /board_session=.*HttpOnly.*SameSite=Strict.*Path=\/api/)
     assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.deepEqual(await response.json(), { ok: true });
   });
@@ -78,3 +79,11 @@ test('supports the JSON body already parsed by Vercel', async () => {
     assert.equal((await login(url, PASSWORD)).status, 200);
   }, { password: PASSWORD });
 });
+
+test('logout expires the board session cookie', async () => {
+  await withServer(PASSWORD, async url => {
+    const response = await fetch(url, { method: 'DELETE' })
+    assert.equal(response.status, 200)
+    assert.match(response.headers.get('set-cookie') || '', /board_session=;.*Max-Age=0/)
+  })
+})

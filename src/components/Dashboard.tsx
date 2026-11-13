@@ -1,22 +1,15 @@
+import { PeopleManager } from './PeopleManager'
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, Zap, AlertTriangle, Layers, Plus, X } from 'lucide-react';
-import { ConfirmDialog } from './ConfirmDialog';
+import { Users, Zap, AlertTriangle, Layers } from 'lucide-react';
 import { AIInsightsPanel } from './ai/AIInsightsPanel';
 import { WorkItemTypeManager, WorkItemTypeLabel } from './WorkItemTypeManager';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function Dashboard() {
-  const { workItems, people, sprints, getPersonById, addPerson, deletePerson, workItemTypes } = useApp();
-  const [newPersonName, setNewPersonName] = useState('');
-  const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
-  const [isDeletePersonConfirmOpen, setIsDeletePersonConfirmOpen] = useState(false);
-  const [personToDelete, setPersonToDelete] = useState<string | null>(null);
+  const { workItems, people, sprints, getPersonById, workItemTypes } = useApp();
   const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null);
 
   const filteredItems = selectedSprintId
@@ -60,26 +53,6 @@ export function Dashboard() {
   const typeChartData = Object.entries(activeByType)
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
-
-  const handleAddPerson = () => {
-    if (newPersonName.trim()) {
-      addPerson({ name: newPersonName.trim() });
-      setNewPersonName('');
-      setIsAddPersonOpen(false);
-    }
-  };
-
-  const handleDeletePerson = (id: string) => {
-    setPersonToDelete(id);
-    setIsDeletePersonConfirmOpen(true);
-  };
-
-  const confirmDeletePerson = () => {
-    if (personToDelete) {
-      deletePerson(personToDelete);
-      setPersonToDelete(null);
-    }
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -268,66 +241,7 @@ export function Dashboard() {
         </Card>
       </div>
 
-      {/* Active Users Board */}
-      <Card className="p-4 bg-card border-border">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-muted-foreground">ACTIVE USERS</h3>
-          <Dialog open={isAddPersonOpen} onOpenChange={setIsAddPersonOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Person
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Person</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Person name"
-                  value={newPersonName}
-                  onChange={(e) => setNewPersonName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddPerson();
-                    }
-                  }}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsAddPersonOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddPerson}>Add</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {people.map((person) => (
-            <div
-              key={person.id}
-              className="flex items-center justify-between p-3 border border-border rounded-md hover:bg-secondary/50 transition-colors"
-            >
-              <span className="text-sm">{person.name}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-6 h-6 p-0 text-muted-foreground hover:text-destructive"
-                onClick={() => handleDeletePerson(person.id)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-          {people.length === 0 && (
-            <p className="text-sm text-muted-foreground col-span-full text-center py-4">
-              No people added yet
-            </p>
-          )}
-        </div>
-      </Card>
+      <PeopleManager />
 
       {/* Blockers Section */}
       {blockers.length > 0 && (
@@ -367,17 +281,6 @@ export function Dashboard() {
         </div>
       </Card>
 
-      {/* Delete Person Confirmation Dialog */}
-      <ConfirmDialog
-        open={isDeletePersonConfirmOpen}
-        onOpenChange={setIsDeletePersonConfirmOpen}
-        title="Remove Person"
-        description="Are you sure you want to remove this person from the board?"
-        confirmText="Remove"
-        cancelText="Cancel"
-        onConfirm={confirmDeletePerson}
-        variant="destructive"
-      />
     </div>
   );
 }

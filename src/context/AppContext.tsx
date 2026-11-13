@@ -1,10 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
 import { WorkItem, Person, Sprint, AppState, WorkItemType, WorkItemState, Priority, Comment, Board, BoardNote, Announcement, WorkItemTypeDefinition, AIGeneratedTask, AIInsights } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { DEFAULT_WORK_ITEM_TYPES, FALLBACK_TYPE } from '@/lib/workItemTypes';
+import { shouldPingAssignment } from '@/lib/assignment'
+import { toast } from 'sonner'
 import { queryAI, isAIConfigured } from '@/lib/ai';
 
 interface AppContextType extends AppState {
+  createTaskGroup: (name: string, itemIds: string[]) => void
+  renameTaskGroup: (id: string, name: string) => void
+  ungroupTasks: (id: string) => void
+  emailNote: string
+  migrationNote: string
   addWorkItem: (item: Omit<WorkItem, 'id' | 'createdAt' | 'comments'>) => void;
   updateWorkItem: (id: string, updates: Partial<WorkItem>) => void;
   reorderWorkItems: (itemIds: string[]) => void;
@@ -80,6 +87,8 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
       return {};
     }
 
+    const { data: taskGroups } = await supabase.from('task_groups').select('id,name')
+
     // Load people
     const { data: peopleData, error: peopleError } = await supabase
       .from('people')
@@ -145,6 +154,8 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
         description: item.description || '',
         comments: comments,
         order: item.order ?? undefined,
+        pingOnAssign: item.ping_on_assign ?? false,
+        groupId: item.group_id || undefined,
       };
     });
 
@@ -153,6 +164,7 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
       id: p.id,
       name: p.name,
       handle: p.handle || undefined,
+      email: p.email || undefined,
     }));
 
     // Convert sprints data
@@ -246,6 +258,7 @@ const loadDataFromSupabase = async (): Promise<Partial<AppState>> => {
     const activeBoard = boards.length > 0 ? boards[0].id : null;
 
     return {
+      taskGroups: taskGroups || [],
       workItems: workItemsWithComments,
       people: people.length > 0 ? people : defaultPeople,
       sprints: sprints.length > 0 ? sprints : defaultSprints,
@@ -301,6 +314,7 @@ const initializeDatabase = async () => {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>({
+    taskGroups: [],
     workItems: [],
     people: [],
     sprints: [],
@@ -313,6 +327,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       isAuthenticated: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [emailNote, setEmailNote] = useState('')
+  const [migrationNote, setMigrationNote] = useState('')
+  const stateRef = useRef(state)
+  stateRef.current = state
+  const missingMigration = () => setMigrationNote('Apply the database migration to save emails, ping preferences and groups. New fields are kept for this visit only.')
+  const isMissingColumn = (error: { code?: string }) => ['PGRST204', '42703'].includes(error?.code || '')
+
+  const notifyAssignment = async (item: WorkItem, previous?: WorkItem) => {
+    if (!shouldPingAssignment(item, previous)) return
+    const person = stateRef.current.people.find(p => p.id === item.assigneeId)
+    if (!person?.email) return
+    try {
+      const response = await fetch('/api/assign-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId: item.id, eventId: crypto.randomUUID(), to: person.email, title: item.title,
+          board: item.tags.includes('Daily') ? 'Daily' : `Sprint Board: ${stateRef.current.sprints.find(s => s.id === item.sprintId)?.name || 'No sprint'}`,
+          priority: item.priority, description: item.description || '', appUrl: window.location.origin }),
+      })
+      const result = await response.json()
+      if (result.status === 'not_configured') setEmailNote('Email not set up')
+      else if (!response.ok) setEmailNote(response.status === 401 ? 'Log in again to send assignment email' : 'Assignment saved. Email could not be sent')
+      else setEmailNote('')
+    } catch { setEmailNote('Assignment saved. Email could not be sent') }
+  }
+
 
   // Wait for the server password check before loading or seeding the board.
   useEffect(() => {
@@ -325,6 +365,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setState(prev => ({
         ...prev,
+        taskGroups: data.taskGroups || [],
         workItems: data.workItems || [],
         people: data.people || defaultPeople,
         sprints: data.sprints || defaultSprints,
@@ -341,50 +382,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; };
   }, [state.isAuthenticated]);
 
-  // Save work item to Supabase
   const saveWorkItemToSupabase = async (item: WorkItem) => {
-    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
-    
-    try {
-      const { error } = await supabase
-        .from('work_items')
-        .upsert({
-          id: item.id,
-          title: item.title,
-          type: item.type,
-          state: item.state,
-          assignee_id: item.assigneeId || null,
-          priority: item.priority,
-          tags: item.tags,
-          parent_id: item.parentId || null,
-          sprint_id: item.sprintId || null,
-          description: item.description || null,
-          created_at: item.createdAt,
-          order: item.order ?? null,
-        });
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving work item:', error);
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return
+    const base = { id: item.id, title: item.title, type: item.type, state: item.state,
+      assignee_id: item.assigneeId || null, priority: item.priority, tags: item.tags,
+      parent_id: item.parentId || null, sprint_id: item.sprintId || null,
+      description: item.description || null, created_at: item.createdAt, order: item.order ?? null }
+    let { error } = await supabase.from('work_items').upsert({ ...base, ping_on_assign: !!item.pingOnAssign, group_id: item.groupId || null })
+    if (isMissingColumn(error)) {
+      missingMigration()
+      const fallback = await supabase.from('work_items').upsert(base)
+      error = fallback.error
     }
-  };
+    if (error) console.error('Error saving work item:', error)
+  }
 
-  // Save person to Supabase
   const savePersonToSupabase = async (person: Person) => {
-    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return;
-    
-    try {
-      const { error } = await supabase
-        .from('people')
-        .upsert({
-          id: person.id,
-          name: person.name,
-          handle: person.handle || null,
-        });
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving person:', error);
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) return
+    const base = { id: person.id, name: person.name, handle: person.handle || null }
+    let { error } = await supabase.from('people').upsert({ ...base, email: person.email || null })
+    if (isMissingColumn(error)) {
+      missingMigration()
+      const fallback = await supabase.from('people').upsert(base)
+      error = fallback.error
     }
-  };
+    if (error) console.error('Error saving person:', error)
+  }
 
   // Save sprint to Supabase
   const saveSprintToSupabase = async (sprint: Sprint) => {
@@ -437,6 +460,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Update state immediately (optimistic update)
     setState(prev => ({ ...prev, workItems: [...prev.workItems, newItem] }));
     
+    void notifyAssignment(newItem)
+
     // Save to Supabase in background (won't block if Supabase not configured)
     try {
       await saveWorkItemToSupabase(newItem);
@@ -447,17 +472,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const updateWorkItem = async (id: string, updates: Partial<WorkItem>) => {
-    setState(prev => {
-      const updatedItems = prev.workItems.map(item =>
-        item.id === id ? { ...item, ...updates } : item
-      );
-      const updatedItem = updatedItems.find(item => item.id === id);
-      if (updatedItem) {
-        saveWorkItemToSupabase(updatedItem);
-      }
-      return { ...prev, workItems: updatedItems };
-    });
-  };
+    const previous = stateRef.current.workItems.find(item => item.id === id)
+    if (!previous) return
+    const updated = { ...previous, ...updates }
+    stateRef.current = { ...stateRef.current, workItems: stateRef.current.workItems.map(item => item.id === id ? updated : item) }
+    setState(stateRef.current)
+    void notifyAssignment(updated, previous)
+    await saveWorkItemToSupabase(updated)
+  }
+
+  const createTaskGroup = async (name: string, itemIds: string[]) => {
+    if (!name.trim() || itemIds.length < 2) return
+    const group = { id: crypto.randomUUID(), name: name.trim() }
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      const { error } = await supabase.from('task_groups').insert(group)
+      if (error) missingMigration()
+    }
+    itemIds.forEach(id => { void updateWorkItem(id, { groupId: group.id }) })
+    setState(prev => ({ ...prev, taskGroups: [...prev.taskGroups, group] }))
+  }
+
+  const renameTaskGroup = async (id: string, name: string) => {
+    if (!name.trim()) return
+    setState(prev => ({ ...prev, taskGroups: prev.taskGroups.map(g => g.id === id ? { ...g, name: name.trim() } : g) }))
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) {
+      const { error } = await supabase.from('task_groups').update({ name: name.trim() }).eq('id', id)
+      if (error) missingMigration()
+    }
+  }
+
+  const ungroupTasks = async (id: string) => {
+    stateRef.current.workItems.filter(item => item.groupId === id).forEach(item => { void updateWorkItem(item.id, { groupId: undefined }) })
+    setState(prev => ({ ...prev, taskGroups: prev.taskGroups.filter(group => group.id !== id) }))
+    if (supabase && import.meta.env.VITE_SUPABASE_URL) await supabase.from('task_groups').delete().eq('id', id)
+  }
 
   const reorderWorkItems = async (itemIds: string[]) => {
     setState(prev => {
@@ -519,10 +567,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     setState(prev => ({ ...prev, workItems: [...prev.workItems, copiedItem] }));
+    void notifyAssignment(copiedItem)
     await saveWorkItemToSupabase(copiedItem);
   };
 
   const addPerson = async (person: Omit<Person, 'id'>) => {
+    if (person.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(person.email)) { toast.error('Enter a valid email address'); return }
     const newPerson: Person = {
       ...person,
       id: `person-${Date.now()}`,
@@ -532,6 +582,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const updatePerson = async (id: string, updates: Partial<Person>) => {
+    if (updates.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updates.email)) { toast.error('Enter a valid email address'); return }
     setState(prev => {
       const updatedPeople = prev.people.map(p => (p.id === id ? { ...p, ...updates } : p));
       const updatedPerson = updatedPeople.find(p => p.id === id);
@@ -737,6 +788,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    void fetch('/api/board-login', { method: 'DELETE' })
     setState(prev => ({ ...prev, isAuthenticated: false }));
   };
 
@@ -1158,6 +1210,7 @@ No markdown. No commentary outside the JSON. Keep it concise and actionable.`;
     <AppContext.Provider
       value={{
         ...state,
+        createTaskGroup, renameTaskGroup, ungroupTasks, emailNote, migrationNote,
         addWorkItem,
         updateWorkItem,
         reorderWorkItems,
